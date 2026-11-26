@@ -133,14 +133,6 @@
     --faixa-texto-fundo: 28px;
   }
 
-  /* Display variant B (`?exibicao=b`, FG-2b): its own face is wider or narrower than Literata's, so its first span has
-     its own ratio. Declared on the Início root itself (one class more than the block above), so `--heroi-vao` and
-     `--heroi-costura-x` resolve with it. This file keeps the per-face constant: the display tokens live in tokens.css, out
-     of this card. */
-  html[data-exibicao='b'] [data-casa]:has(> [data-cena-heroi] .ic-titulo) {
-    --heroi-span1-em: 5.126;
-  }
-
   /* The framed screens (`ProdutoEmMoldura`: the real capture under ASSET-1's frame raster): 320 px of screen layer at 1440
      and 280 at 390 (RECUT §6), read from the container (cqi) like the quadro. The shared box (`.cm-produto-moldura` in
      secoes.css) does the rest: the capture is inset by 3 % of the screen layer's width, the frame is 1.06 x that wide and
@@ -516,12 +508,6 @@
       top: var(--heroi-leg-topo);
       left: var(--heroi-esq);
       z-index: 2;
-    }
-
-    /* Display variant C (64 px at 1440): the caption's box ends one `bloco` left of the seam, so the text never crosses
-       it (A and B keep the shipped width). On the box, not the p: the hero's left edge resolves against the hero. */
-    html[data-exibicao='c'] [data-casa] .ic-leg1 {
-      max-inline-size: calc(var(--heroi-costura-x) - var(--heroi-esq) - var(--espaco-bloco));
     }
 
     /* Band 2 is the stage of moment 2 (REP-HOME motion sheet §3). Its quadro and tone wrappers dissolve, so the stage's
@@ -1087,24 +1073,49 @@
     padding-top: var(--espaco-secao-ampla);
   }
 
-  /* Band 7: the closing (centred, the only centred block), then M11 on the band's bottom edge, its dark foot cut (542 x
-     386 of the 542 x 421 plate). The light layer is the plate's own box, so it keeps the plate's proportion. */
+  /* Band 7: the closing (centred, the only centred block), then A05, the street, on the band's bottom edge (the footer's
+     top): a `grupo` under the pill, so the highest roof is never nearer to it than that. One column that may shrink
+     (`minmax(0, 1fr)`), or the street's own width would stretch the track instead of overflowing it evenly. */
   [data-casa] .ic-fecho {
     display: grid;
+    grid-template-columns: minmax(0, 1fr);
     justify-items: center;
-    row-gap: var(--espaco-bloco);
+    row-gap: var(--espaco-grupo);
   }
 
-  /* `overflow: clip` is not a scroll container: without `min-block-size: 0` the in-flow img (block-size auto, 421 of the
-     file) would set the frame's automatic minimum height (a grid item) and the frame would show the whole plate instead of
-     cutting its dark foot. Every clip frame with an aspect ratio says so (inicioFaixas.test.tsx, SH-10). */
+  /* The closing block stands above the street in stacking: the street rises under the pill (below), so its box overlaps
+     the pill's, and the pill must stay the one that takes the click. */
+  [data-casa] .ic-fecho .cm-fechamento {
+    position: relative;
+    z-index: 1;
+  }
+
+  /* The street runs edge to edge: the window's width (the container's, `cqi`) up to the master's 1672 px, never scaled
+     below its own pixels (the plate is 1672 x 642, `a05-rua.MANIFESTO.json`). The quadro is narrower than the window, so
+     the box is wider than its track: the grid (`justify-items: center`) centres it and it overflows the track by the
+     same amount on both sides; the band clips what is past the window (`overflow-x: clip`). No `inset` or `translate`
+     re-centres it: on top of the grid's centring that pair would shift the box to one side. `overflow: clip` is not a
+     scroll container: without `min-block-size: 0` the in-flow img (block-size auto) would set the frame's automatic
+     minimum height (a grid item). Every clip frame with an aspect ratio says so (inicioFaixas.test.tsx, SH-10). The
+     light layer is the plate's own box (`[data-luz-grupo]` is `inset: 0`). */
   [data-casa] .ic-fecho-cena {
     position: relative;
-    inline-size: min(var(--fecho-janela), 542px);
-    aspect-ratio: 542 / 386;
+    inline-size: min(100cqi, 1672px);
+    aspect-ratio: 1672 / 642;
     min-block-size: 0;
     margin: 0;
     overflow: clip;
+    pointer-events: none;
+  }
+
+  /* From 768 the pill is its own width, centred, and under it the highest roof is the tall building's: row 62 of 1672
+     (0.037 of the street's width). The street rises by 0.035 of its width, so that roof stands a `grupo` and a little more
+     under the pill (never nearer), while the chimney and the low roofs beside the pill rise next to it, clear of the
+     heading. Under 768 the pill is as wide as the column and covers the chimney, so the street stays a `grupo` below it. */
+  @media (min-width: 768px) {
+    [data-casa] .ic-fecho-cena {
+      margin-block-start: calc(var(--espaco-grupo) * -1.5);
+    }
   }
 
   [data-casa] .ic-fecho-cena img:not([data-luz]) {
@@ -1113,12 +1124,7 @@
     block-size: auto;
   }
 
-  [data-casa] .ic-fecho-cena [data-luz-grupo] {
-    inset-block-end: auto;
-    aspect-ratio: 542 / 421;
-  }
-
-  /* The panes come on in the catalogue's M11 time (`--luz-fecho-ms`, set by the page from CATALOGO.M11). */
+  /* The windows come on in the catalogue's M11 time (`--luz-fecho-ms`, set by the page from CATALOGO.M11). */
   [data-casa] .ic-fecho-cena [data-luz] {
     transition-duration: var(--luz-fecho-ms);
   }
@@ -1341,42 +1347,32 @@
   }
 
   /* ---- Moment 4: the signed caption (16:00 under the hero plate, 17:30 on the night floor) ------------------------- */
-  /* The hour leads: larger (titulo-3 inside the abertura line), heavier, tabular figures. The author is subordinate:
-     body size at the line's regular weight, in the caption's own colour (the night floor is mid grey: a lighter ink
-     would fall under 4.5:1). Under "por <nome>" a 2 px stroke draws once, 400 ms from the left on the standard curve,
-     when the caption is first whole in view (`data-assinada`, movimento/troca/assinatura.tsx); reduced motion: drawn. */
+  /* The voices of the caption: the words around them stay Outfit (the line's own face). The hour leads in Literata,
+     heavy, at one and a half times the caption's size (`texto-abertura`, the line's own token: no new level), in tabular
+     lining figures so 16:00 and 17:30 stand on the same grid. The name is Literata upright at the caption's size, in the
+     caption's colour (the night floor is mid grey: a lighter ink would fall under 4.5:1). No rule, no underline: nothing
+     reads like a link. The hour is a taller face than the words around it: with `inherit`, and even with a line height of
+     1, its ascent over the shared baseline is larger than the caption's, and the line box grows by about 3 px. The hour
+     keeps the caption's baseline and its own line box is smaller than its glyphs (half of the caption's size, written
+     with the `--texto-*` token the lint asks for there), so the caption's line is as tall as before the hour grew. */
   [data-casa] .ic-legenda-hora {
-    font-size: var(--texto-titulo-3-tamanho);
-    font-weight: var(--peso-titulo);
-    font-variant-numeric: tabular-nums;
+    font-family: var(--fonte-exibicao);
+    font-size: calc(var(--texto-abertura-tamanho) * 1.5);
+    font-weight: 800;
+    font-variant-numeric: tabular-nums lining-nums;
+    line-height: calc(var(--texto-abertura-tamanho) * 0.5);
   }
 
+  /* The padding under the name stands for the rule the name no longer draws: the caption keeps the height it had, so the
+     bands below it (two static captions in the flow under 1024) stay where they were. */
   [data-casa] .ic-legenda-autor {
-    position: relative;
     display: inline-block;
-    font-size: var(--texto-corpo-tamanho);
-  }
-
-  [data-casa] .ic-legenda-traco {
-    position: absolute;
-    top: 100%;
-    inset-inline: 0;
-    block-size: 2px;
-    background-color: currentColor;
-    transform: scaleX(0);
-    transform-origin: left;
-    transition: transform 400ms linear;
-  }
-
-  [data-casa] [data-assinada] .ic-legenda-traco {
-    transform: scaleX(1);
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    [data-casa] .ic-legenda-traco {
-      transform: none;
-      transition: none;
-    }
+    padding-block-end: 2px;
+    font-family: var(--fonte-exibicao);
+    font-size: var(--texto-abertura-tamanho);
+    font-weight: var(--peso-titulo);
+    font-style: normal;
+    text-decoration: none;
   }
 
   /* ---- Moment 6: between the pages of the house the floor carries over ------------------------------------------ */

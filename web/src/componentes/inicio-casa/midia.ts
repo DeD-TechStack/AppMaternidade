@@ -22,7 +22,7 @@ import m05Webp390c780 from '../../assets/cenas/inicio/m05-sol-390c-780w.webp'
 import m05Webp390c1170 from '../../assets/cenas/inicio/m05-sol-390c-1170w.webp'
 import m06Apagada from '../../assets/cenas/inicio/m06-apagada-900w.webp?w=300;396;600;792;900&format=avif;webp&as=picture'
 import m04Faixa from '../../assets/cenas/inicio-faixas/m04-faixa-1200w.webp?w=1200&format=webp&lossless=true&as=picture'
-import m11Apagada from '../../assets/cenas/inicio-faixas/m11-apagada-542w.webp?w=326;542&format=webp&lossless=true&as=picture'
+import a05Rua from '../../assets/cenas/inicio-faixas/a05-rua-fundo-1672w.webp?w=780;1170;1672&format=webp&lossless=true&as=picture'
 
 // The files of the page. M04 and M05 are FIXED files under `web/src/assets/cenas/inicio/` (PROVENANCE.md there): an AVIF
 // 4:4:4 ladder whose ground is calibrated on the decoded output, and a WebP ladder, both exported once from the lossless
@@ -268,21 +268,26 @@ export const ESTILO_DA_ROLAGEM = {
 } as CSSProperties
 
 /**
- * M11 of band 7 (HOME-SECOND-HALF): the street corner at night with the four panes UNLIT (`inicio-faixas`, lossless,
- * 326 and 542 wide: the master holds 542 px, so no 1440 w file exists). The lit panes are `LUZ_M11`, a layer over it.
- * The figure is `min(var(--fecho-janela), 542px)` wide: 542 at 1440, 326 at 390, and half the container between (326 from
- * 652 px up to 541 at 1083), so DPR 1 at 768, 1024 and 1083 (384, 512 and 541.5 px) takes the 542 file, never the 326 one.
+ * A05 of band 7 (F7a-1, `a05-rua.MANIFESTO.json`): the closing street, 1672 x 642 (the master's rows from the highest roof
+ * down), its sky transparent so the band's cacau shows through, the five windows UNLIT. Lossless like the other plates:
+ * the flat ground is a token colour. Files of 780, 1170 and 1672 wide (the master holds 1672 px: nothing is upscaled).
+ * The figure is `min(100cqi, 1672px)` wide, the whole window up to the master's width, standing on the band's bottom edge;
+ * `sizes` is that drawn width, and the light layer reads the same string so both pick the same tier.
  */
-const M11_TAMANHOS = '(min-width: 1084px) 542px, (min-width: 652px) 50vw, 326px'
-export const M11_JANELA: Imagem = placaWebp(m11Apagada, M11_TAMANHOS, 542)
+const A05_TAMANHOS = 'min(100cqi, 1672px)'
+export const A05_RUA: Imagem = placaWebp(a05Rua, A05_TAMANHOS, 1672)
 
-/** The lit panes of M11: one RGBA layer in the plate's own box, opacity only (`LuzDaLampada`, key `casa-luz-m11`). */
-export const LUZ_M11: Imagem = imagemPublica({
-  src: '/cenas/inicio-faixas/m11-luz-542w.png',
-  srcSet: '/cenas/inicio-faixas/m11-luz-326w.png 326w, /cenas/inicio-faixas/m11-luz-542w.png 542w',
-  sizes: M11_TAMANHOS,
-  largura: 542,
-  altura: 421,
+/**
+ * The lit windows of A05: one RGBA layer in the plate's own box (same aspect at every tier), opacity only
+ * (`LuzDaLampada`, key `casa-luz-a05`). Four tiers: 390, 780, 1170 and 1672 wide.
+ */
+export const LUZ_A05: Imagem = imagemPublica({
+  src: '/cenas/inicio-faixas/a05-rua-luz-1672w.png',
+  srcSet:
+    '/cenas/inicio-faixas/a05-rua-luz-390w.png 390w, /cenas/inicio-faixas/a05-rua-luz-780w.png 780w, /cenas/inicio-faixas/a05-rua-luz-1170w.png 1170w, /cenas/inicio-faixas/a05-rua-luz-1672w.png 1672w',
+  sizes: A05_TAMANHOS,
+  largura: 1672,
+  altura: 642,
 })
 
 /**

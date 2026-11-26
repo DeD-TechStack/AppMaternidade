@@ -4636,3 +4636,259 @@ describe('METER-INICIO 12 PRODUTO at 1440: only the room-stage screen may be und
     ok(medir.produto(produtoCom(larg(320)), { ...docDs1(1440), altura: undefined }))
   })
 })
+
+// =============================================================================================
+// METER-FUNDO: the ground under a text is the visible one. The night sheet has pointer-events: none, so the page records
+// the whole stack of what paints under the text (`pilhaSob`, each entry with the clip that cuts it), and the pure side
+// reads the first opaque entry whose clip holds the text point (`fundoVisivelDaPilha`).
+// =============================================================================================
+
+describe('METER-FUNDO: fundoVisivelDaPilha, pilhaSob in avaliarTudo and recortadoFora', () => {
+  const FOLHA = { x: 0, y: 0, w: 1440, h: 900 }
+  const FORA_DA_FOLHA = { x: 1000, y: 0, w: 200, h: 200 }
+  const PONTO = { x: 300, y: 200 }
+  const transparente = { cor: TRANSPARENTE, recorte: null }
+  const folha = (recorte = FOLHA) => ({ cor: CACAU, recorte })
+  const dia = { cor: AREIA, recorte: null }
+  const fundoDa = (pilha, ponto = PONTO) => medir.fundoVisivelDaPilha(pilha, ponto)
+
+  const alvo = () => no({ tag: 'a', texto: 'Entrar', rect: { x: 0, y: 0, w: 100, h: 48 }, m: { interativo: true } })
+  const legendaDaNoite = (pilhaSob, extra = {}) => ({
+    ...legendaNo({ x: 20, y: 1600, w: 300, h: 28 }, { cor: PAPEL, chao: PAPEL, tom: 'noite', ordemDom: 20 }),
+    texto: '18:00',
+    pilhaSob,
+    pontoSob: PONTO,
+    ...extra,
+  })
+  const textoDaNoite = (pilhaSob, extra = {}) =>
+    no({ texto: ', fralda, anotada', rect: { x: 0, y: 0, w: 200, h: 24 }, estilo: { color: PAPEL }, cadeia: [TRANSPARENTE, PAPEL], pilhaSob, pontoSob: PONTO, ...extra })
+  const g11Via = (nos) => medir.avaliarTudo({ doc: docDs1(1440), nos: [alvo(), ...nos], tema: 'claro' }).find((r) => r.regra === 'G11')
+  const tempoVia = (nos) => medir.avaliarTudo({ doc: docRh(1440), nos: [...tempoComHoras(1440), ...nos], tema: 'claro', caso: 'inicio' }).find((r) => r.regra === 'TEMPO')
+
+  it('a. the sheet cacau over the areia floor is the ground of the night text (pure function, G11 and TEMPO)', () => {
+    const pilha = [transparente, folha(), dia]
+    assert.equal(fundoDa(pilha), CACAU)
+    ok(g11Via([textoDaNoite(pilha)]))
+    ok(tempoVia([legendaDaNoite(pilha)]))
+  })
+
+  it('b. NEGATIVE: with only the areia floor in the stack, areia is the ground and both rules fail', () => {
+    const pilha = [transparente, dia]
+    assert.equal(fundoDa(pilha), AREIA)
+    falha(g11Via([textoDaNoite(pilha)]), /1\.24:1/)
+    falha(tempoVia([legendaDaNoite(pilha)]), /areia/)
+  })
+
+  it('c. NEGATIVE: a sheet whose clip does not hold the text point is not the ground', () => {
+    const pilha = [transparente, folha(FORA_DA_FOLHA), dia]
+    assert.equal(fundoDa(pilha), AREIA)
+    falha(g11Via([textoDaNoite(pilha)]), /1\.24:1/)
+    falha(tempoVia([legendaDaNoite(pilha)]), /areia/)
+  })
+
+  it('the clip is inclusive on the edges, and an empty clip holds nothing', () => {
+    assert.equal(fundoDa([folha({ x: 300, y: 200, w: 10, h: 10 }), dia]), CACAU)
+    assert.equal(fundoDa([folha({ x: 290, y: 190, w: 10, h: 10 }), dia]), CACAU)
+    assert.equal(fundoDa([folha({ x: 301, y: 200, w: 10, h: 10 }), dia]), AREIA)
+    assert.equal(fundoDa([folha({ x: 300, y: 200, w: 0, h: 0 }), dia]), AREIA)
+    assert.equal(fundoDa([folha({ x: 0, y: 0, w: 1440, h: 0 }), dia]), AREIA)
+  })
+
+  it('an entry without clip (undefined) counts as unclipped, and a stack with nothing opaque returns undefined', () => {
+    assert.equal(fundoDa([{ cor: CACAU }]), CACAU)
+    assert.equal(fundoDa([]), undefined)
+    assert.equal(fundoDa([transparente, { cor: 'transparent', recorte: null }, { cor: 'rgba(10, 20, 30, 0)', recorte: null }]), undefined)
+  })
+
+  it('avaliarTudo does not mutate the caller nodes, and a node with a plain fundoSob and no pilhaSob is untouched', () => {
+    const comPilha = textoDaNoite([folha(), dia])
+    const simples = textoDaNoite(undefined, { pilhaSob: undefined, pontoSob: undefined, cadeia: [TRANSPARENTE, PAPEL], fundoSob: CACAU })
+    delete simples.pilhaSob
+    delete simples.pontoSob
+    const antes = JSON.stringify([comPilha, simples])
+    ok(g11Via([comPilha, simples]))
+    assert.equal(JSON.stringify([comPilha, simples]), antes)
+    assert.equal(comPilha.fundoSob, undefined)
+  })
+
+  it('an unresolved stack (nothing opaque) drops fundoSob, so the ancestor chain decides as before', () => {
+    const noTexto = textoDaNoite([transparente], { fundoSob: CACAU, estilo: { color: PAPEL }, cadeia: [TRANSPARENTE, PAPEL] })
+    falha(g11Via([noTexto]), /contraste/)
+  })
+
+  it('d. recortadoFora === true is skipped by G11 and TEMPO; anything else is measured', () => {
+    const naAreia = (extra = {}) => tinta(PAPEL, AREIA, { fundoSob: AREIA, rect: { x: 0, y: 0, w: 200, h: 24 }, ...extra })
+    ok(medir.g11([alvo(), naAreia({ recortadoFora: true })], 'claro'))
+    falha(medir.g11([alvo(), naAreia()], 'claro'), /1\.24:1/)
+    falha(medir.g11([alvo(), naAreia({ recortadoFora: 'true' })], 'claro'), /1\.24:1/)
+    falha(medir.g11([alvo(), naAreia({ recortadoFora: 1 })], 'claro'), /1\.24:1/)
+    falha(medir.g11([alvo(), naAreia({ recortadoFora: true }), naAreia()], 'claro'), /1\.24:1/)
+    const base = tempoComHoras(1440)
+    ok(regra('tempo')([...base, naAreia({ ordemDom: 30, recortadoFora: true })], docRh(1440)))
+    falha(regra('tempo')([...base, naAreia({ ordemDom: 30 })], docRh(1440)), /tinta/)
+    falha(regra('tempo')([...base, naAreia({ ordemDom: 30, recortadoFora: 'true' })], docRh(1440)), /tinta/)
+    falha(regra('tempo')([...base, naAreia({ ordemDom: 30, recortadoFora: 1 })], docRh(1440)), /tinta/)
+    falha(regra('tempo')([...base, naAreia({ ordemDom: 30, recortadoFora: true }), naAreia({ ordemDom: 31 })], docRh(1440)), /tinta/)
+  })
+
+  it('e. fail closed: an unreadable colour, a non-finite clip, a non-array stack or a NaN point is "ilegível"', () => {
+    assert.equal(fundoDa([{ cor: 'cor-estranha', recorte: null }, dia]), 'ilegível')
+    assert.equal(fundoDa([{ cor: undefined, recorte: null }, dia]), 'ilegível')
+    assert.equal(fundoDa([{ cor: null, recorte: null }, dia]), 'ilegível')
+    assert.equal(fundoDa([folha({ x: 0, y: 0, w: Number.NaN, h: 900 }), dia]), 'ilegível')
+    assert.equal(fundoDa([folha({ x: 0, y: 0, w: Infinity, h: 900 }), dia]), 'ilegível')
+    assert.equal(fundoDa([folha({ x: 0, y: 0, w: 1440 }), dia]), 'ilegível')
+    assert.equal(fundoDa(undefined), 'ilegível')
+    assert.equal(fundoDa('rgb(1, 2, 3)'), 'ilegível')
+    assert.equal(fundoDa([folha(), dia], { x: Number.NaN, y: 1 }), 'ilegível')
+    assert.equal(medir.fundoVisivelDaPilha([folha(), dia], undefined), 'ilegível')
+    assert.equal(medir.fundoVisivelDaPilha([folha(), dia]), 'ilegível')
+    assert.equal(fundoDa([folha(), dia], null), 'ilegível')
+  })
+
+  it('e. a legend whose stack is unreadable fails TEMPO ("chão da legenda ilegível"), and G11 falls back to the chain', () => {
+    falha(tempoVia([legendaDaNoite([{ cor: 'cor-estranha', recorte: null }])]), /ilegível/)
+    falha(tempoVia([legendaDaNoite(undefined, { pilhaSob: 'nao-e-lista' })]), /ilegível/)
+    ok(g11Via([textoDaNoite([{ cor: 'cor-estranha', recorte: null }], { estilo: { color: TINTA } })]))
+    falha(g11Via([textoDaNoite([{ cor: 'cor-estranha', recorte: null }])]), /contraste/)
+  })
+})
+
+describe('METER-FUNDO (coletor): hit stack with pointer-events auto, pilhaSob, pontoSob and recortadoFora', () => {
+  const HTML = `<main><div data-casa><div id="envolve"><p id="alvo">noite</p><div id="chao" style="background-color: ${CACAU}"></div>
+    <a id="mel" data-botao-mel href="#">Mel</a></div></div></main>`
+  const SOMENTE_PILHA = (letra) => (documento) => {
+    documento.elementsFromPoint = () => {
+      if (letra.estilo === undefined) letra.estilo = [...documento.querySelectorAll('style')].map((s) => s.textContent).join('\n')
+      if (letra.falhar) throw new Error('pilha quebrada')
+      return [documento.getElementById('alvo'), documento.getElementById('chao'), documento.documentElement]
+    }
+  }
+  const caixaDe = (x) => (documento) => {
+    const janela = documento.defaultView
+    janela.Element.prototype.getBoundingClientRect = function medir() {
+      return this.id === 'envolve' ? { ...RETANGULO, x, left: x, right: x + 100 } : { ...RETANGULO }
+    }
+  }
+  const estilos = (documento) => documento.head.querySelectorAll('style').length
+
+  it('injects "* { pointer-events: auto !important }" only during the probe and removes it afterwards', () => {
+    const letra = {}
+    const { nos } = coletarDe(HTML, SOMENTE_PILHA(letra))
+    assert.match(letra.estilo, /\*\s*\{\s*pointer-events:\s*auto\s*!important\s*\}/)
+    const p = nos.find((n) => n.tag === 'p')
+    assert.deepEqual(p.pilhaSob, [
+      { cor: CACAU, recorte: null },
+      { cor: PAPEL, recorte: null },
+    ])
+    assert.deepEqual(p.pontoSob, { x: 50, y: 10 })
+    assert.equal(p.fundoSob, undefined)
+    assert.equal(p.recortadoFora, undefined)
+  })
+
+  it('removes the style also when the probe throws', () => {
+    const letra = { falhar: true }
+    let documento
+    assert.throws(() => coletarDe(HTML, juntar((d) => (documento = d), SOMENTE_PILHA(letra))), /pilha quebrada/)
+    assert.match(letra.estilo, /pointer-events:\s*auto\s*!important/)
+    assert.equal(estilos(documento), 1)
+  })
+
+  it('records the clip of the ancestors that cut a stack entry (overflow) and of its own inset() clip-path', () => {
+    const { nos } = coletarDe(
+      HTML,
+      juntar(
+        SOMENTE_PILHA({}),
+        comLeitura('#envolve', { 'overflow-x': 'hidden', 'overflow-y': 'clip' }),
+        comLeitura('#chao', { 'clip-path': 'inset(2px 10% 3px 4px round 5px)' }),
+      ),
+    )
+    const p = nos.find((n) => n.tag === 'p')
+    // The wrapper is the ancestor that clips: its border box (0, 0, 100, 20), then the inset of #chao itself.
+    assert.deepEqual(p.pilhaSob[0], { cor: CACAU, recorte: { x: 4, y: 2, w: 86, h: 15 } })
+    assert.deepEqual(p.pilhaSob[1], { cor: PAPEL, recorte: null })
+  })
+
+  it('an overflow ancestor alone gives its border box, and a clip-path that is not inset() is ignored', () => {
+    const { nos } = coletarDe(HTML, juntar(SOMENTE_PILHA({}), comLeitura('#envolve', { 'overflow-x': 'hidden', 'overflow-y': 'hidden' }), comLeitura('#chao', { 'clip-path': 'circle(50%)' })))
+    assert.deepEqual(nos.find((n) => n.tag === 'p').pilhaSob[0], { cor: CACAU, recorte: { x: 0, y: 0, w: 100, h: 20 } })
+  })
+
+  it('marks recortadoFora when the node lies outside the clip of its ancestors, never on a mel button', () => {
+    const fora = coletarDe(HTML, juntar(SOMENTE_PILHA({}), caixaDe(500), comLeitura('#envolve', { 'overflow-x': 'clip', 'overflow-y': 'clip' }))).nos
+    assert.equal(fora.find((n) => n.tag === 'p').recortadoFora, true)
+    assert.equal(fora.find((n) => n.tag === 'a').recortadoFora, undefined)
+    assert.ok(Array.isArray(fora.find((n) => n.tag === 'a').pilhaSob))
+    const dentro = coletarDe(HTML, juntar(SOMENTE_PILHA({}), caixaDe(0), comLeitura('#envolve', { 'overflow-x': 'clip', 'overflow-y': 'clip' }))).nos
+    assert.equal(dentro.find((n) => n.tag === 'p').recortadoFora, undefined)
+    const semRecorte = coletarDe(HTML, juntar(SOMENTE_PILHA({}), caixaDe(500))).nos
+    assert.equal(semRecorte.find((n) => n.tag === 'p').recortadoFora, undefined)
+  })
+})
+
+// =============================================================================================
+// METER-FUNDO (CSP): the site has a Content-Security-Policy that blocks an inline <style>, so the probe override
+// `* { pointer-events: auto !important }` goes in a constructable stylesheet (document.adoptedStyleSheets). The <style>
+// element stays only as the fallback where constructable sheets do not exist (jsdom).
+// =============================================================================================
+
+describe('METER-FUNDO (coletor): the probe override is a constructable stylesheet when the browser has one', () => {
+  const HTML = `<main><div data-casa><p id="alvo" style="color: ${PAPEL}">, fralda, anotada</p></div></main>`
+  const ESTILOS = (documento) => documento.head.querySelectorAll('style').length
+  // Stubs: `CSSStyleSheet` (com replaceSync) na janela e `document.adoptedStyleSheets`; `registro` guarda o que se viu.
+  const comFolhaConstruivel = (registro, { anteriores = [], falhar = false } = {}) => (documento) => {
+    const janela = documento.defaultView
+    janela.CSSStyleSheet = class {
+      constructor() {
+        this.regras = ''
+        registro.criadas.push(this)
+      }
+      replaceSync(css) {
+        this.regras = css
+      }
+    }
+    documento.adoptedStyleSheets = [...anteriores]
+    registro.documento = documento
+    documento.elementsFromPoint = () => {
+      if (registro.durante === undefined) registro.durante = { adotadas: [...documento.adoptedStyleSheets], estilos: ESTILOS(documento) }
+      if (falhar) throw new Error('pilha quebrada')
+      return [documento.getElementById('alvo'), documento.documentElement]
+    }
+  }
+  const novoRegistro = () => ({ criadas: [], durante: undefined, documento: undefined })
+
+  it('adds one CSSStyleSheet with the override during the probe, adds no <style>, and removes exactly that sheet afterwards', () => {
+    const registro = novoRegistro()
+    const antiga = { sentinela: true }
+    const { nos } = coletarDe(HTML, comFolhaConstruivel(registro, { anteriores: [antiga] }))
+    assert.equal(registro.criadas.length, 1)
+    const folha = registro.criadas[0]
+    assert.match(folha.regras, /\*\s*\{\s*pointer-events:\s*auto\s*!important\s*\}/)
+    assert.deepEqual(registro.durante.adotadas, [antiga, folha])
+    assert.equal(registro.durante.estilos, 1, 'only the fixture <style>: the override is not an inline <style>')
+    // O `filter` do código da página roda no realm do jsdom: copiar para um array deste realm antes de comparar.
+    assert.deepEqual([...registro.documento.adoptedStyleSheets], [antiga])
+    assert.equal(ESTILOS(registro.documento), 1)
+    assert.ok(Array.isArray(nos.find((n) => n.tag === 'p').pilhaSob))
+  })
+
+  it('removes the sheet also when the probe throws, and keeps the sheets that were already adopted', () => {
+    const registro = novoRegistro()
+    const antiga = { sentinela: true }
+    assert.throws(() => coletarDe(HTML, comFolhaConstruivel(registro, { anteriores: [antiga], falhar: true })), /pilha quebrada/)
+    assert.deepEqual(registro.durante.adotadas, [antiga, registro.criadas[0]])
+    assert.deepEqual([...registro.documento.adoptedStyleSheets], [antiga])
+    assert.equal(ESTILOS(registro.documento), 1)
+  })
+
+  it('falls back to the <style> element when constructable sheets are missing (CSSStyleSheet without adoptedStyleSheets)', () => {
+    let durante
+    coletarDe(HTML, (documento) => {
+      documento.elementsFromPoint = () => {
+        durante ??= [...documento.querySelectorAll('style')].map((s) => s.textContent).join('\n')
+        return [documento.getElementById('alvo'), documento.documentElement]
+      }
+    })
+    assert.match(durante, /\*\s*\{\s*pointer-events:\s*auto\s*!important\s*\}/)
+  })
+})

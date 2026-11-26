@@ -101,10 +101,10 @@ describe('HOME-WIDTH S1: the page container and the width rule sit on the Iníci
     expect(forasDaRaiz(`html[data-exibicao='b'] ${RAIZ} { --heroi-span1-em: 5; } ${RAIZ} .ic-estagio .cm-produto-moldura { --produto-tela: 1px; }`)).toEqual([])
   })
 
-  it('display variant B re-declares its first-span ratio on the Início root, one class more than the root rule', () => {
-    const b = regras().find((r) => r.seletor === `html[data-exibicao='b'] ${RAIZ}`)
-    expect(b, "html[data-exibicao='b'] on the root").toBeDefined()
-    expect(b!.corpo).toContain('--heroi-span1-em: 5.126;')
+  it('display variant B is removed: no rule is scoped to html[data-exibicao] and the root keeps one first-span ratio', () => {
+    expect(regras().find((r) => r.seletor === `html[data-exibicao='b'] ${RAIZ}`)).toBeUndefined()
+    expect(regras().filter((r) => r.seletor.includes('data-exibicao'))).toEqual([])
+    expect(daRaiz().map((r) => r.corpo).join(' ')).toMatch(/--heroi-span1-em\s*:/)
   })
 
   it('the quadro follows the container width, capped by the short-wide rule, and the width terms read the Início root only', () => {

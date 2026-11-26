@@ -1,10 +1,10 @@
 import { useEffect, useState, type RefObject } from 'react'
 import { usePrefereMovimentoReduzido } from '../reduzido.ts'
 
-// Moment 4 of the Início (HOME-FINAL): the timestamp strip reads like a signed log line. The hour leads (heavier,
-// larger, tabular figures), the author is subordinate (smaller, quieter), and a stroke draws under "por <nome>" ONCE,
-// when the caption first stands whole in the window: 400 ms, `scaleX(0)` to `scaleX(1)` from the left, on the standard
-// curve, in plain CSS (inicio-casa.css, `[data-assinada]`). With reduced motion the stroke is there, finished, at once.
+// Moment 4 of the Início (HOME-FINAL): the timestamp strip reads like a signed log line. The hour leads (heavy serif,
+// larger, tabular figures) and the author is the name in an upright serif (inicio-casa.css); there is no drawn stroke any
+// more, so nothing reads like a link. `useAssinatura` still says once when the caption first stands whole in the window
+// (`data-assinada`; at once with reduced motion), which band 5's hairlines also read.
 // The approved wording never changes: the caption's text is the copy string, split into three runs, nothing added.
 
 /** "hh:mm" + the middle + the last two words (the author: "por Ju", "por Ícaro"). */
@@ -13,7 +13,7 @@ const PARTES = /^(\d{1,2}:\d{2})(.*\s)(\S+\s+\S+)$/u
 /** Mostly in view: the stroke starts when 60 % of the caption's line is on screen (STAGE, H2). */
 const LIMIAR_DA_ASSINATURA = 0.6
 
-/** The caption's text in three runs: the hour, the middle, and the author holding the stroke. */
+/** The caption's text in three runs: the hour, the middle, and the author. */
 export function TextoAssinado({ texto }: { texto: string }) {
   const partes = PARTES.exec(texto)
   if (!partes) return <>{texto}</>
@@ -26,15 +26,14 @@ export function TextoAssinado({ texto }: { texto: string }) {
       {meio}
       <span data-legenda-autor="" className="ic-legenda-autor">
         {autor}
-        <span data-legenda-traco="" className="ic-legenda-traco" aria-hidden="true" />
       </span>
     </>
   )
 }
 
 /**
- * True once the caption has been whole in view (then it stays true: the stroke plays once per mount), and at once with
- * reduced motion. Without IntersectionObserver the stroke is finished from the start.
+ * True once the caption has been whole in view (then it stays true, once per mount), and at once with reduced motion.
+ * Without IntersectionObserver it is true from the start.
  */
 export function useAssinatura(alvo: RefObject<Element | null>): boolean {
   const reduzido = usePrefereMovimentoReduzido()
