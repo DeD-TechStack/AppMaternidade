@@ -188,9 +188,53 @@ O site é um só produto: nenhuma página ou pasta é "do Diego" ou "dos agentes
 - **Demonstração interativa do celular (front):** partes do briefing AGY-02 (`AGY_02_DEMO_TELEFONE/PROMPT.md`); combine com o Daniel quais partes antes de começar.
 - **Pendências visuais V-DES-1 a V-DES-3** das imagens da página Desenvolvimento.
 - **Login com Google:** as tarefas A do plano de login (código), no `PLANO.md` de PAGES_LOGIN_20261125.
-- **Telas logadas:** o polimento funcional e visual da seção 11.
+- **Telas logadas:** o polimento funcional e visual das seções 12 e 13.
 
-## 11. Tarefas para começar agora
+## 11. Prioridades até sexta
+
+Meta do Daniel para sexta (27/11): uma versão **completa e apresentável** em <https://ded-techstack.github.io/AppMaternidade/previa/>, que um professor vai experimentar: navegação, o essencial da área logada em modo demonstração, visuais e imagens, em 390 e 1440. O caminho crítico fica com os agentes, para não depender de ninguém fora do horário. O que está em andamento:
+
+- **Composição nova do Início e páginas secundárias:** cartões de agente (COMP-PORT/COMP-PORT-b, COMP-PECAS, COMO, CUIDADO, PT, NF).
+- **Demonstração no celular:** Antigravity, tarefa AGY-02 (briefing em `AGY_02_DEMO_TELEFONE/PROMPT.md`).
+- **Desempenho de carga:** Antigravity, tarefa AGY-03.
+- **Página Desenvolvimento:** AGY-01, em integração.
+- **Correção da CI:** cartão F-CI. **Autores:** cartão AUTOR-DIEGO.
+- **Login com Google:** cartão de agente para o código, mais os passos de conta que só o Daniel faz.
+- **Procedência das imagens (provenance):** cartão de agente.
+
+Nada disso é para você pegar. As tarefas da seção 12 são independentes do caminho crítico.
+
+## 12. Tarefas que você pode pegar hoje
+
+**Regra de posse (vale para as quatro):**
+
+1. **Reivindique antes de começar:** escreva o seu nome e a data (`Diego, DD/MM`) na linha da tarefa abaixo, em um commit só disso, e envie para `Diego`. A partir daí você é o **dono temporário** do conjunto de arquivos da tarefa, até o merge.
+2. **Se um cartão de agente já mexe nesses arquivos**, avise o Daniel e combine antes de editar; não edite por cima.
+3. Termine, rode `npm.cmd --prefix web run check` (ou `npm --prefix web run check`) e confira em **390×844** e **1440×900** (capturas no PR, só dados fictícios). Depois do merge, a posse volta a ser livre.
+
+**Tarefa 12.1: percorrer a demonstração logada como quem chega pela primeira vez.** Dono: _(livre)_
+- **O que se vê quando está pronto:** Hoje, Registro, Histórico, Notas, Lixeira e Conta, em 390 e 1440, sem cara de protótipo: estado vazio com texto e ação, carregando com sinal, rótulos claros, texto a 200% sem quebrar.
+- **Arquivos prováveis (só `/app`):** `web/src/paginas/rotina/` (`Hoje.tsx`, `Registro.tsx`, `Historico.tsx`, `Notas.tsx`, `Lixeira.tsx`), `web/src/paginas/conta/PaginaConta.tsx`, `web/src/componentes/rotina/`, `web/src/componentes/estado/`.
+- **Verificação:** `check`; ande pelas seis telas nos dois tamanhos e a 200% de texto; anexe antes e depois.
+
+**Tarefa 12.2: fatia da demo do celular, "Cuidado compartilhado" (trocar entre Juliana e Ícaro).** Dono: _(livre)_
+- **O que se vê:** um componente em que a pessoa troca de cuidador e vê quem registrou o quê e a linha "desde o seu último registro" mudar. Ele é feito para o `TelefoneDemo` do AGY-02 hospedar (fluxo `familia`).
+- **Arquivos:** pasta **nova** só sua, por exemplo `web/src/componentes/demo-telefone-familia/`. Leia antes a API documentada no `PROMPT.md` do AGY-02 (`<TelefoneDemo fluxo="familia" />`, dados fictícios em memória, sem Supabase, sem `localStorage`, `MemoryRouter` próprio) e importe sem editar: `web/src/componentes/conta/BlocoMembros.tsx`, `web/src/componentes/app/DesdeQueVoceSaiu.tsx`, `web/src/dados/conta.memoria.ts`, `web/src/dados/conta.demonstracao.ts`. Combine com o Daniel o encaixe com o AGY-02 antes de começar.
+- **Verificação:** `check`; um teste de comportamento (troca de cuidador muda a autoria e a linha); teste de que nenhum módulo Supabase entra no grafo; capturas em 390 e 1440.
+
+**Tarefa 12.3: tela de erro da aplicação com recuperação de chunk que falha após um deploy.** Dono: _(livre)_
+- **O que se vê:** depois de um deploy, quando um pedaço da página (lazy) não carrega, o site recarrega **uma vez** sozinho; se falhar de novo, aparece a tela em português com o botão de recarregar, sem laço de recarga.
+- **Arquivos:** `web/src/paginas/ErroDaAplicacao.tsx`, `web/src/rotasComErro.tsx`, `web/src/conteudo/erroAplicacao.ts`, mais um teste ao lado (`ErroDaAplicacao.test.tsx`). Controle de "já recarreguei" em `sessionStorage` com chave própria; sem dados pessoais no registro.
+- **Verificação:** `check`; teste que simula a falha de importação dinâmica (recarrega uma vez, na segunda mostra a tela, sem laço); capturas da tela de erro em 390 e 1440.
+
+**Tarefa 12.4: refazer as capturas das telas dentro dos aparelhos desenhados.** Dono: _(livre)_
+- **O que se vê:** imagens nítidas, só com dados fictícios, em `web/assets-fonte/telas/`. Em `origin/Diego` existem apenas as de Hoje e Sessão (claro e madrugada, 390 e 1440; `FONTE.md` lista origem e sha256). A captura de **Histórico** que ainda mostra um recorte "por Juliana" fica na composição nova (`web/public/composicao/a/`), que é do cartão COMP-PORT-b: **peça ao Daniel antes de mexer nela**; as de `assets-fonte/telas` são suas.
+- **Arquivos:** `web/assets-fonte/telas/*.png` e `web/assets-fonte/telas/FONTE.md` (novo SHA de origem, hora, sha256).
+- **Verificação:** `check`; confira cada PNG nos tamanhos exatos (1440×900 e 390×844), sem barra de rolagem, sem nome ou dado real; atualize `FONTE.md`.
+
+Observação sobre autoria: até o cartão AUTOR-DIEGO (t_3d92c3b7) entrar, os commits com a sua identidade reprovam no passo de autores da CI; o time corrige hoje, não é erro seu.
+
+## 13. Mais tarefas para começar
 
 1. **Telas logadas:** passe pelos fluxos Hoje, Registro, Histórico, Notas e Família em 390 e 1440, com dados fictícios, e liste ou corrija o que parece protótipo (espaçamento, estado vazio, rótulos, ritmo vertical).
 2. **Estados:** confira vazio, carregando e erro de cada tela logada; texto em português, ação clara, foco visível.
@@ -202,16 +246,16 @@ O site é um só produto: nenhuma página ou pasta é "do Diego" ou "dos agentes
 
 Sugestão de fluxo com IA própria: dê à ferramenta este guia, `web/DESIGN.md` e o bloco "Conventions" do `AGENTS.md`; peça mudanças pequenas por PR; sempre rode `npm run check` e confira as telas à mão nos dois tamanhos.
 
-## 12. Plano resumido de sexta (27/11)
+## 14. Plano resumido de sexta (27/11)
 
 - **Essencial:** Home com a nova composição integrada (ou, se não ficar pronta, a Home atual com rua, luz e grão e a nova tipografia); páginas públicas navegáveis e consistentes em 390 e 1440; os fluxos principais de `/app` apresentáveis com dados fictícios; sem imagem quebrada ou borrada nas páginas mostradas; link de pré-visualização pronto (a publicação depende do sim do Daniel).
 - **Importante:** faixa da porta; masters de imagem trocados onde são pequenos, depois que o gerador entregar; o seu polimento do `/app` e das páginas de acesso; paleta "hora azul" só se Daniel escolher.
 - **Depois:** redesenho completo de Como funciona, Cuidado e Desenvolvimento, os dois modos do RF-14, checagem de AVIF no Safari/iOS, publicação em `main`.
 
-## 13. Segurança do que é público
+## 15. Segurança do que é público
 
 Este repositório é público. Nunca coloque no código, nos textos, nas capturas ou nos PRs: caminhos do seu computador, e-mails ou dados reais, chaves e senhas, fotos de pessoas reais (só desenhos de personagens fictícios), nem texto, código ou imagem copiados de outros sites.
 
-## 14. Atualizações deste guia
+## 16. Atualizações deste guia
 
 A nova composição da Home e uma eventual troca de paleta vão alterar partes das seções 4, 5 e 10. Este guia será atualizado quando essa composição entrar.
