@@ -106,6 +106,9 @@ jobs:
         working-directory: previa-src/web
         env:
           BASE_SITE: ${{ steps.pages.outputs.base_path }}/previa
+          # Só a prévia recebe o banco. São valores públicos (URL e chave anon); sem eles o site fica em demonstração.
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
         run: npm run build
 
       - name: Montar o artefato do Pages
