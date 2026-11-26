@@ -13,6 +13,7 @@ import { fileURLToPath } from 'node:url'
 
 const SCRIPT = join(dirname(fileURLToPath(import.meta.url)), 'verificar-commits.mjs')
 const DANIEL = { nome: 'Daniel Macedo', email: 'danielmacedosilva11@gmail.com' }
+const DIEGO = { nome: 'Diego Silva Prado', email: '114458215+Pradixx@users.noreply.github.com' }
 const FORMATO_LINHA = /^[0-9a-f]{12} [^:]+: /
 
 function criarRepo(t) {
@@ -127,6 +128,45 @@ test('4. committer diferente com autor certo passa', (t) => {
   })
   const saida = r.verificar(`${r.base}..HEAD`)
   assert.equal(saida.status, 0, saida.stderr)
+})
+
+test('4a. commit comum do Diego passa', (t) => {
+  const r = criarRepo(t)
+  r.alterar()
+  r.commitar('Adiciona o arquivo', { autor: DIEGO })
+  const saida = r.verificar(`${r.base}..HEAD`)
+  assert.equal(saida.status, 0, saida.stderr)
+  assert.equal(saida.stdout, `OK: 1 commits verificados em ${r.base}..HEAD\n`)
+})
+
+test('4b. identidade desconhecida reprova em autor', (t) => {
+  const r = criarRepo(t)
+  r.alterar()
+  r.commitar('Adiciona o arquivo', { autor: { nome: 'Fulano de Tal', email: 'fulano@exemplo.invalid' } })
+  const saida = r.verificar(`${r.base}..HEAD`)
+  assert.equal(saida.status, 1)
+  assert.deepEqual(regras(saida.stderr), ['autor'])
+})
+
+test('4c. nome do Diego com e-mail do Daniel reprova em autor', (t) => {
+  const r = criarRepo(t)
+  r.alterar()
+  r.commitar('Adiciona o arquivo', { autor: { nome: DIEGO.nome, email: DANIEL.email } })
+  const saida = r.verificar(`${r.base}..HEAD`)
+  assert.equal(saida.status, 1)
+  assert.deepEqual(regras(saida.stderr), ['autor'])
+})
+
+test('4d. merge aceito com autor e committer Diego reprova em autor', (t) => {
+  const r = criarRepo(t)
+  prepararDivergencia(r)
+  r.git(['merge', '-q', '--no-ff', '-m', 'Integra o int/refazer no ramo', 'lado'], {
+    autor: DIEGO,
+    committer: DIEGO,
+  })
+  const saida = r.verificar(`${r.base}..HEAD`)
+  assert.equal(saida.status, 1)
+  assert.deepEqual(regras(saida.stderr), ['autor'])
 })
 
 test('5. commit vazio reprova em vazio', (t) => {
