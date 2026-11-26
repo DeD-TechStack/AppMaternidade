@@ -108,7 +108,7 @@ Regras: registre só o nome da técnica e a URL pública; não cole trechos, nã
 
 Resumo do bloco "Conventions" do `AGENTS.md` (o original está no `AGENTS.md`):
 
-1. Título de commit com até 72 caracteres e iniciando por maiúscula, no formato em português com verbo no início; sem merge nem commit vazio. Confira com `node scripts/verificar-commits.mjs <base>..HEAD`.
+1. Título de commit com até 72 caracteres e iniciando por maiúscula, no formato em português com verbo no início; sem commit vazio; os merges `Integra o int/refazer` e `Traz o int/refazer` são do Daniel. Confira com `node scripts/verificar-commits.mjs <base>..HEAD`.
 2. Texto aguenta zoom de 200% e viewport de 320 px: sem corte, sobreposição ou rolagem horizontal; palavras longas quebram.
 3. Toda mudança de tela traz capturas em 390×844 e 1440×900 (DPR 2) em cada tema que a rota aceita.
 4. Links internos, assets e redirecionamentos usam `import.meta.env.BASE_URL`; nunca `"/"` fixo.
@@ -165,35 +165,30 @@ Build e testes são necessários, não suficientes. Um cartão só está pronto 
 - legível com texto a 200% e com viewport de 320 px;
 - nenhuma rolagem horizontal.
 
-## 10. Divisão de trabalho
+## 10. Como trabalhamos juntos
 
-**Diego é dono** de (atualizado em 25/11, para dar a ele frentes inteiras sem conflito com os agentes):
+O site é um só produto: nenhuma página ou pasta é "do Diego" ou "dos agentes" para sempre. Cada implementação em andamento tem **um dono temporário** (uma pessoa ou um agente), e só ele edita aquele conjunto de arquivos até a entrega. Quem quer mexer em um conjunto que tem dono pede ao dono, não edita por cima. O Diego também pode propor e implementar melhorias por conta própria: abra o PR com o que, onde, por quê e captura.
 
-- as telas logadas `/app`: `web/src/paginas/rotina/**`, `desenvolvimento/**`, `comunidade/**`, `avisos/**`, `moderacao/**`, e os componentes só delas: `web/src/componentes/app/**`, `rotina/**`, `resumo-rotina/**`, `avisos/**`, `comunidade/**`, `moderacao/**`, além de `web/src/componentes/desenvolvimento/**` e `web/src/conteudo/desenvolvimento/**`;
-- as páginas de acesso: `web/src/paginas/conta/**` (Entrar, Criar conta, Recuperar acesso, Convite, Família, Conta) e `web/src/componentes/acesso/**`, `web/src/componentes/conta/**`;
-- os testes dessas telas e o polimento funcional e visual dentro desses escopos.
+- **Sem dono, sem conflito:** arquivos que ninguém está implementando agora estão livres; quem chegar primeiro assume o conjunto, avisa o Daniel e entrega por PR.
+- **Compartilhados:** os tokens (`web/src/styles/**`, `web/src/index.css`, `web/DESIGN.md`), a casca (`web/src/componentes/casca/**`, `Layout.tsx`, `base/`), CI e configuração (`.github/**`, `web/vite.config.ts`, `web/package.json` e o lock, `supabase/**`) mudam por pedido na descrição do PR, para que a mudança tenha um só autor por vez. O design system é um só para todas as telas; as telas só usam tokens.
+- **Merge nos dois sentidos, com frequência:** o time traz o `int/refazer` para `Diego` e leva o que o Diego entrega de volta. Se você commitar em `Diego`, não faça rebase nem force push: o merge preserva seus commits com o SHA e a autoria originais.
+- **Caminho:** trabalhe em `Diego` (ou `diego/<tema>`), abra PR contra `Diego`; o time revisa e integra no `int/refazer`; nada chega à `main` sem o Daniel.
+- **Autoria:** commits com o seu nome e e-mail; título em português com até 72 caracteres, iniciando em maiúscula, verbo no início. Os merges `Integra o int/refazer ...` e `Traz o int/refazer ...` são feitos pelo Daniel. **Aviso:** o cadastro da sua identidade na lista de autores de `scripts/verificar-commits.mjs` está no cartão AUTOR-DIEGO (t_3d92c3b7). Até ele entrar, a CI reprova os seus commits no passo de política de commits; isso é esperado e não é erro seu.
 
-**Reservado agora para outra frente:** a página pública Desenvolvimento (`web/src/paginas/publicas/Desenvolvimento.tsx`, `desenvolvimento.casa.test.tsx`, `web/src/componentes/desenvolvimento-casa/**` e `web/src/conteudo/casa/desenvolvimento.ts`) está em redesenho. Não edite esses arquivos até este guia liberar.
+### Donos temporários atuais
 
-**A equipe é dona** de:
+- **Início (composição) e páginas secundárias:** cartões COMP-PORT-b, COMP-PECAS, COMO, CUIDADO, PT e NF no Kanban.
+- **Desenvolvimento (página pública):** AGY-01, integrado a seguir.
+- **Demonstração interativa do celular:** briefing AGY-02, aberto para o Diego.
+- **Testes da CI:** F-CI (t_9a361698).
+- **Política de autores:** AUTOR-DIEGO (t_3d92c3b7).
 
-- as demais páginas públicas: Como funciona, Cuidado compartilhado, Sobre, Contato e 404 (`web/src/paginas/publicas/**` exceto Desenvolvimento, `web/src/componentes/como-casa/**`, `cuidado-casa/**`, `nao-encontrada-casa/**`, `publicas-texto/**`, `web/src/conteudo/casa/**` e `web/src/conteudo/publicas-texto.ts`; o texto legal continua só do Daniel);
-- a Home: `web/src/paginas/Inicio.tsx`, `web/src/componentes/inicio-casa/**`, `web/src/componentes/inicio/**`, `web/src/movimento/**`, `web/src/conteudo/inicio.ts` e as imagens da Home (`web/src/assets/cenas/inicio*/**`);
-- o design system compartilhado: `web/src/styles/**`, `web/src/index.css`, `web/src/main.tsx`, `web/DESIGN.md`, os tokens;
-- a casca e o layout compartilhados: `web/src/componentes/casca/**`, `web/src/componentes/Layout.tsx`, `web/src/componentes/base/**`, `web/src/componentes/campo/**`, `web/src/componentes/secoes/**`;
-- build, CI e configuração: `.github/**`, `web/vite.config.ts`, `web/package.json` e o lock, `web/build/**`, `supabase/**`;
-- masters e scripts de imagem: `web/scripts/ativos/**`, `web/assets-fonte/**`.
+### Melhorias que você pode pegar
 
-**Quando você precisa mudar algo da equipe,** escreva um pedido na descrição do seu PR (o que, onde, por quê, captura). Não edite o arquivo direto.
-
-**Caminho de contribuição:**
-
-1. Trabalhe na branch `Diego` (ou `diego/<tema>` saindo dela).
-2. Abra PR sempre contra `Diego`, nunca contra `main`.
-3. A equipe revisa e integra na branch de integração interna.
-4. Nada chega à `main` sem Daniel.
-
-**Dependências:** a nova composição da Home e uma possível mudança de paleta (decisão do Daniel) vão mexer nos tokens. Use só tokens, nunca cor crua, e a troca chega às suas páginas sem retrabalho. Imagens novas ou melhores (masters) chegam depois do gerador de imagens e entram pela equipe.
+- **Demonstração interativa do celular (front):** partes do briefing AGY-02 (`AGY_02_DEMO_TELEFONE/PROMPT.md`); combine com o Daniel quais partes antes de começar.
+- **Pendências visuais V-DES-1 a V-DES-3** das imagens da página Desenvolvimento.
+- **Login com Google:** as tarefas A do plano de login (código), no `PLANO.md` de PAGES_LOGIN_20261125.
+- **Telas logadas:** o polimento funcional e visual da seção 11.
 
 ## 11. Tarefas para começar agora
 

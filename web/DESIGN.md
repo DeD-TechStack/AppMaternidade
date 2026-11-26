@@ -514,4 +514,4 @@ Cada linha é uma regra que perdeu para o código na base (a003fe4, sem mudança
 - **Acordeão em Radix ou shadcn.** A FINAL §4. O código faz: botões nativos com `aria-expanded`, sem biblioteca, `Acordeao.tsx:16-40`.
 - **Registro de origem em `web/PROVENANCE.md`.** A FINAL §6 diz um arquivo só para as cenas. O código faz: um `PROVENANCE.md` por pasta de cena e de desenho (`web/public/cenas/*/PROVENANCE.md`, `web/public/ilustracoes/PROVENANCE.md`); o `web/PROVENANCE.md` cobre fontes, ícones, bibliotecas e movimento.
 
-Guia para quem contribui, com a divisão de trabalho e o caminho de PR: `docs/DIEGO.md`.
+Quem contribui: `docs/DIEGO.md` explica o caminho de PR e os donos temporários de cada implementação. O design system (tokens, tipografia, componentes) é um só para todas as telas; mudanças nele entram por pedido no PR, uma por vez, e as telas só usam tokens.
