@@ -118,7 +118,7 @@ describe('tipo: duas famílias só (DESIGN.md 2 e 8)', () => {
   })
 
   it('as fontes vêm do @fontsource-variable (Literata reta e itálica, Outfit), e as quatro antigas saíram', () => {
-    expect(indexCss).toContain("@import '@fontsource-variable/literata/wght.css';")
+    expect(indexCss).toContain("@import '@fontsource-variable/literata/opsz.css';")
     expect(indexCss).toContain("@import '@fontsource-variable/literata/wght-italic.css';")
     expect(indexCss).toContain("@import '@fontsource-variable/outfit/wght.css';")
     const dependencias = Object.keys(pacote.dependencies).join(' ')

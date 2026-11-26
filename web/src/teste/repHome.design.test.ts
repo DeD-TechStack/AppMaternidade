@@ -143,20 +143,14 @@ describe('REPH-I-17 display variants A/B/C and the M PLUS Rounded 1c package', (
     expect([...semComentarios(tokens).matchAll(/data-exibicao/g)]).toHaveLength(2)
   })
 
-  it('REPH-I-17 main.tsx reads ?exibicao=b|c once at boot, sets data-exibicao on html, and does not persist it', () => {
+  it('REPH-I-17 main.tsx no longer reads ?exibicao nor sets data-exibicao (C6)', () => {
     const principal = lerSrc('main.tsx')
-    expect(principal).toMatch(/URLSearchParams|searchParams/)
-    expect(principal).toMatch(/exibicao/)
-    expect(principal).toMatch(/['"]b['"]/)
-    expect(principal).toMatch(/['"]c['"]/)
-    expect(principal).toMatch(/dataset\.exibicao|setAttribute\(\s*['"]data-exibicao['"]/)
-    expect(principal).toMatch(/documentElement/)
-    const linhas = principal.split(/\r?\n/).filter((linha) => /exibicao/.test(linha))
-    expect(linhas.filter((linha) => /localStorage|sessionStorage|cookie/.test(linha))).toEqual([])
-    expect(linhas.length).toBeGreaterThan(0)
+    expect(principal).not.toMatch(/exibicao/)
+    expect(principal).not.toMatch(/URLSearchParams/)
+    expect(principal).not.toMatch(/dataset\./)
   })
 
-  it('REPH-I-17 @fontsource/m-plus-rounded-1c is 5.3.0 exactly, with only latin 700 and 800 imported, its licence copied and its PROVENANCE line written', () => {
+  it('REPH-I-17 @fontsource/m-plus-rounded-1c is 5.3.0 exactly, no longer imported by index.css, its licence copied and its PROVENANCE line written', () => {
     const pacote = JSON.parse(lerWeb('package.json')) as { dependencies?: Record<string, string> }
     expect(pacote.dependencies?.[PACOTE_FONTE]).toBe('5.3.0')
     const trava = JSON.parse(lerWeb('package-lock.json')) as { packages?: Record<string, { version?: string }> }
@@ -182,10 +176,9 @@ describe('REPH-I-17 display variants A/B/C and the M PLUS Rounded 1c package', (
     expect(linha).toMatch(/700/)
     expect(linha).toMatch(/800/)
 
-    // Only the latin 700 and 800 files are imported.
+    // C6: index.css no longer imports the package (the B variant is gone from the page).
     const css = lerSrc('index.css')
-    const importados = [...css.matchAll(/['"]([^'"]*m-plus-rounded-1c[^'"]*)['"]/g)].map((m) => m[1]).sort()
-    expect(importados).toEqual([`${PACOTE_FONTE}/latin-700.css`, `${PACOTE_FONTE}/latin-800.css`])
+    expect(css).not.toMatch(/m-plus-rounded-1c/)
   })
 
   it('REPH-I-17 the meter FONTES allow-list names M PLUS Rounded 1c next to Literata and Outfit', () => {
