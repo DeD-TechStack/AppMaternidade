@@ -43,6 +43,8 @@ const PAGINAS = [
 ]
 const LARGURAS = [390, 768, 1024, 1440]
 const TELA_DE_ACESSO = '/entrar'
+/** As seis páginas de leitura longa: o h1 delas é o de `titulo-1` desde F8-1 (as outras páginas seguem em `exibicao`). */
+const PAGINAS_DE_LEITURA = ['/privacidade', '/termos', '/regras-da-comunidade', '/exclusao-de-conta', '/sobre', '/contato']
 
 interface Acento {
   tag: string
@@ -456,10 +458,17 @@ describe('TYPE-1: a escala de tipo medida no Chrome', () => {
     async () => {
       const medidas = await medirTudo()
       for (const caminho of PAGINAS) {
-        const minimo: Array<[number, number]> = [
-          [1440, 72],
-          [390, 40],
-        ]
+        // F8-1 (troca a S-21): o h1 das seis páginas de leitura é o de `titulo-1` (48 em 1440, 34 em 390), numa abertura
+        // compacta; as demais páginas seguem em `exibicao`.
+        const minimo: Array<[number, number]> = PAGINAS_DE_LEITURA.includes(caminho)
+          ? [
+              [1440, 48],
+              [390, 34],
+            ]
+          : [
+              [1440, 72],
+              [390, 40],
+            ]
         for (const [largura, tamanhoMinimo] of minimo) {
           const m = medida(medidas, caminho, largura)
           expect(m.h1, `${caminho}: sem h1 em ${largura}`).not.toBeNull()

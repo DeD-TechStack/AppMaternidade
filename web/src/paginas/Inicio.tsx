@@ -1,4 +1,4 @@
-import { useLayoutEffect, useRef, type CSSProperties } from 'react'
+import { useLayoutEffect, useRef, useSyncExternalStore, type CSSProperties } from 'react'
 import { AcoesDoHeroi } from '../componentes/inicio-casa/AcoesDoHeroi.tsx'
 import { FaixaNoite } from '../componentes/inicio-casa/FaixaNoite.tsx'
 import { FaixaSozinho } from '../componentes/inicio-casa/FaixaSozinho.tsx'
@@ -6,16 +6,16 @@ import { FaixaTela } from '../componentes/inicio-casa/FaixaTela.tsx'
 import { ID_FAIXA_NOITE, ID_FAIXA_SO, ID_FAIXA_TELA, ID_TITULO } from '../componentes/inicio-casa/ids.ts'
 import { LegendaAssinada } from '../componentes/inicio-casa/LegendaAssinada.tsx'
 import {
+  A05_RUA,
   CAPTURA_NOTAS,
+  LUZ_A05,
   LUZ_M05,
   LUZ_M05_390,
-  LUZ_M11,
   M05,
   M05_390,
   M05_CHAO,
   M05_COSTURA,
   M05_LARGURA,
-  M11_JANELA,
   MOLDURA_DIA,
   PORTA_NOITE,
 } from '../componentes/inicio-casa/midia.ts'
@@ -38,6 +38,38 @@ import { usePalcoFixo } from '../movimento/troca/usarPalco.ts'
 // the page sheet.
 import '../componentes/inicio-casa/inicio-faixas.css'
 import '../componentes/inicio-casa/inicio-casa.css'
+
+/** The text size the room is drawn for (WCAG 1.4.4): the lede needs two lines only at a 16 px root. */
+const RAIZ_DA_SALA_PX = 16
+
+function assinarTexto(aviso: () => void): () => void {
+  if (typeof window === 'undefined') return () => {}
+  // A change of the browser text size reflows the page without a change of width, so `resize` alone would miss it: the root's
+  // box is watched too (where the browser has the observer).
+  window.addEventListener('resize', aviso)
+  const observador = typeof ResizeObserver === 'undefined' ? undefined : new ResizeObserver(aviso)
+  observador?.observe(document.documentElement)
+  return () => {
+    window.removeEventListener('resize', aviso)
+    observador?.disconnect()
+  }
+}
+
+/** Whether the root text is above 16 px: what the stylesheet reads as `1rem - 16px` in its hand-over container query. */
+function lerTextoGrande(): boolean {
+  if (typeof window === 'undefined' || typeof window.getComputedStyle !== 'function') return false
+  const tamanho = Number.parseFloat(window.getComputedStyle(document.documentElement).fontSize)
+  return Number.isFinite(tamanho) && tamanho > RAIZ_DA_SALA_PX
+}
+
+/**
+ * True while the root text is above 16 px (17 to 32 px at 200 %). The room is then not drawn: inicio-casa.css hands the hero
+ * over to the stacked flow on every window width, and this flag makes the page render the DOM that flow lays out (the stage
+ * in the hero, no room layers), so the two agree in every state. NaN, an empty value or no window read as 16 px.
+ */
+function useTextoGrande(): boolean {
+  return useSyncExternalStore(assinarTexto, lerTextoGrande, () => false)
+}
 
 /**
  * Band 5 (HOME-SECOND-HALF): the statement on the rug, with the Notas capture standing on the band's bottom edge. The
@@ -74,16 +106,20 @@ function ProvaDaCasa() {
  * the first screen); 2 the night (M06), which in the room composition (1180 px and more, landscape: `useSala`) is the
  * pinned stage of moment 2 with the first screen in it; 3 the hour as type, with the second framed screen on the band's
  * bottom edge; 4 the lone carer, the mat cut by the band line; 5 the statement on the rug and the Notas screen; 6 the
- * questions, with the night door field on the band's bottom and the right window edge; 7 the night closing, with M11
- * (the street, its panes lit once) on the band's bottom edge. No band has a floor strip.
+ * questions, with the night door field on the band's bottom and the right window edge; 7 the night closing, with A05
+ * (the street, edge to edge, its windows lit once) on the band's bottom edge. No band has a floor strip.
  * Every string comes from conteudo/inicio.ts; this file and the page folders write no text of their own.
  *
  * The header pill belongs to the shell; the page only says whether its hero pill is in view (`data-inicio-heroi` on
  * <html>, set by `useGanchoDoCabecalho`), and the page stylesheet inicio-casa.css quiets the shell's pill from it.
  */
 export function Inicio() {
-  const larga = useSala()
-  const fixo = usePalcoFixo()
+  // The room composition needs the room window AND a 16 px root: with larger text the hero leaves the room (rule W1, see the
+  // hand-over in inicio-casa.css), so `larga` is false there and the stacked DOM renders.
+  const sala = useSala()
+  const textoGrande = useTextoGrande()
+  const larga = sala && !textoGrande
+  const fixo = usePalcoFixo() && larga
   useGanchoDoCabecalho(larga)
 
   return (
@@ -167,20 +203,21 @@ export function Inicio() {
         <FaixaInteira fundo="cacau">
           <div className="ic-fecho">
             <Fechamento titulo={INI.h2Fecho} acao={{ rotulo: INI.cta3, para: INI_ROTAS.criarConta }} tom="noite" />
-            {/* Decorative: the heading above it already says the night is noted; the street only closes the house. Its
-                panes come on once (M11: opacity, `--luz-fecho-ms` from the catalogue) at 60 % in view, and rest lit. */}
+            {/* Decorative: the heading above it already says the night is noted; the street only closes the house. It runs
+                edge to edge and stands on the band's bottom edge, which is the footer's top. Its windows come on once (A05:
+                opacity, `--luz-fecho-ms` from the catalogue's M11 time) at 60 % in view, and rest lit. */}
             <figure className="ic-fecho-cena" style={{ '--luz-fecho-ms': `${CATALOGO.M11.duracaoMs}ms` } as CSSProperties}>
               <img
-                src={M11_JANELA.src}
-                srcSet={M11_JANELA.srcSet}
-                sizes={M11_JANELA.sizes}
-                width={M11_JANELA.largura}
-                height={M11_JANELA.altura}
+                src={A05_RUA.src}
+                srcSet={A05_RUA.srcSet}
+                sizes={A05_RUA.sizes}
+                width={A05_RUA.largura}
+                height={A05_RUA.altura}
                 alt=""
                 loading="lazy"
                 decoding="async"
               />
-              <LuzDaLampada luz={LUZ_M11} memoria="casa-luz-m11" gatilho="vista" limiar={0.6} />
+              <LuzDaLampada luz={LUZ_A05} memoria="casa-luz-a05" gatilho="vista" limiar={0.6} />
             </figure>
           </div>
         </FaixaInteira>

@@ -145,7 +145,7 @@ describe('limites do reset de rolagem', () => {
 
 describe('cabeçalho público', () => {
   it('tem o nome do site, os quatro links, Entrar e o primário "Criar conta"', async () => {
-    const { container } = renderizarRota('/sobre', { sessao: null })
+    const { container } = renderizarRota('/cuidado-compartilhado', { sessao: null })
     // Os links de visitante seguem a sessão: só aparecem depois que ela termina de carregar.
     await aguardarCarga()
     const cabecalho = container.querySelector<HTMLElement>('header[data-cabecalho]')!
