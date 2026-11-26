@@ -6,8 +6,15 @@
 
 import { spawnSync } from 'node:child_process'
 
-const AUTOR_NOME = 'Daniel Macedo'
-const AUTOR_EMAIL = 'danielmacedosilva11@gmail.com'
+// Autores permitidos: nome E e-mail juntos precisam bater com uma entrada.
+// O primeiro é Daniel, o único aceito como autor e committer dos merges.
+const AUTORES_PERMITIDOS = [
+  { nome: 'Daniel Macedo', email: 'danielmacedosilva11@gmail.com' },
+  // Diego Silva Prado (usuário GitHub Pradixx). Usa o e-mail noreply do GitHub; o e-mail
+  // real dele pode ser acrescentado a esta lista depois.
+  { nome: 'Diego Silva Prado', email: '114458215+Pradixx@users.noreply.github.com' },
+]
+const DANIEL = AUTORES_PERMITIDOS[0]
 const LIMITE_TITULO = 72
 // Único merge aceito: 2 pais e título com um destes prefixos (autor e committer = Daniel).
 const PREFIXOS_MERGE = ['Traz o int/refazer', 'Integra o int/refazer']
@@ -96,10 +103,18 @@ for (const sha of commits) {
   const mergeAprovado =
     quantidadePais === 2 && MERGES_APROVADOS.some((aprovado) => aprovado.sha === sha)
 
-  if (nome !== AUTOR_NOME || email !== AUTOR_EMAIL) {
-    regras.push('autor')
-  } else if ((mergeAceito || mergeAprovado) && (nomeCommitter !== AUTOR_NOME || emailCommitter !== AUTOR_EMAIL)) {
-    // O committer só é conferido nos merges aceitos.
+  const ehMergeAceito = mergeAceito || mergeAprovado
+  if (ehMergeAceito) {
+    // Nos merges aceitos, autor e committer precisam ser exatamente o Daniel.
+    if (
+      nome !== DANIEL.nome ||
+      email !== DANIEL.email ||
+      nomeCommitter !== DANIEL.nome ||
+      emailCommitter !== DANIEL.email
+    ) {
+      regras.push('autor')
+    }
+  } else if (!AUTORES_PERMITIDOS.some((a) => a.nome === nome && a.email === email)) {
     regras.push('autor')
   }
 
