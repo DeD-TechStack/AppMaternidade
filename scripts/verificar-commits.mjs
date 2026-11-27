@@ -9,6 +9,20 @@ import { spawnSync } from 'node:child_process'
 const AUTOR_NOME = 'Daniel Macedo'
 const AUTOR_EMAIL = 'danielmacedosilva11@gmail.com'
 const LIMITE_TITULO = 72
+// Exceção aprovada em 20/11 (PAGES, comentário 2942): apenas o comprimento do
+// título destes commits já publicados. O intervalo e as demais regras não mudam.
+const TITULOS_HISTORICOS_LONGOS = new Set([
+  '3ed702da371db7628bcd7f67622e18aaf64979ea',
+  '65f13bcbf2c14478b92ccf6c3515bb16f848a6e6',
+  '751586dd479a559539f7c36eca994d83d6020e72',
+  'baf3d5df7d499a8dc6319a1338280acf61ba03d5',
+  'c1a71192c4e273e5237e4a3ffae8e9bd7b2f0b8b',
+  '8fc6b72bb868d51668c840c930305efb12d594f2',
+  '21f5bd26f49bafb26747dfcb49eaa2d79717d9f9',
+  '2c1faeb17cc2af4707ea0b71807c508f7a754fe0',
+  'f7d0f4c36b0723a878899d51ce7189956c968d70',
+  '7274aa93d348e637e6f04ded587950baccf264d9',
+])
 
 function erro(mensagem) {
   process.stderr.write(`erro: ${mensagem}\n`)
@@ -91,7 +105,9 @@ for (const sha of commits) {
   if (titulo === '') {
     regras.push('título vazio')
   } else {
-    if ([...titulo].length > LIMITE_TITULO) regras.push('título longo')
+    if ([...titulo].length > LIMITE_TITULO && (merge || !TITULOS_HISTORICOS_LONGOS.has(sha))) {
+      regras.push('título longo')
+    }
     if (!/^\p{Lu}/u.test(titulo)) regras.push('maiúscula')
   }
 

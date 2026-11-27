@@ -8,8 +8,8 @@
 // 2 em erro de uso ou em rota obrigatória ausente. Só Node, sem dependências.
 //
 // Gancho só para o teste (controle negativo): a variável de ambiente
-// MONTAR_PAGES_TESTE_MUTAR=<caminho relativo> inverte um byte desse arquivo da raiz em --saida,
-// entre a cópia e a conferência final, para provar que a conferência reprova. Não use fora do teste.
+// MONTAR_PAGES_TESTE_MUTAR=<caminho relativo> inverte um byte desse arquivo da raiz em --saida
+// (ou cria o arquivo se ausente), antes da conferência final. Não use fora do teste.
 
 import { createHash } from 'node:crypto'
 import {
@@ -157,6 +157,35 @@ function marcarComoPrevia(original, selo, rotulo) {
   return texto.slice(0, posCabeca) + ROBOTS + texto.slice(posCabeca, fim) + selo + texto.slice(fim)
 }
 
+// O Vite publica a entrada em <base>/assets/. Aceita só bases locais canônicas;
+// nenhum dado da URL visitada participa dos caminhos ou do HTML gerado.
+function baseDoBuild(documento, rotulo) {
+  const entrada = /<script\b(?=[^>]*\btype=["']module["'])[^>]*\bsrc=["']([^"']+)["'][^>]*>/i.exec(documento)
+  const base = entrada && /^((?:\/[\w.-]+)*\/)assets\/[\w.-]+\.js$/.exec(entrada[1])
+  if (!base || base[1].split('/').some((parte) => parte === '.' || parte === '..')) {
+    falhar(1, `${rotulo} não tem entrada Vite com base local canônica`)
+  }
+  return base[1]
+}
+
+function montarFallback(raizHtml, previaHtml) {
+  const base = baseDoBuild(raizHtml, '404.html da raiz')
+  const basePrevia = baseDoBuild(previaHtml, '404.html da prévia')
+  if (basePrevia !== `${base}previa/`) falhar(1, 'a base da prévia não corresponde à raiz + previa/')
+  // Script externo síncrono: o parser recebe o documento escolhido, com a CSP
+  // original antes de qualquer bundle. Não há fetch, redirect, eval ou HTML de URL.
+  // document.write é deliberado aqui: é a entrada do parser, nunca um callback async.
+  const bootstrap = `const prefixo = ${JSON.stringify(basePrevia)};\n` +
+    'const previa = location.pathname === prefixo.slice(0, -1) || location.pathname.startsWith(prefixo);\n' +
+    `document.write(previa ? ${JSON.stringify(previaHtml)} : ${JSON.stringify(raizHtml)});\n`
+  // O charset precisa preceder o script clássico: sem cabeçalho HTTP, ele também
+  // define a decodificação dos documentos UTF-8 embutidos no bootstrap.
+  return {
+    '404.html': `<!doctype html>\n<meta charset="UTF-8">\n<script src="${base}pages-fallback.js"></script>\n`,
+    'pages-fallback.js': bootstrap,
+  }
+}
+
 const args = lerArgumentos(process.argv.slice(2))
 const raiz = resolve(args.raiz)
 const previa = resolve(args.previa)
@@ -171,6 +200,10 @@ exigirPasta(previa, '--previa')
 exigirPasta(rotasDir, '--rotas')
 if (existsSync(saida) && readdirSync(saida).length > 0) falhar(2, `--saida precisa estar vazia: ${saida}`)
 if (existsSync(join(raiz, 'previa'))) falhar(2, '--raiz já tem uma pasta previa/, que colidiria com a prévia')
+if (existsSync(join(raiz, 'pages-fallback.js'))) falhar(2, '--raiz já tem pages-fallback.js')
+for (const [pasta, rotulo] of [[raiz, 'raiz'], [previa, 'prévia']]) {
+  if (!existsSync(join(pasta, '404.html'))) falhar(1, `${rotulo} não tem 404.html`)
+}
 
 // Rotas primeiro: se faltar uma obrigatória, nada é escrito.
 const rotas = coletarRotas(rotasDir)
@@ -187,7 +220,7 @@ cpSync(previa, saidaPrevia, { recursive: true })
 
 // (c) robots e selo em todo .html da prévia.
 const selo =
-  '<div data-previa role="note" aria-label="Prévia do site em construção" style="position:fixed;bottom:8px;left:8px;z-index:2147483647;font:600 12px/1.2 system-ui,sans-serif;background:#2B2320;color:#FFF7EC;padding:4px 8px;border-radius:4px;pointer-events:none">Prévia · ' +
+  '<div data-previa role="note" aria-label="Prévia do site em construção">Prévia · ' +
   sha7 +
   '</div>'
 const arquivosPrevia = listarArquivos(saidaPrevia)
@@ -211,12 +244,15 @@ for (const rota of rotas) {
   rotasEscritas.push(rota)
 }
 
+// (e) Pages só consulta o 404 da raiz. Estas são as únicas exceções de integridade.
+const geradosRaiz = montarFallback(readFileSync(join(raiz, '404.html'), 'utf8'), readFileSync(join(saidaPrevia, '404.html'), 'utf8'))
+for (const [rel, conteudo] of Object.entries(geradosRaiz)) writeFileSync(join(saida, rel), conteudo, 'utf8')
+
 // Gancho do teste: estraga um byte da raiz antes da conferência.
 const mutar = process.env.MONTAR_PAGES_TESTE_MUTAR
 if (mutar) {
   const alvo = caminhoReal(saida, mutar)
-  if (!existsSync(alvo)) falhar(2, `MONTAR_PAGES_TESTE_MUTAR aponta para arquivo inexistente: ${mutar}`)
-  const bytes = readFileSync(alvo)
+  const bytes = existsSync(alvo) ? readFileSync(alvo) : Buffer.alloc(0)
   if (bytes.length === 0) writeFileSync(alvo, Buffer.from([0x01]))
   else {
     bytes[0] ^= 0xff
@@ -229,18 +265,28 @@ const arquivosRaiz = listarArquivos(raiz)
 const linhas = []
 for (const rel of arquivosRaiz) {
   const original = hashArquivo(caminhoReal(raiz, rel))
+  const esperado = Object.hasOwn(geradosRaiz, rel)
+    ? createHash('sha256').update(geradosRaiz[rel], 'utf8').digest('hex')
+    : original
   const copia = caminhoReal(saida, rel)
   if (!existsSync(copia)) falhar(1, `arquivo da raiz ausente na saída: ${rel}`)
-  if (hashArquivo(copia) !== original) falhar(1, `arquivo da raiz diferente na saída: ${rel}`)
+  if (hashArquivo(copia) !== esperado) falhar(1, `arquivo da raiz diferente na saída: ${rel}`)
   linhas.push(`${rel} ${original}\n`)
 }
 const naRaizDaSaida = listarArquivos(saida).filter((rel) => rel !== 'previa' && !rel.startsWith('previa/'))
-const conhecidos = new Set(arquivosRaiz)
+for (const [rel, conteudo] of Object.entries(geradosRaiz)) {
+  const copia = join(saida, rel)
+  if (!existsSync(copia) || !readFileSync(copia).equals(Buffer.from(conteudo, 'utf8'))) {
+    falhar(1, `artefato gerado diferente na saída: ${rel}`)
+  }
+}
+const conhecidos = new Set([...arquivosRaiz, ...Object.keys(geradosRaiz)])
 for (const rel of naRaizDaSaida) {
   if (!conhecidos.has(rel)) falhar(1, `arquivo a mais na raiz da saída: ${rel}`)
 }
 
 const resumo = {
+  raizExcecoes: Object.keys(geradosRaiz),
   raizArquivos: arquivosRaiz.length,
   raizSha256: createHash('sha256').update(linhas.sort().join(''), 'utf8').digest('hex'),
   previaArquivos: listarArquivos(saidaPrevia).length,

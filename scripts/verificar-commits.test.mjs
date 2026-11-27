@@ -6,7 +6,7 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { spawnSync } from 'node:child_process'
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -64,7 +64,7 @@ function criarRepo(t) {
   }
 
   function verificar(...argumentos) {
-    const r = spawnSync(process.execPath, [SCRIPT, ...argumentos], {
+    const r = spawnSync(process.execPath, [opcoesVerificar.script ?? SCRIPT, ...argumentos], {
       cwd: opcoesVerificar.cwd ?? repo,
       encoding: 'utf8',
       env: ambiente,
@@ -199,6 +199,41 @@ test('12. título de 73 pontos de código reprova em título longo', (t) => {
   const saida = r.verificar(`${r.base}..HEAD`)
   assert.equal(saida.status, 1)
   assert.deepEqual(regras(saida.stderr), ['título longo'])
+})
+
+// Exercita o CLI real em um histórico descartável sem abrir um gancho no script de produção.
+function usarCopiaComExcecaoHistorica(r, sha) {
+  const copia = join(r.pasta, 'verificar-commits-copia.mjs')
+  const original = readFileSync(SCRIPT, 'utf8')
+  writeFileSync(copia, original.replace('3ed702da371db7628bcd7f67622e18aaf64979ea', sha))
+  r.opcoesVerificar.script = copia
+}
+
+test('12a. só o SHA histórico exato passa, não outro commit com o mesmo título', (t) => {
+  const r = criarRepo(t)
+  const titulo = 'Registra ' + 'a'.repeat(65)
+  r.alterar()
+  const historico = r.commitar(titulo)
+  usarCopiaComExcecaoHistorica(r, historico)
+  const aceito = r.verificar(`${r.base}..HEAD`)
+  assert.equal(aceito.status, 0, aceito.stderr)
+
+  r.alterar()
+  const novo = r.commitar(titulo)
+  const recusado = r.verificar(`${r.base}..HEAD`)
+  assert.equal(recusado.status, 1)
+  assert.equal(recusado.stderr, `${novo.slice(0, 12)} título longo: ${titulo}\n`)
+})
+
+test('12b. SHA histórico continua reprovando autor, commit vazio e título minúsculo', (t) => {
+  const r = criarRepo(t)
+  const sha = r.commitar('registra ' + 'a'.repeat(65), {
+    autor: { nome: DANIEL.nome, email: 'outro@exemplo.invalid' },
+  }, ['--allow-empty'])
+  usarCopiaComExcecaoHistorica(r, sha)
+  const saida = r.verificar(`${r.base}..HEAD`)
+  assert.equal(saida.status, 1)
+  assert.deepEqual(regras(saida.stderr), ['autor', 'vazio', 'maiúscula'])
 })
 
 test('13. merge reprova em merge', (t) => {
