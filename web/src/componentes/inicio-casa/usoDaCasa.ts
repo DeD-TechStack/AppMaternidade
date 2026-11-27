@@ -1,41 +1,6 @@
-import { useLayoutEffect, useSyncExternalStore } from 'react'
+import { useLayoutEffect } from 'react'
 
-// Two page-owned hooks of the Início: the composition switch (the room of RECUT §2-§3, where the stage is built as a
-// fixed composition) and the mark on <html> that quiets the shell's header pill.
-
-/**
- * The room needs about 1180 px of width (the plate, the seam and the 388 px night column inside the quadro) and a
- * landscape window. Below it, and on any portrait window (1024 x 1366), the page is the stacked composition. The same
- * query is written literally in inicio-casa.css (CSS has no variable in a media query).
- */
-const CONSULTA_SALA = '(min-width: 1180px) and (min-aspect-ratio: 1/1)'
-const CONSULTA_LARGA = CONSULTA_SALA
-
-function temMatchMedia(): boolean {
-  return typeof window !== 'undefined' && typeof window.matchMedia === 'function'
-}
-
-function assinar(aviso: () => void): () => void {
-  if (!temMatchMedia()) return () => {}
-  const lista = window.matchMedia(CONSULTA_LARGA)
-  if (typeof lista.addEventListener === 'function') {
-    lista.addEventListener('change', aviso)
-    return () => lista.removeEventListener('change', aviso)
-  }
-  if (typeof lista.addListener === 'function') {
-    lista.addListener(aviso)
-    return () => lista.removeListener(aviso)
-  }
-  return () => {}
-}
-
-const ler = () => (temMatchMedia() ? window.matchMedia(CONSULTA_LARGA).matches : false)
-const semJanela = () => false
-
-/** True where the room composition stands (`CONSULTA_SALA`). Without matchMedia (plain jsdom) the stacked one stands. */
-export function useSala(): boolean {
-  return useSyncExternalStore(assinar, ler, semJanela)
-}
+// The page-owned hook of the Início: the mark on <html> that quiets the shell's header pill.
 
 /** The hero pill, the one filled action of the first fold at every width (under the value sentence). */
 const PILULA_DO_HEROI = '[data-cena-heroi] a[data-botao-mel]'

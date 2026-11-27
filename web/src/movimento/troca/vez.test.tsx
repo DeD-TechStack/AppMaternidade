@@ -1,6 +1,6 @@
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs'
 import { join } from 'node:path'
-import { act } from '@testing-library/react'
+import { act, within } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { INI } from '../../conteudo/inicio.ts'
 import { aguardarCarga, renderizarRota } from '../../teste/renderizarRota.tsx'
@@ -367,46 +367,33 @@ async function abrir(opcoes: { largura: number; altura?: number; reduzido?: bool
   return resultado
 }
 
-// The track stands at TOPO_DA_FAIXA in the document, ALTURA_DA_FAIXA tall, over a stage ALTURA_DO_PALCO tall: D is the
-// difference (720, the 1440 x 900 pin), measured from the two rects the way the driver measures it.
-const TOPO_DA_FAIXA = 2000
-const ALTURA_DA_FAIXA = 1500
-const ALTURA_DO_PALCO = 780
-let rolagem = 0
+// COMP-PORT: the Início no longer builds a stage in script. Scenes 1 to 3 are one strip that CSS pins and walks with scroll
+// timelines (composicao.css), so what the page renders in jsdom is the same still DOM in every window. Everything the
+// retired stage wrote (the marker, the twin row, the night sheet, the caption swap, the lamp state) is gone from it.
+const SOBRAS_DO_PALCO = [
+  '[data-vez]',
+  '[data-vez-caixa]',
+  '[data-vez-tela]',
+  '[data-troca-palco]',
+  '[data-troca-fixo]',
+  '[data-troca-noite]',
+  '[data-troca-legenda]',
+  '[data-troca-gemea-acao]',
+  '[data-troca-gemea-tela]',
+  '[data-troca-gemea-arte]',
+  '[data-troca-lado]',
+  '[data-troca-visivel]',
+  '[data-luz-estado]',
+  '[data-luz-direto]',
+  '.ic-estagio',
+  '.ic-palco',
+  '.ic-gemea',
+  '.ic-folha',
+  '.ic-medida',
+  '.ic-m06',
+]
 
-const faixaDaNoite = () => principal().querySelector<HTMLElement>("[data-faixa][aria-labelledby='ic-noite']")!
-const palco = () => principal().querySelector<HTMLElement>('.ic-estagio')!
-
-async function modelar(altura = 900) {
-  rolagem = 0
-  Object.defineProperty(document.documentElement, 'scrollTop', { configurable: true, get: () => rolagem })
-  Object.defineProperty(document.documentElement, 'clientHeight', { configurable: true, value: altura })
-  const faixa = faixaDaNoite()
-  Object.defineProperty(faixa, 'offsetTop', { configurable: true, value: TOPO_DA_FAIXA })
-  Object.defineProperty(faixa, 'clientHeight', { configurable: true, value: ALTURA_DA_FAIXA })
-  const retangulo = (top: number, height: number) =>
-    ({ top, bottom: top + height, left: 0, right: 1440, width: 1440, height, x: 0, y: top, toJSON: () => ({}) }) as DOMRect
-  palco().getBoundingClientRect = () => retangulo(24, ALTURA_DO_PALCO)
-  faixa.getBoundingClientRect = () => retangulo(TOPO_DA_FAIXA - rolagem, ALTURA_DA_FAIXA)
-  Object.defineProperty(palco(), 'clientWidth', { configurable: true, value: 1440 })
-  Object.defineProperty(principal().querySelector('.ic-medida')!, 'offsetLeft', { configurable: true, value: 553 })
-  palco().style.top = '24px'
-  await act(async () => {
-    window.dispatchEvent(new Event('resize'))
-  })
-}
-
-/** Scrolls so that the pin is at p (the track top is at the sticky top 24 less p x D). */
-async function irParaP(p: number, esperaMs = 60) {
-  const distancia = ALTURA_DA_FAIXA - ALTURA_DO_PALCO
-  rolagem = TOPO_DA_FAIXA - (24 - p * distancia)
-  await act(async () => {
-    window.dispatchEvent(new Event('scroll'))
-    await new Promise((resolver) => setTimeout(resolver, esperaMs))
-  })
-}
-
-const textoDaLegenda = () => colapsar(principal().querySelector('[data-troca-legenda]')?.textContent ?? '')
+const PILULA_DO_HEROI = '[data-cena-heroi] a[data-botao-mel]'
 
 beforeEach(() => {
   ObservadorFalso.todos = []
@@ -424,158 +411,103 @@ afterEach(() => {
   Object.defineProperty(window, 'matchMedia', { configurable: true, writable: true, value: MATCHMEDIA_ORIGINAL })
 })
 
-describe('U6 markup at 1440 x 900: two markers, the overlay after the day frame, the twin row inside the night frame, one button', () => {
-  it('has exactly two [data-vez] in the stage, one in the overlay and one in the twin', async () => {
+describe('U6 the page at 1440 x 900 carries no stage: no marker, overlay, twin row, night sheet or frame buttons', () => {
+  it('none of the nodes the retired stage wrote is in the page, and the strip is the three panels of the composition', async () => {
     await abrir({ largura: 1440 })
-    expect(palco().querySelectorAll('[data-vez]')).toHaveLength(2)
-    expect(palco().querySelectorAll('[data-vez-caixa] [data-vez-tela] [data-vez]')).toHaveLength(1)
-    expect(palco().querySelectorAll('.ic-gemea [data-vez-tela] [data-vez]')).toHaveLength(1)
+    for (const seletor of SOBRAS_DO_PALCO) expect(principal().querySelector(seletor), seletor).toBeNull()
+    expect([...principal().querySelectorAll('.co-fita > .co-painel')].map((p) => p.className.split(' ').find((c) => /^co-p\d$/.test(c)))).toEqual([
+      'co-p1',
+      'co-p2',
+      'co-p3',
+    ])
   })
 
-  it('the overlay [data-vez-caixa] follows the day figure[data-produto-moldura] and precedes [data-troca-noite]; it is a .cm-produto-moldura', async () => {
-    await abrirJanelaPronta()
-    const caixa = palco().querySelector<HTMLElement>('[data-vez-caixa]')!
-    expect(caixa.classList.contains('cm-produto-moldura')).toBe(true)
-    const dia = palco().querySelector<HTMLElement>('figure[data-produto-moldura]')!
-    const folha = palco().querySelector<HTMLElement>('[data-troca-noite]')!
-    expect(dia.nextElementSibling).toBe(caixa)
-    expect(caixa.nextElementSibling).toBe(folha)
+  it('the three strings of the old twin row (INI.acaoTela1, inicialTela1, detalheTela1) are not rendered and no button names them', async () => {
+    await abrir({ largura: 1440 })
+    const texto = colapsar(principal().textContent ?? '')
+    for (const antigo of [INI.acaoTela1, INI.inicialTela1, INI.detalheTela1]) expect(texto).not.toContain(antigo)
+    expect(within(principal()).queryAllByRole('button', { name: INI.acaoTela1 })).toHaveLength(0)
+    expect(principal().querySelectorAll('button')).toHaveLength(0)
   })
 
-  it('in .ic-gemea the order is: capture, [data-vez-tela], raster, twin row', async () => {
-    await abrirJanelaPronta()
-    const gemea = palco().querySelector<HTMLElement>('.ic-gemea')!
-    const ordem = [...gemea.children].map((no) => {
-      if (no.hasAttribute('data-troca-gemea-tela')) return 'captura'
-      if (no.hasAttribute('data-vez-tela')) return 'vez'
-      if (no.hasAttribute('data-troca-gemea-arte')) return 'moldura'
-      if (no.hasAttribute('data-troca-gemea-acao')) return 'acao'
-      return 'outro'
-    })
-    expect(ordem).toEqual(['captura', 'vez', 'moldura', 'acao'])
-  })
-
-  it('every new node is a decoration or an aria-hidden duplicate: the overlay, the holes, the markers, the twin row (inside the aria-hidden sheet)', async () => {
-    await abrirJanelaPronta()
-    for (const caixa of palco().querySelectorAll('[data-vez-caixa], [data-vez-tela]')) expect(caixa.getAttribute('aria-hidden')).toBe('true')
-    const acao = palco().querySelector<HTMLElement>('[data-troca-gemea-acao]')!
-    expect(acao.closest("[aria-hidden='true']")).not.toBeNull()
-    expect(palco().querySelector('[data-troca-gemea-acao] button, [data-troca-gemea-acao] a')).toBeNull()
-  })
-
-  it('the twin row carries the three INI strings and nothing else', async () => {
-    await abrirJanelaPronta()
-    const acao = palco().querySelector<HTMLElement>('[data-troca-gemea-acao]')!
-    expect(colapsar(acao.querySelector('[data-troca-gemea-rotulo]')!.textContent ?? '')).toBe(INI.acaoTela1)
-    expect(colapsar(acao.querySelector("[data-troca-gemea-estado='inicial']")!.textContent ?? '')).toBe(INI.inicialTela1)
-    expect(colapsar(acao.querySelector("[data-troca-gemea-estado='detalhe']")!.textContent ?? '')).toBe(INI.detalheTela1)
-    expect(colapsar(acao.textContent ?? '')).toBe(`${INI.acaoTela1}${INI.inicialTela1}${INI.detalheTela1}`)
-  })
-
-  it('the accessibility tree keeps ONE button named "Explorar a tela"', async () => {
-    await abrirJanelaPronta()
-    const { getAllByRole } = await import('@testing-library/react').then((m) => m.within(principal()))
-    expect(getAllByRole('button', { name: INI.acaoTela1 })).toHaveLength(1)
+  it('the Histórico capture of scene 2 is a plain picture: not a button, not a toggle, not scrollable by the reader', async () => {
+    await abrir({ largura: 1440 })
+    const fone = principal().querySelector<HTMLElement>('.co-p2-fone')!
+    expect(fone.querySelector('img')!.getAttribute('alt')).toBe(INI.altTela1)
+    expect(fone.querySelector('button, [aria-pressed], [role="button"], [tabindex]')).toBeNull()
   })
 })
 
-async function abrirJanelaPronta() {
-  return abrir({ largura: 1440 })
-}
-
-describe('U7 markup at 390 x 844: the stacked frame holds the figure then one overlay with one marker', () => {
-  it('has .ic-palco > figure[data-produto-moldura] followed by one [data-vez-caixa] with one [data-vez]', async () => {
+describe('U7 the page at 390 x 844 is the same still DOM: no stacked frame with an overlay and a marker', () => {
+  it('has none of the stage nodes, and the three scenes stack in order inside .co-fita', async () => {
     await abrir({ largura: 390, altura: 844 })
-    const palcoEmpilhado = principal().querySelector<HTMLElement>('.ic-palco')!
-    const filhos = [...palcoEmpilhado.children]
-    expect(filhos).toHaveLength(2)
-    expect(filhos[0].matches('figure[data-produto-moldura]')).toBe(true)
-    expect(filhos[1].matches('[data-vez-caixa]')).toBe(true)
-    expect(filhos[1].querySelectorAll('[data-vez]')).toHaveLength(1)
-    expect(filhos[1].getAttribute('aria-hidden')).toBe('true')
-    expect(principal().querySelector('[data-troca-gemea-acao]')).toBeNull()
+    for (const seletor of SOBRAS_DO_PALCO) expect(principal().querySelector(seletor), seletor).toBeNull()
+    const paineis = [...principal().querySelectorAll('.co-fita > .co-painel')]
+    expect(paineis).toHaveLength(3)
+    for (let i = 1; i < paineis.length; i += 1) expect(paineis[i - 1].compareDocumentPosition(paineis[i]) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
   })
 })
 
-describe('U8 one attribute at the crossing: data-troca-lado feeds the caption and the lamp of M06', () => {
-  const lampada = () => principal().querySelector<HTMLElement>('.ic-m06 [data-luz-estado]')!
+describe('U8 the caption and the lamp are no longer state: both captions are in the page, signed once, and no lamp is remembered', () => {
+  const chavesDasLuzes = ['casa-luz-m05', 'casa-luz-m06', 'casa-luz-a05', 'casa-luz-m11']
 
-  it('p 0.55: lado 2, the caption is leg2, the lamp is lit and remembered; p 0.45: lado 1, leg1, the lamp stays lit; storage cleared at p 0.15: dark', async () => {
+  it('both captions (16:00 and 17:30) are static paragraphs, no data-troca-lado exists, and nothing is stored for the lamps', async () => {
     await abrir({ largura: 1440 })
-    await modelar()
-    await irParaP(0.55)
-    expect(palco().getAttribute('data-troca-lado')).toBe('2')
-    expect(textoDaLegenda()).toBe(INI.leg2)
-    expect(lampada().getAttribute('data-luz-estado')).toBe('acesa')
-    expect(sessionStorage.getItem('casa-luz-m06')).toBe('1')
-    await irParaP(0.45)
-    expect(palco().getAttribute('data-troca-lado')).toBe('1')
-    expect(textoDaLegenda()).toBe(INI.leg1)
-    expect(lampada().getAttribute('data-luz-estado')).toBe('acesa')
+    const legendas = [...principal().querySelectorAll('p[data-legenda]')].map((p) => colapsar(p.textContent ?? ''))
+    expect(legendas).toEqual([INI.leg1, INI.leg2])
+    expect(document.querySelector('[data-troca-lado]')).toBeNull()
+    for (const chave of chavesDasLuzes) expect(sessionStorage.getItem(chave), chave).toBeNull()
   })
 
-  it('on a first visit the lamp is dark before the crossing (p 0.15), with no light and no transition scheduled', async () => {
+  it('a scroll and a resize change nothing the page owns: the lamps stay decorative images lit by CSS, and no storage is written', async () => {
     await abrir({ largura: 1440 })
-    await modelar()
-    await irParaP(0.15)
-    expect(palco().getAttribute('data-troca-lado')).toBe('1')
-    expect(lampada().getAttribute('data-luz-estado')).toBe('apagada')
-    expect(sessionStorage.getItem('casa-luz-m06')).toBeNull()
-  })
-
-  it('a stage that mounts at p >= 0.5 (a deep link, a restored scroll) shows the lamp lit at once, with no transition', async () => {
-    // The page mounts, the driver reads p 0.6 from the track's first position, and the lamp is lit and marked "direct".
-    fixarJanela({ largura: 1440 })
-    const desfazer = vi.spyOn(Element.prototype, 'getBoundingClientRect').mockImplementation(function (this: Element) {
-      const retangulo = (top: number, height: number) =>
-        ({ top, bottom: top + height, left: 0, right: 1440, width: 1440, height, x: 0, y: top, toJSON: () => ({}) }) as DOMRect
-      if (this.matches('.ic-estagio')) return retangulo(24, ALTURA_DO_PALCO)
-      if (this.matches("[data-faixa][aria-labelledby='ic-noite']")) return retangulo(24 - 0.6 * (ALTURA_DA_FAIXA - ALTURA_DO_PALCO), ALTURA_DA_FAIXA)
-      return retangulo(0, 0)
+    const antes = principal().innerHTML
+    await act(async () => {
+      window.dispatchEvent(new Event('scroll'))
+      window.dispatchEvent(new Event('resize'))
     })
-    try {
-      renderizarRota('/', { sessao: null })
-      await aguardarCarga()
-      expect(palco().getAttribute('data-troca-lado')).toBe('2')
-      expect(lampada().getAttribute('data-luz-estado')).toBe('acesa')
-      expect(lampada().hasAttribute('data-luz-direto') || lampada().closest('[data-luz-direto]') !== null).toBe(true)
-    } finally {
-      desfazer.mockRestore()
+    expect(principal().innerHTML).toBe(antes)
+    const luzes = [...principal().querySelectorAll('img.co-luz')]
+    expect(luzes).toHaveLength(3)
+    for (const luz of luzes) {
+      expect(luz.getAttribute('alt')).toBe('')
+      expect(luz.hasAttribute('data-luz-estado')).toBe(false)
+    }
+    for (const chave of chavesDasLuzes) expect(sessionStorage.getItem(chave), chave).toBeNull()
+  })
+})
+
+describe('U9 reduced motion: the same still DOM, and nothing in the page writes a transform or a translate', () => {
+  it('has no stage node, and no inline transform, translate or will-change on any element of main, with or without the preference', async () => {
+    for (const reduzido of [true, false]) {
+      const { unmount } = await abrir({ largura: 1440, reduzido })
+      for (const seletor of SOBRAS_DO_PALCO) expect(principal().querySelector(seletor), `${seletor} (reduced: ${reduzido})`).toBeNull()
+      for (const no of principal().querySelectorAll<HTMLElement>('[style]')) {
+        expect(no.style.transform, no.className).toBe('')
+        expect(no.style.translate, no.className).toBe('')
+        expect(no.style.willChange, no.className).toBe('')
+      }
+      unmount()
     }
   })
 })
 
-describe('U9 reduced motion: the still (no data-troca-lado, no inline translate, both lamps lit, no pin)', () => {
-  it('has no pin, no data-troca-lado, no inline translate or transform on the markers and the sheet, and both lamps are lit', async () => {
-    await abrir({ largura: 1440, reduzido: true })
-    expect(principal().querySelector('[data-troca-fixo]')).toBeNull()
-    expect(palco().hasAttribute('data-troca-lado')).toBe(false)
-    for (const marcador of principal().querySelectorAll<HTMLElement>('[data-vez]')) {
-      expect(marcador.style.translate).toBe('')
-      expect(marcador.style.transform).toBe('')
-    }
-    expect(principal().querySelector<HTMLElement>('[data-troca-noite]')!.style.transform).toBe('')
-    const lampadas = [...principal().querySelectorAll('[data-luz-estado]')]
-    expect(lampadas.length).toBeGreaterThanOrEqual(2)
-    for (const lampada of lampadas) expect(lampada.getAttribute('data-luz-estado')).toBe('acesa')
-  })
-})
-
-describe('U10 H2: the stroke starts when 60 % of the caption is in view', () => {
-  it('every IntersectionObserver that watches a p[data-legenda] is created with threshold 0.6', async () => {
+describe('U10 H2: the signed captions have no script behind them, so no observer waits for them', () => {
+  it('no IntersectionObserver of the page watches a caption, a lamp or any node of main but the hero pill', async () => {
     await abrir({ largura: 1440 })
-    const dasLegendas = ObservadorFalso.todos.filter((o) => [...o.alvos].some((alvo) => alvo.matches('p[data-legenda]')))
-    expect(dasLegendas.length).toBeGreaterThanOrEqual(2)
-    for (const o of dasLegendas) expect(o.opcoes?.threshold).toBe(0.6)
+    const nosDaPagina = ObservadorFalso.todos.flatMap((o) => [...o.alvos]).filter((alvo) => principal().contains(alvo))
+    expect(nosDaPagina.filter((alvo) => alvo.matches('p[data-legenda], .co-luz, [data-legenda] *'))).toEqual([])
+    for (const alvo of nosDaPagina) expect(alvo.matches(PILULA_DO_HEROI), alvo.className).toBe(true)
+    expect(nosDaPagina.length).toBeGreaterThanOrEqual(1)
   })
 })
 
-describe('the sources of the stage exist where the card says', () => {
-  it('FaixaDaVez.tsx exports FaixaDaVez and CaixaDaVez', () => {
-    const arquivo = join(TROCA, 'FaixaDaVez.tsx')
-    expect(existsSync(arquivo)).toBe(true)
-    const fonte = lerTexto(arquivo)
-    expect(fonte).toMatch(/export function FaixaDaVez\b/)
-    expect(fonte).toMatch(/export function CaixaDaVez\b/)
+describe('the sources of the retired stage are gone', () => {
+  it('FaixaDaVez.tsx, LegendaDaTroca.tsx and LuzDaLampada.tsx no longer exist in movimento/troca', () => {
+    for (const nome of ['FaixaDaVez.tsx', 'LegendaDaTroca.tsx', 'LuzDaLampada.tsx']) {
+      expect(existsSync(join(TROCA, nome)), nome).toBe(false)
+    }
+    // Control: the check sees a file that is there.
+    expect(existsSync(join(TROCA, 'vez.test.tsx'))).toBe(true)
   })
 })

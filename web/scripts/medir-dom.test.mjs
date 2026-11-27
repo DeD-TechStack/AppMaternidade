@@ -2347,6 +2347,29 @@ describe('MED-AUTH:RF-05 medirPedido falha fechado e não grava JSON', () => {
     const expressoes = avaliadas(cdp)
     assert.ok(expressoes.findIndex((e) => e.includes('h1_texto')) < expressoes.findIndex((e) => e.includes('coletarNaPagina')))
   })
+
+  it('TROCA_RM Casa no CDP: lê os dois modos e restaura o reduzido quando a leitura normal falha', async () => {
+    const pasta = pastaNova()
+    const cdp = cdpFalso({
+      pagina: { caminho: '/', h1_texto: 'Ela mamou que horas?' },
+      leitura: { doc: doc1440, nos: [no({ m: { heroiComposicao: true } })] },
+    })
+    const anterior = cdp.enviar
+    let provas = 0
+    cdp.enviar = async (metodo, params = {}) => {
+      if (metodo === 'Runtime.evaluate' && params.expression.includes('function coletarTrocaCasaNaPagina')) {
+        provas += 1
+        if (provas === 2) throw new Error('leitura de movimento falhou')
+        return { result: { value: { reduzido: true } } }
+      }
+      return anterior(metodo, params)
+    }
+    await assert.rejects(medir.medirPedido(cdp, BASE_MED, { ...pedidoFila, caso: 'inicio', rota: '' }, pasta), /leitura de movimento falhou/)
+    assert.equal(provas, 2)
+    assert.deepEqual(cdp.chamadas.filter((c) => c.metodo === 'Emulation.setEmulatedMedia').map((c) => c.params.features[0].value),
+      ['reduce', 'no-preference', 'reduce'])
+    assert.deepEqual(fs.readdirSync(pasta), [])
+  })
 })
 
 // ---------------------------------------------------------------------------------------------
@@ -3572,6 +3595,432 @@ const falha = (r, padrao) => {
   assert.equal(r.ok, false, `expected a failure: ${r.motivo}`)
   if (padrao) assert.match(r.motivo, padrao)
 }
+
+describe('coletor da placa e da legenda do herói', () => {
+  const legenda = '<p class="co-leg co-p1-leg" data-legenda><span>16:00</span>, anotada por Ju</p>'
+  const base = '<picture><source srcset="m05.webp"><img src="m05m.webp" alt="Entrega do bebê"></picture>'
+  const luz = '<picture><img class="co-luz" src="luz.png" alt=""></picture>'
+  const cenaCasa = (imagens, legendaDaCena) => `<div class="co"><section data-cena-heroi class="co-painel co-p1">
+    <h1><span data-h1-dia>Ela mamou</span> <span data-h1-noite>que horas?</span></h1>
+    <a href="/criar-conta" data-botao-mel>Criar conta</a>
+    <div class="co-p1-cena"><div class="co-placa co-m05">${imagens}</div>${legendaDaCena}</div>
+  </section><section class="co-painel co-p2"><p data-legenda>17:30, anotada por Ícaro</p></section></div>`
+  const cenaLegada = `<section data-cena-heroi data-largura-max="900">
+    <h1><span data-h1-dia>Ela mamou</span> <span data-h1-noite>que horas?</span></h1>
+    <a href="/criar-conta" data-botao-mel>Criar conta</a>
+    <div class="cm-cena-placa">${base}<picture><img data-luz src="luz.png" alt=""></picture></div>
+    ${legenda}</section>`
+  const leitura = (html, largura, larguraDaPlaca = 900) => coletarDe(`<main><div data-casa>${html}</div></main>`, (documento) => {
+    const janela = documento.defaultView
+    janela.innerWidth = largura
+    janela.innerHeight = largura === 1440 ? 900 : 844
+    Object.defineProperty(janela.HTMLImageElement.prototype, 'naturalWidth', { get: () => 1672 })
+    Object.defineProperty(janela.HTMLImageElement.prototype, 'currentSrc', {
+      get() { return new URL(this.closest('picture')?.querySelector('source')?.srcset || this.src, documento.baseURI).href },
+    })
+    janela.Element.prototype.getBoundingClientRect = function medir() {
+      if (this.matches('img') && largura === 390) return { x: 0, y: 392, width: 390, height: 305.8 }
+      if (this.matches('img')) return { x: 66.7, y: 112, width: larguraDaPlaca, height: 507 }
+      if (this.matches('[data-h1-dia]')) return { x: 66.7, y: 120, width: 480.3, height: 64 }
+      if (this.matches('[data-h1-noite]')) return { x: 566, y: 120, width: 400, height: 64 }
+      if (this.matches('[data-legenda]')) return { x: 80, y: 622, width: 400, height: 28 }
+      return { ...RETANGULO }
+    }
+  }, `p[data-legenda] { color: ${CACAU}; }`, 'http://localhost/')
+
+  it('mede a base M05, a legenda de 16:00 e seus contêineres na Casa', () => {
+    const { doc, nos } = leitura(cenaCasa(luz + base, legenda), 1440)
+    const placas = nos.filter((no) => no.m.cenaPlaca)
+    assert.equal(placas.length, 1)
+    assert.equal(placas[0].currentSrc, 'http://localhost/m05.webp')
+    assert.equal(placas[0].larguraCodificada, 1672)
+    assert.equal(nos.find((no) => no.m.legendaHeroi)?.textoTodo, '16:00, anotada por Ju')
+    assert.deepEqual(nos.find((no) => no.m.cenaHeroiComposicao)?.classes, ['co-p1-cena'])
+    assert.deepEqual(nos.find((no) => no.m.caixaPlacaComposicao)?.classes, ['co-placa', 'co-m05'])
+    assert.equal(doc.largura, 1440)
+
+    const movel = leitura(cenaCasa(base + luz, legenda), 390)
+    assert.deepEqual(movel.doc.placa390, PLACA_390_RECORTE)
+    assert.equal(movel.nos.find((no) => no.m.cenaPlaca)?.currentSrc, 'http://localhost/m05.webp')
+  })
+
+  it('mantém os limites do HEROI e da LEGENDA_PRESA na composição legada', () => {
+    const { doc, nos } = leitura(cenaLegada, 1440, 860)
+    falha(medir.heroi(nos, doc), /largura.*900/)
+    const legendaMedida = nos.find((no) => no.m.legendaHeroi)
+    legendaMedida.rect.y = 560
+    falha(medir.legendaPresa(nos, doc), /distância certa é de 0 a 12/)
+  })
+
+  it('mantém a coleta e as regras da placa de estúdio legada', () => {
+    const { doc, nos } = leitura(cenaLegada, 1440)
+    assert.equal(nos.filter((no) => no.m.cenaPlaca).length, 1)
+    assert.equal(nos.find((no) => no.m.cenaPlaca)?.larguraMax, 900)
+    assert.equal(nos.find((no) => no.m.legendaHeroi)?.textoTodo, '16:00, anotada por Ju')
+    ok(medir.cena(nos, doc))
+    ok(medir.heroi(nos, doc))
+    ok(medir.legendaPresa(nos, doc))
+  })
+
+  it('reprova sem placa base ou só com luz, mesmo com descrição na luz', () => {
+    for (const imagens of ['', luz, luz.replace('alt=""', 'alt="Luz"')]) {
+      const { doc, nos } = leitura(cenaCasa(imagens, legenda), 390)
+      assert.equal(nos.filter((no) => no.m.cenaPlaca).length, 0)
+      assert.equal(doc.placa390, null)
+      for (const avaliar of [medir.cena, medir.heroi, medir.legendaPresa]) falha(avaliar(nos, doc), /nenhuma placa/)
+    }
+  })
+
+  it('reprova sem a legenda da cena, mesmo se outra legenda estiver medida', () => {
+    for (const legendaDaCena of ['', `<div>${legenda}</div>`]) {
+      const { doc, nos } = leitura(cenaCasa(base + luz, legendaDaCena), 1440)
+      assert.equal(nos.some((no) => no.m.legendaHeroi), false)
+      assert.ok(nos.some((no) => no.m.legenda && no.textoTodo.startsWith('17:30')))
+      falha(medir.legendaPresa(nos, doc), /nenhuma legenda do herói/)
+    }
+  })
+})
+
+describe('contrato renderizado da Casa em 390 e 1440', () => {
+  const rua = `<main><div data-casa><div class="co"><div class="co-fita">
+    <section class="co-painel co-p1" data-cena-heroi>
+      <span class="co-fantasma" aria-hidden="true">16:00</span>
+      <div class="co-texto co-p1-texto"><h1><span data-h1-dia>Ela mamou</span><span data-h1-noite>que horas?</span></h1>
+        <p class="co-lede">Quem cuida anota.</p>
+        <div class="co-acoes"><a data-botao-mel href="/criar-conta">Criar conta</a><a href="/como-funciona">Ver como funciona</a></div>
+      </div>
+      <div class="co-p1-cena"><div class="co-placa co-m05"><picture><img src="m05.webp" alt="Entrega"></picture></div>
+        <p class="co-leg co-p1-leg" data-legenda><span class="co-leg-hora">16:00</span> mamada, anotada por Ju</p></div>
+    </section>
+    <section class="co-painel co-p2"><span class="co-fantasma" aria-hidden="true">17:30</span>
+      <div class="co-p2-cena"><p class="co-leg co-p2-leg" data-legenda><span class="co-leg-hora">17:30</span> mamada, anotada por Ícaro</p></div>
+    </section>
+  </div></div></div></main>`
+  const r = (x, y, width, height) => ({ x, y, width, height })
+  const divisao = (dia, noite, x) => `linear-gradient(to right, ${dia} 0px ${x}px, ${noite} ${x}px)`
+  const avaliarCasa = (largura, { html = rua, caixas = {}, tinta = {}, costura, parede, anel, placa = 1672, fecho = CHAO_NOITE } = {}) => {
+    const larga = largura === 1440
+    const emenda = costura ?? (larga ? 990 : 135)
+    const posicoes = {
+      '.co-p1': r(0, 80, largura, larga ? 800 : 730),
+      '.co-p2': r(0, larga ? 880 : 810, largura, 500),
+      '.co-p1-cena': larga ? r(0, 80, largura, 0) : r(0, 435, largura, 375),
+      '.co-m05, .co-m05 img': larga ? r(550, 380, 890, 500) : r(0, 435, 390, 305),
+      '[data-h1-dia]': r(20, larga ? 410 : 120, 260, 50),
+      '[data-h1-noite]': r(20, larga ? 470 : 180, 260, 50),
+      '.co-lede': r(20, larga ? 535 : 240, 260, 40),
+      '.co-p1 [data-botao-mel]': r(20, larga ? 600 : 290, 160, 56),
+      '.co-fecho-texto': r(0, 1500, largura, 180),
+      '.co-fecho-texto a': r(20, 1540, 160, 56),
+      'a:not([data-botao-mel])': r(larga ? 200 : 20, larga ? 600 : 350, 150, 50),
+      '.co-p1-leg': larga ? r(20, 780, 350, 100) : r(135, 740, 255, 70),
+      '.co-p1-leg .co-leg-hora': larga ? r(28, 805, 100, 40) : r(150, 745, 100, 36),
+      '.co-p2-leg': r(20, larga ? 1280 : 1240, 350, 60),
+      '.co-p2-leg .co-leg-hora': r(24, larga ? 1290 : 1250, 100, 36),
+      '.co-p1 > .co-fantasma': larga ? r(20, 100, 460, 190) : r(0, 0, 0, 0),
+      '.co-p2 > .co-fantasma': larga ? r(20, 900, 460, 190) : r(0, 0, 0, 0),
+      ...caixas,
+    }
+    const preparar = (documento) => {
+      const janela = documento.defaultView
+      janela.innerWidth = largura
+      janela.innerHeight = larga ? 900 : 844
+      janela.matchMedia = () => ({ matches: larga })
+      Object.defineProperty(janela.HTMLImageElement.prototype, 'naturalWidth', { get: () => placa })
+      janela.Element.prototype.getBoundingClientRect = function medir() {
+        return Object.entries(posicoes).find(([seletor]) => this.matches(seletor))?.[1] ?? { ...RETANGULO }
+      }
+      documento.elementsFromPoint = (x, y) => [
+        ...['.co-p1-leg', '.co-p2-leg', '.co-p1-cena', '.co-p1', '.co-p2', '.co-fecho-texto'].map((s) => documento.querySelector(s)).filter((el) => {
+          if (!el) return false
+          const r = el.getBoundingClientRect()
+          return r.width > 0 && r.height > 0 && x >= r.x && x < r.x + r.width && y >= r.y && y < r.y + r.height
+        }),
+        documento.documentElement,
+      ]
+    }
+    const lerEstilo = (el, pseudo) => {
+      if (pseudo === '::after' && larga && el.matches('.co-p1')) {
+        return { content: '""', position: 'absolute', left: '0px', top: 'auto', bottom: '0px', width: '1440px', height: '100px', 'background-image': divisao(AREIA, CHAO_NOITE, emenda) }
+      }
+      if (pseudo === '::before' && !larga && el.matches('.co-p1-cena')) {
+        return { content: '""', position: 'absolute', left: '0px', top: '245px', width: '390px', height: '130px', 'background-image': divisao(AREIA, CHAO_NOITE, emenda) }
+      }
+      if (!pseudo && el.matches('.co-p1, .co-p1-cena')) {
+        if (el.matches('.co-p1')) return larga ? { 'background-image': parede ?? divisao(PAPEL, CACAU, emenda) } : { 'background-color': PAPEL }
+        if (!larga) return { 'background-image': parede ?? divisao(TRANSPARENTE, CACAU, emenda) }
+      }
+      if (!pseudo && el.matches('[data-botao-mel]') && anel) return { 'box-shadow': anel }
+      return null
+    }
+    const css = `
+      * { text-shadow: none; visibility: visible; }
+      .co-p2 { background-color: ${CACAU}; } .co-p2-leg { background-color: ${CHAO_NOITE}; }
+      .co-p1-leg { color: ${larga ? CACAU : PAPEL}; }
+      .co-p1-leg span { color: ${tinta.legenda ?? (larga ? CACAU : PAPEL)}; }
+      .co-p2-leg, .co-p2-leg span { color: ${PAPEL}; }
+      [data-botao-mel] { background-color: ${MEL}; color: ${CACAU}; }
+      .co-fecho-texto { background-color: ${fecho}; }
+      .co-fantasma { position: absolute; font-size: 120px; font-weight: 800; }
+      .co-p1 > .co-fantasma { color: ${tinta.arte ?? 'rgb(241, 233, 215)'}; }
+      .co-p2 > .co-fantasma { color: rgb(55, 45, 41); }
+    `
+    const estiloComoNoChrome = interceptarEstilo((el, pseudo) =>
+      pseudo ? lerEstilo(el, pseudo) : { 'text-shadow': 'none', visibility: 'visible', ...lerEstilo(el, pseudo) },
+    )
+    const { doc, nos } = coletarDe(html, juntar(preparar, estiloComoNoChrome), css, 'http://localhost/')
+    return Object.fromEntries(medir.avaliarTudo({ doc, nos, tema: 'claro', caso: 'inicio' }).map((regra) => [regra.regra, regra]))
+  }
+
+  for (const largura of [390, 1440]) {
+    it(`${largura}: TEMPO lê as legendas na sequência e os CTAs nos fundos pintados de Casa`, () => {
+      const html = rua.replace('</div></div></div></main>', `</div><section class="co-fecho">
+        <div class="co-dentro"><div class="co-fecho-texto"><div class="co-acoes"><a data-botao-mel href="/criar-conta">Criar conta</a></div></div></div>
+        </section></div></div></main>`)
+      const anel = `inset 0px 0px 0px 1.5px ${CACAU}`
+      ok(avaliarCasa(largura, { html, anel }).TEMPO)
+      falha(avaliarCasa(largura, { html, anel, fecho: PAPEL }).TEMPO, /botão de mel.*papel/)
+      falha(avaliarCasa(largura, { html: html.replace('co-leg-hora">17:30', 'co-leg-hora">15:00'), anel }).TEMPO, /horas não voltam/)
+    })
+
+    it(`${largura}: SOMBRA/CASA_LIMPA distinguem emenda e anel pintados de gradiente ou sombra arbitrários`, () => {
+      const anel = `inset 0px 0px 0px 1.5px ${CACAU}`
+      const valido = avaliarCasa(largura, { anel })
+      ok(valido.SOMBRA)
+      ok(valido.CASA_LIMPA)
+      const borrado = avaliarCasa(largura, { anel: `inset 0px 0px 2px 1.5px ${CACAU}` })
+      falha(borrado.SOMBRA, /box-shadow/)
+      falha(borrado.CASA_LIMPA, /box-shadow/)
+      const interpolada = avaliarCasa(largura, { anel, parede: `linear-gradient(to right, ${PAPEL}, ${CACAU})` })
+      falha(interpolada.SOMBRA, /gradiente/)
+      falha(interpolada.CASA_LIMPA, /gradiente/)
+    })
+
+    it(`${largura}: CENA/COSTURA medem o master carregado e a emenda do recorte M05 correspondente`, () => {
+      const larga = largura === 1440
+      const nome = larga ? 'm05' : 'm05m'
+      const html = rua.replace('m05.webp', `composicao/a/${nome}.webp`)
+      const placa = larga ? 1672 : 1170
+      const costura = larga ? 550 + 890 * 0.5437 : 390 * 0.3641
+      const valido = avaliarCasa(largura, { html, placa, costura })
+      ok(valido.CENA)
+      ok(valido.COSTURA)
+      falha(avaliarCasa(largura, { html, placa: 550, costura }).CENA, /densidade/)
+      falha(avaliarCasa(largura, { html, placa, costura: costura + 10 }).COSTURA, /emenda/)
+      const grande = larga ? r(480, 380, 960, 500) : r(0, 435, 670, 305)
+      falha(avaliarCasa(largura, { html, placa, costura, caixas: { '.co-m05, .co-m05 img': grande } }).CENA, /máximo|master/)
+    })
+
+    it(`${largura}: o recorte atravessa a emenda e a legenda recebe o piso do lado previsto`, () => {
+      const { HEROI, LEGENDA_PRESA } = avaliarCasa(largura)
+      ok(HEROI)
+      ok(LEGENDA_PRESA)
+    })
+
+    it(`${largura}: reprova a emenda fora da imagem ou a legenda fora do piso`, () => {
+      const foraDaImagem = largura === 390 ? r(200, 435, 190, 305) : r(1000, 380, 440, 500)
+      falha(avaliarCasa(largura, { caixas: { '.co-m05, .co-m05 img': foraDaImagem } }).HEROI, /emenda/)
+      const foraDoPiso = largura === 390 ? r(20, 740, 110, 60) : r(20, 640, 350, 100)
+      falha(avaliarCasa(largura, { caixas: { '.co-p1-leg': foraDoPiso } }).LEGENDA_PRESA, /piso/)
+      const foraDaParede = largura === 390 ? r(20, 430, 150, 50) : r(970, 600, 150, 50)
+      falha(avaliarCasa(largura, { caixas: { 'a:not([data-botao-mel])': foraDaParede } }).HEROI, /ação secundária.*parede/)
+    })
+
+    it(`${largura}: mantém o contraste da hora funcional e verifica a arte distinta`, () => {
+      ok(avaliarCasa(largura).G11)
+      falha(avaliarCasa(largura, { tinta: { legenda: largura === 390 ? CHAO_NOITE : AREIA } }).G11, /16:00.*contraste/)
+      falha(avaliarCasa(largura, { html: rua.replace('aria-hidden="true"', 'aria-hidden="false"') }).G11, /hora decorativa.*semântica/)
+    })
+  }
+
+  it('1440: reprova a arte sobreposta à legenda, a cor errada e a falta de hora acessível correspondente', () => {
+    falha(avaliarCasa(1440, { caixas: { '.co-p1 > .co-fantasma': r(20, 705, 460, 190) } }).G11, /hora decorativa.*parede/)
+    falha(avaliarCasa(1440, { tinta: { arte: CACAU } }).G11, /hora decorativa.*tinta/)
+    falha(avaliarCasa(1440, { html: rua.replace('co-leg-hora">16:00', 'co-leg-hora">15:00') }).G11, /hora decorativa.*correspondente/)
+  })
+
+  it('mede a cor sRGB e o espalhamento do anel do telefone, só no papel de moldura', () => {
+    const mel = `inset 0px 0px 0px 1.5px ${CACAU}`
+    const noite = 'color(srgb 0.97255 0.964706 0.921569 / 0.38) 0px 0px 0px 1.5px'
+    const comAnel = (tag, sombra) => rua.replace('<div class="co-p2-cena">', `<div class="co-p2-cena"><${tag} class="co-fone"
+      style="box-shadow: ${sombra}"><img src="foto.webp" alt="Histórico"></${tag}>`)
+    const certo = avaliarCasa(1440, { html: comAnel('figure', noite), anel: mel })
+    ok(certo.SOMBRA)
+    ok(certo.CASA_LIMPA)
+    for (const html of [comAnel('div', noite), comAnel('figure', `${noite}, ${noite}`), comAnel('figure', noite.replace('0.38', '0.8'))]) {
+      const errado = avaliarCasa(1440, { html, anel: mel })
+      falha(errado.SOMBRA, /box-shadow/)
+      falha(errado.CASA_LIMPA, /box-shadow/)
+    }
+  })
+})
+
+describe('TROCA_RM Casa: prova do pino e da pilha estática', () => {
+  const caixa = (x, y, w, h) => ({ x, y, w, h })
+  const reduzida = (largura) => ({
+    reduzido: true, suportaPino: largura === 1440, posicao: 'static', recorteX: 'visible', transform: 'none', semRolagemX: true,
+    palco: caixa(0, 88, largura, 1800), fita: caixa(0, 88, largura, 1800), alturaConteudo: 1800,
+    paineis: [0, 1, 2].map((i) => ({ rect: caixa(0, 88 + i * 600, largura, 600), transform: 'none', clipPath: 'none' })),
+    luzes: ['m05', 'm06', 'rua'].map((cena) => ({ cena, opacidade: '1', decorativa: true, rect: caixa(0, 200, 160, 100) })),
+  })
+  const normal = (largura) => {
+    const base = { ...reduzida(largura), reduzido: false }
+    if (largura === 390) return base
+    return {
+      ...base, posicao: 'sticky', recorteX: 'clip', palco: caixa(0, 88, largura, 810), fita: caixa(0, 88, largura * 3, 810),
+      paineis: [0, 1, 2].map((i) => ({ rect: caixa(i * largura, 88, largura, 810) })),
+      amostras: [0, 1, 2].map((i) => ({ y: i * 1000, x: 0, palcoX: 0, palcoY: 88, cenasX: [0, 1, 2].map((j) => (j - i) * largura) })),
+      depois: { y: 3000, x: 0, palcoX: 0, palcoY: -722, proximaY: 88 },
+    }
+  }
+  const regraRm = (largura, alterar = () => undefined) => {
+    const trocaCasa = { reduzida: reduzida(largura), normal: normal(largura) }
+    alterar(trocaCasa)
+    return medir.trocaRm([rhNo({ heroiComposicao: true }, caixa(0, 0, largura, 500))], { largura, animacoesCasa: 0, trocaCasa })
+  }
+
+  it('aceita 390 estático nos dois estados e 1440 com travessia vertical e fallback reduzido', () => {
+    ok(regraRm(390))
+    ok(regraRm(1440))
+    ok(regraRm(1440, (v) => { v.normal = { ...v.reduzida, reduzido: false, suportaPino: false } }))
+  })
+
+  it('reprova pino no reduzido, painel fora da pilha, luz apagada e falta de amostra real', () => {
+    falha(regraRm(1440, (v) => { v.reduzida.posicao = 'sticky' }), /pilha|pino/)
+    falha(regraRm(390, (v) => { v.normal.paineis[1].rect.x = 390 }), /pilha/)
+    falha(regraRm(390, (v) => { v.reduzida.luzes[1].opacidade = '0' }), /luz/)
+    falha(regraRm(1440, (v) => { delete v.normal.amostras }), /amostra/)
+  })
+
+  it('reprova pino apenas nominal, travessia por scrollX e falta de liberação', () => {
+    falha(regraRm(1440, (v) => { v.normal.amostras[1].cenasX[1] = 1440 }), /cena/)
+    falha(regraRm(1440, (v) => { v.normal.amostras[1].x = 1440 }), /horizontal/)
+    falha(regraRm(1440, (v) => { v.normal.depois.palcoY = 88 }), /libera/)
+  })
+
+  it('a sonda serializada recolhe as posições a cada rolagem e restaura a posição inicial', async () => {
+    const dom = new JSDOM(`<main><div data-casa><div class="co">
+      <div class="co-trilho"><div class="co-palco" style="position: sticky; top: 88px; overflow-x: clip"><div class="co-fita">
+        <section class="co-p1"></section><section class="co-p2"></section><section class="co-p3"></section>
+      </div></div></div><section class="co-faixa"></section></div></div></main>`, { runScripts: 'outside-only' })
+    const { window } = dom
+    let y = 40
+    window.matchMedia = (query) => ({ matches: !query.includes('reduce') })
+    window.CSS = { supports: () => true }
+    Object.defineProperty(window, 'scrollY', { get: () => y })
+    window.scrollTo = ({ top }) => { y = top }
+    window.requestAnimationFrame = (f) => f()
+    window.Element.prototype.getBoundingClientRect = function medir() {
+      const palcoY = Math.min(88, 88 + 3110 - y - 810)
+      if (this.matches('.co-trilho')) return { x: 0, y: 88 - y, width: 1440, height: 3110 }
+      if (this.matches('.co-faixa')) return { x: 0, y: 88 + 3110 - y, width: 1440, height: 900 }
+      if (this.matches('.co-palco, .co-fita')) return { x: 0, y: palcoY, width: this.matches('.co-fita') ? 4320 : 1440, height: 810 }
+      const indice = ['co-p1', 'co-p2', 'co-p3'].indexOf(this.className)
+      const cena = y < 1000 ? 0 : y < 2000 ? 1 : 2
+      return { x: (indice - cena) * 1440, y: palcoY, width: 1440, height: 810 }
+    }
+    try {
+      const modo = await window.eval(`(${medir.coletarTrocaCasaNaPagina.toString()})()`)
+      assert.deepEqual(Array.from(modo.amostras, (amostra, i) => amostra.cenasX[i]), [0, 0, 0])
+      assert.equal(modo.depois.proximaY, 88)
+      assert.equal(y, 40)
+      ok(regraRm(1440, (v) => { v.normal = modo }))
+    } finally {
+      window.close()
+    }
+  })
+})
+
+describe('Casa entrega: régua, moldura útil, noite e capturas', () => {
+  it('conta só a pintura noturna final, fora do cabeçalho e da barra de rolagem', () => {
+    const pixels = Uint8Array.from([
+      43, 35, 32, 255, 43, 35, 32, 255, 43, 35, 32, 255,
+      110, 101, 96, 255, 248, 246, 235, 255, 43, 35, 32, 255,
+      44, 35, 31, 255, 43, 35, 32, 0, 43, 35, 32, 255,
+    ])
+    assert.deepEqual(medir.contarNoitePintada(pixels, 3, 3, 2, 1), { total: 6, cabecalho: 2, noite: 2 })
+  })
+
+  it('a régua oculta passa pela sua estrutura, e a visível precisa da pintura correta', () => {
+    const avaliarRegua = (horas, { atributo = 'aria-hidden="true"', ativa = false, fora = false } = {}) => {
+      const regua = `<ol class="co-regua" ${atributo}>${horas.map((hora) => '<li>' + hora + '</li>').join('')}</ol>`
+      const html = `<main><div data-casa><div class="co"><div class="co-trilho"><div class="co-palco">${fora ? '' : regua}</div></div>${fora ? regua : ''}</div></div></main>`
+      const preparar = comLeitura('*', { 'text-shadow': 'none', visibility: 'visible' })
+      return medir.casaLimpa(coletarDe(html, preparar, `.co-regua { display: ${ativa ? 'block' : 'none'}; }`).nos)
+    }
+    const horas = ['16:00', '17:30', '20:30']
+    ok(avaliarRegua(horas))
+    falha(avaliarRegua([...horas].reverse()), /hora solta/)
+    falha(avaliarRegua(horas, { atributo: '' }), /hora solta/)
+    falha(avaliarRegua(horas, { fora: true }), /hora solta/)
+    falha(avaliarRegua(horas, { ativa: true }), /hora solta/)
+  })
+
+  const heroi = no({ m: { heroiComposicao: true } })
+  const caixa = (x, y, w, h) => ({ x, y, w, h })
+  const moldura = (largura, y = 100) => ({
+    rect: caixa(16, y, 240, 510), tela: caixa(22, y + 6, 228, 498), util: caixa(0, 88, largura, 756),
+  })
+
+  for (const largura of [390, 1440]) {
+    it(`${largura}: MOLDURA_DOBRA mede o telefone inteiro na janela útil de cada cena de uso`, () => {
+      const inicial = () => ({ molduras: largura === 1440 ? [moldura(largura), moldura(largura)] : [moldura(largura)] })
+      const doc = { largura, trocaCasa: { normal: { ...inicial(), suportaPino: largura === 1440 }, reduzida: inicial() } }
+      ok(medir.molduraDobra([heroi], doc))
+      doc.trocaCasa.normal.molduras[0] = moldura(largura, 73)
+      falha(medir.molduraDobra([heroi], doc), /moldura.*janela útil/)
+      doc.trocaCasa.normal.molduras = inicial().molduras
+      doc.trocaCasa.reduzida.molduras[0].rect.w = largura
+      falha(medir.molduraDobra([heroi], doc), /moldura.*janela útil/)
+    })
+
+    it(`${largura}: NOITE usa pixels pintados e a largura útil da cena noturna, mantendo 0,30`, () => {
+      const faixa = no({ m: { cenaDepoisHeroiComposicao: true }, estilo: { backgroundColor: CACAU }, rect: caixa(0, 850, largura - 15, 1200) })
+      const doc = { largura, clientWidth: largura - 15, altura: 900, noitePintadaCasa: [
+        { rolagem: 0, total: 100, cabecalho: 10, noite: 24 },
+        { rolagem: 900, total: 100, cabecalho: 10, noite: 30 },
+      ] }
+      ok(medir.noite([heroi, faixa], doc))
+      doc.noitePintadaCasa[1].noite = 29
+      falha(medir.noite([heroi, faixa], doc), /piso é 0\.30/)
+      doc.noitePintadaCasa[1].noite = 30
+      falha(medir.noite([heroi, { ...faixa, rect: { ...faixa.rect, w: largura - 35 } }], doc), /ponta a ponta/)
+    })
+  }
+
+  it('CAPTURA_REAL vincula as oito WebP derivadas aos quatro slots e rejeita trocar uma por outra', () => {
+    const montar = (w, trocar = false) => {
+      const slots = [
+        ['co-p2', 'co-p2-fone', trocar ? 'hoje-n' : 'historico'],
+        ['co-p3', 'co-p3-fone', 'hoje-n'], ['co-so', 'co-so-fone', 'familia'], ['co-prova', 'co-prova-fone', 'notas'],
+      ]
+      const html = `<main><div data-casa><div class="co">${slots.map(([cena, classe, arte]) => `<section class="${cena}">
+        <figure class="co-fone ${classe}"><img src="/previa/composicao/a/${arte}-${w}w.webp" alt="Tela"></figure>
+        </section>`).join('')}</div></div></main>`
+      return coletarDe(html, (documento) => {
+        Object.defineProperty(documento.defaultView.HTMLImageElement.prototype, 'naturalWidth', { get: () => w })
+      }, '', 'http://localhost/previa/').nos
+    }
+    for (const w of [780, 1170]) ok(medir.capturaReal([heroi, ...montar(w)], {}))
+    falha(medir.capturaReal([heroi, ...montar(780, true)], {}), /Histórico|historico/)
+
+    // Um WebP válido com o mesmo nome, mas bytes de outra captura, também reprova.
+    const publico = fileURLToPath(new URL('../public', import.meta.url))
+    const pasta = fs.mkdtempSync(path.join(os.tmpdir(), 'meter-casa-captura-'))
+    const doHistorico = ['telas/casa/MANIFESTO.json', 'telas/casa/historico-y-alta-1170w.webp', 'composicao/a/historico-780w.webp']
+    try {
+      for (const arquivo of doHistorico) {
+        fs.mkdirSync(path.dirname(path.join(pasta, arquivo)), { recursive: true })
+        fs.copyFileSync(path.join(publico, arquivo), path.join(pasta, arquivo))
+      }
+      fs.copyFileSync(path.join(publico, 'composicao/a/hoje-n-780w.webp'), path.join(pasta, doHistorico[2]))
+      falha(medir.capturaReal([heroi, ...montar(780)], {}, { publico: pasta }), /historico: tela carregada não corresponde/)
+    } finally {
+      for (const arquivo of doHistorico) fs.rmSync(path.join(pasta, arquivo), { force: true })
+      for (const dir of ['telas/casa', 'telas', 'composicao/a', 'composicao', '']) fs.rmdirSync(path.join(pasta, dir))
+    }
+  })
+})
 
 // ---- REPH-I-03 HEROI ----
 
@@ -4827,6 +5276,83 @@ describe('METER-FUNDO (coletor): hit stack with pointer-events auto, pilhaSob, p
 })
 
 // =============================================================================================
+describe('METER-FUNDO (Casa): parede dividida e piso pintado', () => {
+  const html = `<main><div data-casa><div class="co"><div class="co-fita">
+    <section class="co-painel co-p1" data-cena-heroi>
+      <div class="co-texto"><h1><span data-h1-dia>Ela mamou</span></h1></div>
+      <div class="co-p1-cena"><p class="co-leg co-p1-leg" data-legenda><span class="co-leg-hora">16:00</span></p></div>
+    </section>
+    <a href="#" style="background-color: ${CACAU}; color: ${PAPEL}">Ver detalhes</a>
+  </div></div></div></main>`
+  const r = (x, y, width, height) => ({ x, y, width, height })
+  const parede = `linear-gradient(to right, ${PAPEL} 0px, ${PAPEL} 500px, ${CACAU} 500px)`
+  const piso = `linear-gradient(to right, ${AREIA} 0px 50%, ${CHAO_NOITE} 50%)`
+  const medirCasa = ({ larga = false, cor, direita = false, imagem, yLegenda } = {}) => {
+    const seletor = larga ? '[data-h1-dia]' : '.co-leg-hora'
+    const posicoes = {
+      '.co-painel': r(0, 100, 1000, 500),
+      '.co-p1-cena': larga ? r(0, 100, 1000, 0) : r(0, 300, 1000, 300),
+      '.co-leg-hora': r(larga ? 72 : 530, yLegenda ?? 558, 110, 36),
+      '[data-h1-dia]': r(direita ? 550 : 86, 410, 330, 48),
+    }
+    const preparar = (documento) => {
+      alvosGrandes(documento)
+      const janela = documento.defaultView
+      const lerCaixa = janela.Element.prototype.getBoundingClientRect
+      janela.Element.prototype.getBoundingClientRect = function medir() {
+        return Object.entries(posicoes).find(([seletor]) => this.matches(seletor))?.[1] ?? lerCaixa.call(this)
+      }
+      documento.elementsFromPoint = (_x, y) => [
+        ...[seletor, y >= 535 && '.co-leg', !larga && y >= 300 && '.co-p1-cena', '.co-painel', '.co-fita']
+          .filter(Boolean).map((s) => documento.querySelector(s)),
+        documento.documentElement,
+      ]
+    }
+    const lerEstilo = (el, pseudo) => {
+      if (!pseudo && el.matches('.co-painel')) {
+        return { 'background-color': larga ? TRANSPARENTE : PAPEL, 'background-image': larga ? imagem ?? parede : 'none' }
+      }
+      if (pseudo === '::before' && !larga && el.matches('.co-p1-cena')) {
+        return { content: '""', position: 'absolute', left: '0px', top: '235px', width: '1000px', height: '65px', 'background-image': imagem ?? piso }
+      }
+      if (pseudo === '::after' && larga && el.matches('.co-painel')) {
+        return { content: '""', position: 'absolute', left: '0px', top: 'auto', bottom: '0px', width: '1000px', height: '65px', 'background-image': piso }
+      }
+      return null
+    }
+    const css = `.co-fita { background-color: ${CHAO_NOITE}; } ${seletor} { color: ${cor ?? (larga ? CACAU : PAPEL)}; font-size: 36px; font-weight: 800; }`
+    const { doc, nos } = coletarDe(html, juntar(preparar, interceptarEstilo(lerEstilo)), css)
+    const texto = nos.find((no) => no.texto === (larga ? 'Ela mamou' : '16:00'))
+    const g11 = medir.avaliarTudo({ doc, nos: nos.filter((no) => no === texto || no.m.interativo), tema: 'claro' }).find((no) => no.regra === 'G11')
+    return { g11, fundo: medir.fundoVisivelDaPilha(texto.pilhaSob, texto.pontoSob), nos }
+  }
+
+  it('lê o piso do ::before sob a legenda móvel', () => {
+    const movel = medirCasa()
+    ok(movel.g11)
+    assert.equal(movel.fundo, CHAO_NOITE)
+  })
+
+  it('lê a parede clara sob o título largo e o piso do ::after sob a legenda', () => {
+    const largo = medirCasa({ larga: true })
+    ok(largo.g11)
+    assert.equal(largo.fundo, PAPEL)
+    const hora = largo.nos.find((no) => no.texto === '16:00')
+    assert.equal(medir.fundoVisivelDaPilha(hora.pilhaSob, hora.pontoSob), AREIA)
+  })
+
+  it('reprova a tinta errada, o título do lado escuro e a legenda acima do piso', () => {
+    falha(medirCasa({ larga: true, cor: PAPEL }).g11, /1\.00:1/)
+    falha(medirCasa({ larga: true, direita: true }).g11, /1\.00:1/)
+    falha(medirCasa({ yLegenda: 480 }).g11, /1\.00:1/)
+  })
+
+  it('não trata um gradiente suave como um fundo claro conhecido', () => {
+    const { g11 } = medirCasa({ larga: true, imagem: `linear-gradient(to right, ${PAPEL}, ${CACAU})` })
+    falha(g11, /pintura.*ilegível/)
+  })
+})
+
 // METER-FUNDO (CSP): the site has a Content-Security-Policy that blocks an inline <style>, so the probe override
 // `* { pointer-events: auto !important }` goes in a constructable stylesheet (document.adoptedStyleSheets). The <style>
 // element stays only as the fallback where constructable sheets do not exist (jsdom).

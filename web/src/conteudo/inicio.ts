@@ -34,6 +34,8 @@ export const INI = {
 
   h2So: 'E quando sou só eu?',
   pSo: 'Um dia anotado por uma pessoa só é um dia inteiro. Quando chegar mais alguém para cuidar, você convida e escolhe o papel dessa pessoa: responsável, cuidador ou observador.',
+  altTela3:
+    'Tela Família do site num celular. Em Membros, Juliana, responsável, e Ícaro, cuidador, cada um com o botão de mudar o papel. Em Convites, um de observador que ainda vale e um de cuidador que já venceu.',
   altCena3: 'Heloísa de bruços no tapete, de cabeça erguida e sorrindo. Juliana está deitada ao lado dela, também de bruços, olhando para a bebê.',
 
   h2Prova: 'Ninguém dá nota para o seu dia.',
@@ -73,3 +75,12 @@ export const INI_PERGUNTAS = [
 
 /** The two destinations of the page's actions. */
 export const INI_ROTAS = { criarConta: '/criar-conta', comoFunciona: '/como-funciona' } as const
+
+/** The three hours of the first three scenes (the hour rail and the hour written on the wall): substrings of the captions and of `h2Tela`. */
+export const INI_HORAS = ['16:00', '17:30', '20:30'] as const
+
+/** Reference composition only (fable/home-composicao): the labels of the slots that still wait for art. Not product copy. */
+export const INI_REF = {
+  slotBerco: 'Aguarda arte: A03, o berço',
+  slotPorta: 'Aguarda arte: A06, a porta de corpo inteiro',
+} as const

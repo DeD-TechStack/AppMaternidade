@@ -1,226 +1,195 @@
-import { useLayoutEffect, useRef, useSyncExternalStore, type CSSProperties } from 'react'
-import { AcoesDoHeroi } from '../componentes/inicio-casa/AcoesDoHeroi.tsx'
-import { FaixaNoite } from '../componentes/inicio-casa/FaixaNoite.tsx'
-import { FaixaSozinho } from '../componentes/inicio-casa/FaixaSozinho.tsx'
-import { FaixaTela } from '../componentes/inicio-casa/FaixaTela.tsx'
+import { Botao } from '../componentes/base/Botao.tsx'
 import { ID_FAIXA_NOITE, ID_FAIXA_SO, ID_FAIXA_TELA, ID_TITULO } from '../componentes/inicio-casa/ids.ts'
-import { LegendaAssinada } from '../componentes/inicio-casa/LegendaAssinada.tsx'
-import {
-  A05_RUA,
-  CAPTURA_NOTAS,
-  LUZ_A05,
-  LUZ_M05,
-  LUZ_M05_390,
-  M05,
-  M05_390,
-  M05_CHAO,
-  M05_COSTURA,
-  M05_LARGURA,
-  MOLDURA_DIA,
-  PORTA_NOITE,
-} from '../componentes/inicio-casa/midia.ts'
-import { PalcoTroca } from '../componentes/inicio-casa/PalcoTroca.tsx'
-import { TituloCasa } from '../componentes/inicio-casa/TituloCasa.tsx'
-import { useGanchoDoCabecalho, useSala } from '../componentes/inicio-casa/usoDaCasa.ts'
-import { CenaHeroi } from '../componentes/secoes/CenaHeroi.tsx'
-import { FaixaInteira } from '../componentes/secoes/FaixaInteira.tsx'
-import { FaixaProva } from '../componentes/secoes/FaixaProva.tsx'
-import { Fechamento } from '../componentes/secoes/Fechamento.tsx'
+import { useGanchoDoCabecalho } from '../componentes/inicio-casa/usoDaCasa.ts'
+import { BotaoLargo } from '../componentes/secoes/BotaoLargo.tsx'
 import { PaginaCasa } from '../componentes/secoes/PaginaCasa.tsx'
-import { Perguntas } from '../componentes/secoes/Perguntas.tsx'
-import { ProdutoEmMoldura } from '../componentes/secoes/ProdutoEmMoldura.tsx'
-import { INI, INI_FATOS, INI_PERGUNTAS, INI_ROTAS } from '../conteudo/inicio.ts'
-import { CATALOGO } from '../movimento/catalogo.ts'
-import { useAssinatura } from '../movimento/troca/assinatura.tsx'
-import { LuzDaLampada } from '../movimento/troca/LuzDaLampada.tsx'
-import { usePalcoFixo } from '../movimento/troca/usarPalco.ts'
-// The two scrubbed entries of bands 4 and 6, then (last, so the page rules come after the shared pieces' own and win ties)
-// the page sheet.
-import '../componentes/inicio-casa/inicio-faixas.css'
-import '../componentes/inicio-casa/inicio-casa.css'
+import { INI, INI_FATOS, INI_HORAS, INI_PERGUNTAS, INI_REF, INI_ROTAS } from '../conteudo/inicio.ts'
+// The display cut of Literata (optical size axis): the large titles and the hours pick it by themselves.
+import '@fontsource-variable/literata/opsz.css'
+import '../componentes/inicio-composicao/composicao.css'
+import { Legenda, Telefone } from '../componentes/inicio-composicao/pecas.tsx'
 
-/** The text size the room is drawn for (WCAG 1.4.4): the lede needs two lines only at a 16 px root. */
-const RAIZ_DA_SALA_PX = 16
+/** The wide composition (the room strip): the same query is written literally in composicao.css. */
+const LARGA = '(min-width: 69em) and (min-aspect-ratio: 1/1)'
 
-function assinarTexto(aviso: () => void): () => void {
-  if (typeof window === 'undefined') return () => {}
-  // A change of the browser text size reflows the page without a change of width, so `resize` alone would miss it: the root's
-  // box is watched too (where the browser has the observer).
-  window.addEventListener('resize', aviso)
-  const observador = typeof ResizeObserver === 'undefined' ? undefined : new ResizeObserver(aviso)
-  observador?.observe(document.documentElement)
-  return () => {
-    window.removeEventListener('resize', aviso)
-    observador?.disconnect()
-  }
-}
+const RAIZ = import.meta.env.BASE_URL
 
-/** Whether the root text is above 16 px: what the stylesheet reads as `1rem - 16px` in its hand-over container query. */
-function lerTextoGrande(): boolean {
-  if (typeof window === 'undefined' || typeof window.getComputedStyle !== 'function') return false
-  const tamanho = Number.parseFloat(window.getComputedStyle(document.documentElement).fontSize)
-  return Number.isFinite(tamanho) && tamanho > RAIZ_DA_SALA_PX
-}
+/** The folder of the cut-outs (palette A, the only one). */
+const ARTE = `${RAIZ}composicao/a`
 
-/**
- * True while the root text is above 16 px (17 to 32 px at 200 %). The room is then not drawn: inicio-casa.css hands the hero
- * over to the stacked flow on every window width, and this flag makes the page render the DOM that flow lays out (the stage
- * in the hero, no room layers), so the two agree in every state. NaN, an empty value or no window read as 16 px.
- */
-function useTextoGrande(): boolean {
-  return useSyncExternalStore(assinarTexto, lerTextoGrande, () => false)
-}
-
-/**
- * Band 5 (HOME-SECOND-HALF): the statement on the rug, with the Notas capture standing on the band's bottom edge. The
- * LIST of facts (`[data-prova-lista]`, ~400 px) is signed by the same primitive as the captions (`useAssinatura`:
- * `data-assinada` once 60 % of it is in view, at once with reduced motion), and the five hairlines draw from that one
- * attribute (inicio-casa.css). Not the band's wrapper: on a phone it is 1425 px tall, so 60 % of it (855 px) is never in
- * a 844 px window and the rules would never draw. The list is rendered by the shared FaixaProva, so the page finds it in
- * the wrapper and writes the attribute on it (layout effects, before the first paint and before the observer starts).
- */
-function ProvaDaCasa() {
-  const raiz = useRef<HTMLDivElement>(null)
-  const lista = useRef<HTMLElement | null>(null)
-  useLayoutEffect(() => {
-    lista.current = raiz.current?.querySelector<HTMLElement>('[data-prova-lista]') ?? null
-  }, [])
-  const assinada = useAssinatura(lista)
-  useLayoutEffect(() => {
-    const no = lista.current
-    if (!no) return
-    if (assinada) no.setAttribute('data-assinada', '')
-    else no.removeAttribute('data-assinada')
-  }, [assinada])
+/** A slot that still waits for art: a dashed outline with its label, so the gap is seen and not papered over. */
+function Vaga({ rotulo, className }: { rotulo: string; className?: string }) {
   return (
-    <div ref={raiz} className="ic-prova">
-      <FaixaProva titulo={INI.h2Prova} texto={INI.pProva} itens={INI_FATOS} />
-      <ProdutoEmMoldura tela={{ ...CAPTURA_NOTAS, alt: INI.altNotas }} moldura={MOLDURA_DIA} />
-    </div>
+    <p className={`co-vaga ${className ?? ''}`} data-aguarda-arte="">
+      {rotulo}
+    </p>
   )
 }
 
 /**
- * The Início (REP-HOME), "A casa acesa": seven bands on the shared pieces of secoes/, in this order:
- * 1 the 17:30 hand-off scene (plate M05, the two-ink h1 across the seam; in the stacked composition also the stage with
- * the first screen); 2 the night (M06), which in the room composition (1180 px and more, landscape: `useSala`) is the
- * pinned stage of moment 2 with the first screen in it; 3 the hour as type, with the second framed screen on the band's
- * bottom edge; 4 the lone carer, the mat cut by the band line; 5 the statement on the rug and the Notas screen; 6 the
- * questions, with the night door field on the band's bottom and the right window edge; 7 the night closing, with A05
- * (the street, edge to edge, its windows lit once) on the band's bottom edge. No band has a floor strip.
- * Every string comes from conteudo/inicio.ts; this file and the page folders write no text of their own.
- *
- * The header pill belongs to the shell; the page only says whether its hero pill is in view (`data-inicio-heroi` on
- * <html>, set by `useGanchoDoCabecalho`), and the page stylesheet inicio-casa.css quiets the shell's pill from it.
+ * The Início, reference composition "a luz, pela hora" (branch fable/home-composicao). Seven scenes on one floor line:
+ * 1 16:00, the day room and the hand-over (M05); 2 17:30, the night room (M06, the lamp) and the Histórico; 3 20:30, the
+ * hour as type and the Hoje screen at night; 4 the lone carer (M04) and the Família screen; 5 the statement on the mat's
+ * colour and the Notas screen; 6 the questions and the door; 7 the street at dusk on the footer line.
+ * Palette A only (the cut-outs live in public/composicao/a). Scenes 1 to 3 are one strip: on a wide landscape window with scroll timelines and no reduced-motion preference the
+ * strip is pinned and the vertical scroll walks it sideways (composicao.css); everywhere else the three scenes stack.
+ * Every string comes from conteudo/inicio.ts.
  */
 export function Inicio() {
-  // The room composition needs the room window AND a 16 px root: with larger text the hero leaves the room (rule W1, see the
-  // hand-over in inicio-casa.css), so `larga` is false there and the stacked DOM renders.
-  const sala = useSala()
-  const textoGrande = useTextoGrande()
-  const larga = sala && !textoGrande
-  const fixo = usePalcoFixo() && larga
-  useGanchoDoCabecalho(larga)
+  useGanchoDoCabecalho(false)
+  const arte = ARTE
 
   return (
     <main>
       <PaginaCasa>
-        <CenaHeroi
-          imagem={M05}
-          recorte390={M05_390}
-          alt={INI.altCena1}
-          larguraMax={M05_LARGURA}
-          parede={{ esquerda: 'papel', direita: 'cacau' }}
-          chao={{ esquerda: 'areia', direita: 'chao-noite' }}
-          costura={M05_COSTURA}
-          alturaChao={M05_CHAO}
-          lado="esquerda"
-          idTitulo={ID_TITULO}
-          sobrePlaca={
-            <LuzDaLampada luz={LUZ_M05} luz390={LUZ_M05_390} memoria="casa-luz-m05" gatilho="carga" />
-          }
-          // data-costura-lado: the side of the seam the text lives on, read by the meter's COSTURA rule. The caption of
-          // 16:00 is day text from 1024 (on the day floor) and night text below (papel on cacau, under the plate). It and
-          // the stage come after the plate in DOM order: the caption is the next element after the plate.
-          depoisDaPlaca={
-            <>
-              <div className="ic-leg1" data-costura-lado={larga ? 'dia' : 'noite'}>
-                <LegendaAssinada texto={INI.leg1} tom={larga ? 'dia' : 'noite'} />
+        <div className="co">
+          <div className="co-trilho">
+            <div className="co-palco">
+              <div className="co-fita">
+                <section className="co-painel co-p1" data-cena-heroi="" aria-labelledby={ID_TITULO}>
+                  <span className="co-fantasma" aria-hidden="true">
+                    {INI_HORAS[0]}
+                  </span>
+                  <div className="co-texto co-p1-texto">
+                    <h1 id={ID_TITULO} className="co-h1">
+                      <span data-h1-dia="">{INI.h1Dia}</span> <span data-h1-noite="">{INI.h1Noite}</span>
+                    </h1>
+                    <p className="co-lede">{INI.lede}</p>
+                    <div className="co-acoes">
+                      <BotaoLargo rotulo={INI.cta1} para={INI_ROTAS.criarConta} variante="mel" />
+                      <Botao to={INI_ROTAS.comoFunciona} variante="texto" tamanho="site">
+                        {INI.cta2}
+                      </Botao>
+                    </div>
+                  </div>
+                  <div className="co-p1-cena">
+                    <div className="co-placa co-m05">
+                      <picture>
+                        <source media={LARGA} srcSet={`${arte}/m05.webp`} width={1672} height={941} />
+                        <img src={`${arte}/m05m.webp`} width={1170} height={918} alt={INI.altCena1} fetchPriority="high" decoding="async" />
+                      </picture>
+                      <picture>
+                        <source media={LARGA} srcSet={`${RAIZ}cenas/inicio/m05-luz-1672w.png`} width={1672} height={941} />
+                        <img className="co-luz" src={`${RAIZ}cenas/inicio/m05-luz-390c-1170w.png`} width={1170} height={918} alt="" decoding="async" />
+                      </picture>
+                    </div>
+                    <Legenda texto={INI.leg1} className="co-p1-leg" />
+                  </div>
+                </section>
+
+                <section className="co-painel co-p2" aria-labelledby={ID_FAIXA_NOITE}>
+                  <span className="co-fantasma" aria-hidden="true">
+                    {INI_HORAS[1]}
+                  </span>
+                  <div className="co-texto co-p2-texto">
+                    <h2 id={ID_FAIXA_NOITE} className="co-h2">
+                      {INI.h2Noite}
+                    </h2>
+                    <p className="co-p">{INI.pNoite}</p>
+                  </div>
+                  <div className="co-p2-cena">
+                    <Telefone arte={arte} nome="historico" alt={INI.altTela1} sizes={`${LARGA} 360px, 64vw`} className="co-p2-fone" />
+                    <div className="co-placa co-m06">
+                      <img src={`${arte}/m06.webp`} width={900} height={1470} alt={INI.altCena2} loading="lazy" decoding="async" />
+                      <img className="co-luz" src={`${RAIZ}cenas/inicio/m06-luz-792w.png`} width={792} height={1293} alt="" loading="lazy" decoding="async" />
+                    </div>
+                    <Legenda texto={INI.leg2} className="co-p2-leg" />
+                  </div>
+                </section>
+
+                <section className="co-painel co-p3" aria-labelledby={ID_FAIXA_TELA}>
+                  <div className="co-texto co-p3-texto">
+                    <h2 id={ID_FAIXA_TELA} className="co-h2 co-h2-hora">
+                      {INI.h2Tela}
+                    </h2>
+                    <p className="co-p">{INI.pTela}</p>
+                  </div>
+                  <div className="co-p3-cena">
+                    <Vaga rotulo={INI_REF.slotBerco} className="co-p3-vaga" />
+                    <Telefone arte={arte} nome="hoje-n" alt={INI.altTela2} sizes={`${LARGA} 360px, 78vw`} className="co-p3-fone" />
+                  </div>
+                </section>
               </div>
-              {larga ? null : <PalcoTroca />}
-            </>
-          }
-        >
-          <TituloCasa id={ID_TITULO} />
-          <div className="ic-noite-heroi" data-costura-lado="noite">
-            <p className="text-abertura font-texto ic-lede">{INI.lede}</p>
-            <AcoesDoHeroi />
-          </div>
-        </CenaHeroi>
-
-        <FaixaInteira
-          fundo="papel"
-          fundoDireita="cacau"
-          costuraX="var(--heroi-costura-x)"
-          costuraX390="0px"
-          idTitulo={ID_FAIXA_NOITE}
-        >
-          <FaixaNoite larga={larga} fixo={fixo} />
-        </FaixaInteira>
-
-        <FaixaInteira fundo="cacau" idTitulo={ID_FAIXA_TELA}>
-          <FaixaTela />
-        </FaixaInteira>
-
-        <FaixaInteira fundo="papel" idTitulo={ID_FAIXA_SO}>
-          <FaixaSozinho />
-        </FaixaInteira>
-
-        <FaixaInteira fundo="areia">
-          <ProvaDaCasa />
-        </FaixaInteira>
-
-        <FaixaInteira fundo="papel">
-          <div id="perguntas" className="ic-perguntas">
-            <Perguntas titulo={INI.h2Perg} itens={INI_PERGUNTAS} />
-            {/* The door field: page markup, a sibling of the shared block (which dissolves into this grid). The door is a
-                real picture, so it keeps its alt; the plate enters from the right wall in inicio-faixas.css. */}
-            <div className="ic-porta">
-              <img
-                src={PORTA_NOITE.src}
-                srcSet={PORTA_NOITE.srcSet}
-                sizes={PORTA_NOITE.sizes}
-                width={PORTA_NOITE.largura}
-                height={PORTA_NOITE.altura}
-                alt={INI.altPorta}
-                loading="lazy"
-                decoding="async"
-              />
+              <ol className="co-regua" aria-hidden="true">
+                {INI_HORAS.map((hora) => (
+                  <li key={hora}>{hora}</li>
+                ))}
+              </ol>
             </div>
           </div>
-        </FaixaInteira>
 
-        <FaixaInteira fundo="cacau">
-          <div className="ic-fecho">
-            <Fechamento titulo={INI.h2Fecho} acao={{ rotulo: INI.cta3, para: INI_ROTAS.criarConta }} tom="noite" />
-            {/* Decorative: the heading above it already says the night is noted; the street only closes the house. It runs
-                edge to edge and stands on the band's bottom edge, which is the footer's top. Its windows come on once (A05:
-                opacity, `--luz-fecho-ms` from the catalogue's M11 time) at 60 % in view, and rest lit. */}
-            <figure className="ic-fecho-cena" style={{ '--luz-fecho-ms': `${CATALOGO.M11.duracaoMs}ms` } as CSSProperties}>
-              <img
-                src={A05_RUA.src}
-                srcSet={A05_RUA.srcSet}
-                sizes={A05_RUA.sizes}
-                width={A05_RUA.largura}
-                height={A05_RUA.altura}
-                alt=""
-                loading="lazy"
-                decoding="async"
-              />
-              <LuzDaLampada luz={LUZ_A05} memoria="casa-luz-a05" gatilho="vista" limiar={0.6} />
-            </figure>
-          </div>
-        </FaixaInteira>
+          <section className="co-faixa co-so" aria-labelledby={ID_FAIXA_SO}>
+            <div className="co-dentro">
+              <div className="co-texto co-so-texto">
+                <h2 id={ID_FAIXA_SO} className="co-h2">
+                  {INI.h2So}
+                </h2>
+                <p className="co-p">{INI.pSo}</p>
+              </div>
+              <Telefone arte={arte} nome="familia" alt={INI.altTela3} sizes={`${LARGA} 290px, 64vw`} className="co-so-fone" />
+              <figure className="co-placa co-m04">
+                <img src={`${arte}/m04.webp`} width={1200} height={870} alt={INI.altCena3} loading="lazy" decoding="async" />
+              </figure>
+            </div>
+          </section>
+
+          <section className="co-faixa co-prova" aria-labelledby="co-prova">
+            <div className="co-dentro">
+              <div className="co-texto co-prova-texto">
+                <h2 id="co-prova" className="co-h2">
+                  {INI.h2Prova}
+                </h2>
+                <p className="co-p">{INI.pProva}</p>
+                <ul className="co-fatos">
+                  {INI_FATOS.map((fato) => (
+                    <li key={fato}>{fato}</li>
+                  ))}
+                </ul>
+              </div>
+              <Telefone arte={arte} nome="notas" alt={INI.altNotas} sizes={`${LARGA} 375px, 78vw`} className="co-prova-fone" />
+            </div>
+          </section>
+
+          <section id="perguntas" className="co-faixa co-perg" aria-labelledby="co-perg">
+            <div className="co-dentro">
+              <div className="co-texto co-perg-texto">
+                <h2 id="co-perg" className="co-h2">
+                  {INI.h2Perg}
+                </h2>
+                <dl className="co-perguntas">
+                  {INI_PERGUNTAS.map(({ pergunta, resposta }) => (
+                    <div key={pergunta}>
+                      <dt>{pergunta}</dt>
+                      <dd>{resposta}</dd>
+                    </div>
+                  ))}
+                </dl>
+              </div>
+              <figure className="co-placa co-porta">
+                <img src={`${arte}/porta.webp`} width={1254} height={1070} alt={INI.altPorta} loading="lazy" decoding="async" />
+                <Vaga rotulo={INI_REF.slotPorta} className="co-porta-vaga" />
+              </figure>
+            </div>
+          </section>
+
+          <section className="co-faixa co-fecho" aria-labelledby="co-fecho">
+            <div className="co-dentro">
+              <div className="co-texto co-fecho-texto">
+                <h2 id="co-fecho" className="co-h2">
+                  {INI.h2Fecho}
+                </h2>
+                <div className="co-acoes">
+                  <BotaoLargo rotulo={INI.cta3} para={INI_ROTAS.criarConta} variante="mel" />
+                </div>
+              </div>
+              {/* Decorative: the heading says it; the street only closes the house. */}
+              <div className="co-placa co-rua">
+                <img src={`${arte}/rua.webp`} width={1672} height={642} alt="" loading="lazy" decoding="async" />
+                <img className="co-luz" src={`${RAIZ}cenas/inicio-faixas/a05-rua-luz-1672w.png`} width={1672} height={642} alt="" loading="lazy" decoding="async" />
+              </div>
+            </div>
+          </section>
+        </div>
       </PaginaCasa>
     </main>
   )

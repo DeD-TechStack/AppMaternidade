@@ -1,0 +1,86 @@
+{
+ "m05": {
+  "largura": 1672,
+  "altura": 941,
+  "fundo_F8F6EB": 0.1599,
+  "fundo_2B2320": 0.2624,
+  "fundo_EADDC5": 0.0947,
+  "fundo_6E6560": 0.0625,
+  "bytes_a": 185432,
+  "chao": 0.7991,
+  "costura": 0.5437
+ },
+ "m06": {
+  "largura": 900,
+  "altura": 1470,
+  "fundo_2B2320": 0.63,
+  "fundo_6E6560": 0.1252,
+  "bytes_a": 78128,
+  "chao": 0.8605
+ },
+ "m05m": {
+  "largura": 1170,
+  "altura": 918,
+  "fundo_F8F6EB": 0.0992,
+  "fundo_2B2320": 0.3671,
+  "fundo_EADDC5": 0.0585,
+  "fundo_6E6560": 0.0855,
+  "bytes_a": 124420,
+  "chao": 0.8007,
+  "costura": 0.3641
+ },
+ "m04": {
+  "largura": 1200,
+  "altura": 870,
+  "fundo_F8F6EB": 0.4095,
+  "fundo_EADDC5": 0.0975,
+  "bytes_a": 141636
+ },
+ "rua": {
+  "largura": 1672,
+  "altura": 642,
+  "fundo_2B2320": 0.0105,
+  "bytes_a": 118650
+ },
+ "porta": {
+  "largura": 1254,
+  "altura": 1070,
+  "fundo_2B2320": 0.4888,
+  "bytes_a": 158976
+ },
+ "historico": {
+  "largura": 1170,
+  "altura": 3702
+ },
+ "hoje-n": {
+  "largura": 1170,
+  "altura": 2640
+ },
+ "notas": {
+  "largura": 1170,
+  "altura": 2532
+ },
+ "familia": {
+  "largura": 1170,
+  "altura": 2532
+ },
+ "m01": {
+  "largura": 1672,
+  "altura": 941,
+  "fundo_2B2320": 0.1385,
+  "bytes_a": 809556
+ },
+ "m12": {
+  "largura": 981,
+  "altura": 1602,
+  "fundo_F8F6EB": 0.0848,
+  "bytes_a": 867540
+ },
+ "luminaria": {
+  "largura": 195,
+  "altura": 645,
+  "fundo_2B2320": 0.496,
+  "fundo_6E6560": 0.1053,
+  "bytes_a": 8304
+ }
+}

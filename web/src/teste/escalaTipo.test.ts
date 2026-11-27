@@ -137,7 +137,7 @@ describe('TYPE-1: a escala de tipo (arquivos-fonte)', () => {
     expect(umCorpo(inicio, '.in-pagina .cm-segunda-linha')).not.toMatch(/italic/)
 
     const h1Com = /<h1\b[^>]*className="[^"]*(?<![\w-])cm-exibicao(?![\w-])/
-    for (const arquivo of ['src/componentes/inicio-casa/TituloCasa.tsx', 'src/paginas/NaoEncontrada.tsx']) {
+    for (const arquivo of ['src/paginas/NaoEncontrada.tsx']) {
       expect(lerTexto(arquivo), `${arquivo}: o h1 sem cm-exibicao`).toMatch(h1Com)
     }
     // F8-1 (troca a S-21): o h1 das seis páginas de leitura é o de `titulo-1` (`cm-h1` sem `cm-exibicao`), numa abertura compacta.

@@ -146,7 +146,12 @@ describe('cor só dos tokens (DESIGN.md 8)', () => {
     const soltos: string[] = []
     for (const arquivo of todos) {
       if (arquivo.nome === 'styles/tokens.css') continue
-      for (const [achado] of arquivo.limpo.matchAll(/#[0-9a-fA-F]{3,8}\b|\b(?:rgba?|hsla?)\s*\(/g)) {
+      // Floor line A05: --co-breu is declared on .co in composicao.css, not in the shared tokens; exempt only that literal.
+      const texto =
+        arquivo.nome === 'componentes/inicio-composicao/composicao.css'
+          ? arquivo.limpo.replace('--co-breu: #18110F;', '')
+          : arquivo.limpo
+      for (const [achado] of texto.matchAll(/#[0-9a-fA-F]{3,8}\b|\b(?:rgba?|hsla?)\s*\(/g)) {
         soltos.push(`${arquivo.nome}: ${achado}`)
       }
     }
@@ -154,20 +159,83 @@ describe('cor só dos tokens (DESIGN.md 8)', () => {
   })
 })
 
+// A composição da Início (único arquivo com exceção): um contorno é um anel, não elevação. Deslocamento zero, desfoque
+// zero, espessura em px, cor por papel (var) ou papel misturado com transparente.
+const COMPOSICAO = 'componentes/inicio-composicao/composicao.css'
+const ANEL = /^(inset )?0 0 0 [\d.]+px (var\(--[\w-]+\)|color-mix\(in srgb, var\(--[\w-]+\) \d+%, transparent\))$/
+
+// A mesma composição: a parede do dia e a da noite são duas cores chapadas que se encontram na costura (parada dura,
+// sem mistura): `linear-gradient(to right, X 0 var(--costura), Y var(--costura))`, com X transparente ou um papel.
+const DIVISAO_NA_COSTURA =
+  /^linear-gradient\(to right, (transparent|var\(--[\w-]+\)) 0 var\(--costura\), var\(--[\w-]+\) var\(--costura\)\)$/
+
+/** Os gradientes de um CSS: as chamadas `*-gradient(...)` inteiras (com parênteses aninhados), na ordem. */
+function gradientes(texto: string): string[] {
+  const achados: string[] = []
+  for (const m of texto.matchAll(/(?:repeating-)?(?:linear|radial|conic)-gradient\(/g)) {
+    let fundo = 1
+    let i = m.index + m[0].length
+    while (i < texto.length && fundo > 0) {
+      if (texto[i] === '(') fundo += 1
+      else if (texto[i] === ')') fundo -= 1
+      i += 1
+    }
+    achados.push(texto.slice(m.index, i))
+  }
+  return achados
+}
+
 describe('sombra, gradiente e filtro só pelos tokens (DESIGN.md 3 e 8)', () => {
   it('box-shadow só com var(--sombra-flutuante) ou var(--sombra-cartao)', () => {
     for (const arquivo of css) {
       for (const { propriedade, valor } of declaracoes(arquivo.limpo)) {
         if (propriedade !== 'box-shadow') continue
+        if (arquivo.nome === COMPOSICAO) {
+          expect(valor, arquivo.nome).toMatch(ANEL)
+          continue
+        }
         expect(valor, arquivo.nome).toMatch(/^(none|var\(--sombra-(flutuante|cartao)\))$/)
       }
     }
     for (const arquivo of ts) expect(arquivo.limpo, arquivo.nome).not.toMatch(/\bshadow-|boxShadow|drop-shadow/)
   })
 
+  it('o anel de contorno da composição da Início é só anel: sem deslocamento, sem desfoque, sem elevação', () => {
+    const aneis = css
+      .filter((arquivo) => arquivo.nome === COMPOSICAO)
+      .flatMap((arquivo) => declaracoes(arquivo.limpo).filter((d) => d.propriedade === 'box-shadow'))
+    expect(aneis.length).toBeGreaterThanOrEqual(3)
+    for (const { valor } of aneis) expect(valor).toMatch(ANEL)
+    // Controles negativos: elevação, desfoque, deslocamento, cor solta, duas camadas.
+    for (const ruim of [
+      '0 2px 4px rgb(43 35 32 / .08)',
+      '0 1px 0 0 var(--color-cacau)',
+      '0 0 4px 1px var(--color-cacau)',
+      '2px 0 0 1px var(--color-cacau)',
+      '0 0 0 1px #2B2320',
+      '0 0 0 1px rgb(0 0 0 / .1)',
+      '0 0 0 1px var(--a), 0 8px 24px var(--b)',
+      'var(--sombra-flutuante)',
+    ]) {
+      expect(ruim).not.toMatch(ANEL)
+    }
+    for (const bom of ['0 0 0 1px var(--bisel-fio)', 'inset 0 0 0 1.5px var(--color-cacau)', '0 0 0 1px color-mix(in srgb, var(--color-papel) 30%, transparent)']) {
+      expect(bom).toMatch(ANEL)
+    }
+    // Os outros arquivos continuam sob a regra antiga: o anel não passa nela.
+    expect('0 0 0 1px var(--bisel-fio)').not.toMatch(/^(none|var\(--sombra-(flutuante|cartao)\))$/)
+  })
+
   it('gradiente só nas declarações de tokens.css; fora dele, só var(--luz-estudio) ou var(--brilho-mel)', () => {
     for (const arquivo of todos) {
       if (arquivo.nome === 'styles/tokens.css') continue
+      if (arquivo.nome === COMPOSICAO) {
+        expect(arquivo.limpo, arquivo.nome).not.toMatch(/bg-gradient|bg-linear|bg-radial|radial-gradient|conic-gradient|repeating-/)
+        const lista = gradientes(arquivo.limpo)
+        expect(lista.length, 'a composição tem as divisões das paredes').toBeGreaterThanOrEqual(1)
+        for (const g of lista) expect(g, arquivo.nome).toMatch(DIVISAO_NA_COSTURA)
+        continue
+      }
       expect(arquivo.limpo, arquivo.nome).not.toMatch(/-gradient\(|bg-gradient|bg-linear|bg-radial/)
     }
     for (const arquivo of css) {
@@ -177,6 +245,31 @@ describe('sombra, gradiente e filtro só pelos tokens (DESIGN.md 3 e 8)', () => 
         expect(valor, arquivo.nome).toMatch(/^var\(--(luz-estudio|brilho-mel)\)$/)
       }
     }
+  })
+
+  it('a divisão das paredes da composição é parada dura na --costura; mistura, outra costura e radial/cônico não passam', () => {
+    const bons = [
+      'linear-gradient(to right, transparent 0 var(--costura), var(--noite) var(--costura))',
+      'linear-gradient(to right, var(--dia) 0 var(--costura), var(--noite) var(--costura))',
+    ]
+    for (const bom of bons) expect(bom).toMatch(DIVISAO_NA_COSTURA)
+    const ruins = [
+      'linear-gradient(to right, var(--a), var(--b))',
+      'linear-gradient(to right, var(--a) 0, var(--b) 100%)',
+      'linear-gradient(to right, var(--a) 0 var(--meio), var(--b) var(--meio))',
+      'linear-gradient(to right, var(--a) 0 40%, var(--b) 40%)',
+      'linear-gradient(to right, #F8F6EB 0 var(--costura), var(--b) var(--costura))',
+      'linear-gradient(to right, var(--a) 0 var(--costura), var(--b) var(--costura), var(--c))',
+      'radial-gradient(closest-side, var(--a), transparent)',
+      'conic-gradient(var(--a), var(--b))',
+    ]
+    for (const ruim of ruins) expect(ruim).not.toMatch(DIVISAO_NA_COSTURA)
+    // O leitor acha a chamada inteira, com parênteses aninhados, e nada mais.
+    expect(gradientes('a { background: linear-gradient(to right, var(--a) 0 var(--costura), var(--b) var(--costura)); }')).toEqual([
+      'linear-gradient(to right, var(--a) 0 var(--costura), var(--b) var(--costura))',
+    ])
+    expect(gradientes('.x { color: red; }')).toEqual([])
+    expect(gradientes('.x { background: radial-gradient(closest-side, var(--a), transparent); }')).toHaveLength(1)
   })
 
   it('nenhum filtro nem desfoque', () => {
@@ -288,6 +381,27 @@ describe('movimento reduzido (DESIGN.md 5)', () => {
     expect(indexCss).toMatch(
       /@media \(prefers-reduced-motion: reduce\)\s*\{\s*\*,\s*\*::before,\s*\*::after\s*\{\s*animation: none !important;\s*transition: none !important;/,
     )
+  })
+
+  it('a folha compartilhada desliga os pseudoelementos das View Transitions só com movimento reduzido', () => {
+    expect(lerTexto('main.tsx')).toMatch(/import ['"]\.\/index\.css['"]/)
+    const pseudoelementos = [
+      '::view-transition',
+      '::view-transition-group(*)',
+      '::view-transition-image-pair(*)',
+      '::view-transition-old(*)',
+      '::view-transition-new(*)',
+    ]
+    const folha = semComentariosCss(indexCss)
+    const reduzido = /@media \(prefers-reduced-motion: reduce\)\s*\{([\s\S]*?)^\}/m
+    const regras = reduzido.exec(folha)?.[1] ?? ''
+    for (const seletor of pseudoelementos) {
+      const regra = [...regras.matchAll(/([^{}]+)\{([^{}]*)\}/g)].find(([, seletores]) =>
+        seletores.split(',').some((parte) => parte.trim() === seletor),
+      )
+      expect(regra?.[2] ?? '', seletor).toMatch(/animation:\s*none\s*!important;/)
+    }
+    expect(folha.replace(reduzido, '')).not.toMatch(/::view-transition[^{}]*\{[^{}]*animation:\s*none/)
   })
 
   it('o letreiro dos selos dura 60 s e, com movimento reduzido, para e esconde a cópia e o botão', () => {

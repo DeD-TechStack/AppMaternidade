@@ -628,6 +628,14 @@
     transition: none !important;
   }
 
+  ::view-transition,
+  ::view-transition-group(*),
+  ::view-transition-image-pair(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
+  }
+
   /* Abrir e fechar (styles/abrir-fechar.css) sem duração: o menu, as caixas e o acordeão trocam de uma vez. */
   :root {
     --mov-abrir: 0ms;

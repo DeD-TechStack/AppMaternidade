@@ -194,9 +194,8 @@ export const CATALOGO = {
     // The swap fires when p crosses 0.5 in either direction, inside the middle hold (no hysteresis).
     limiar: 0.5,
   },
-  // Início, band 7 (HOME-SECOND-HALF): the street's lit windows come on in one step, opacity only, 240 ms on the expo
-  // curve, once per session when 60 % of the plate is in view (`LuzDaLampada gatilho="vista" limiar={0.6}`), and rest
-  // lit. The component starts the step after M15's `atrasoMs`; inicio-casa.css gives that one layer these 240 ms.
+  // Início, band 7 (A05): composicao.css drives the street light's opacity with a CSS view timeline.
+  // The windows stay lit with reduced motion or without support for the timeline or animation range.
   M11: {
     id: 'M11',
     tipo: 'tempo',

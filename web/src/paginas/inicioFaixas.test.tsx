@@ -1,26 +1,22 @@
-import { existsSync, readFileSync } from 'node:fs'
+import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
-import { act } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { M04 } from '../componentes/inicio-casa/midia.ts'
-import { INI } from '../conteudo/inicio.ts'
-import { CONDICAO_NATIVA } from '../movimento/troca/usarPalco.ts'
+import { INI, INI_FATOS, INI_PERGUNTAS, INI_REF } from '../conteudo/inicio.ts'
 import { aguardarCarga, renderizarRota } from '../teste/renderizarRota.tsx'
 
-// HOME-SECOND-HALF (card t_bb3048d4): bands 3 to 7 of the Início, at source level. jsdom has no layout and no
-// scroll-driven animation, so the CSS is read as text and the page as DOM; the browser numbers (frame sizes, pixels,
-// getAnimations) are the render's job and are printed in the handoff.
+// The scenes 3 to 7 of the Início composition (the 20:30 hour, the lone carer, the proof, the questions, the closing),
+// at source level (card COMP-PORT). Scenes 1 and 2, the header pill and the images as a whole are in inicio.test.tsx.
+// jsdom has no layout and no scroll-driven animation, so the CSS is read as text and the page as DOM; the browser
+// numbers (frame sizes, pixels, getAnimations) are the render's job and are printed in the handoff.
 
 const PASTA_SRC = join(process.cwd(), 'src')
-const PASTA_CASA = join(PASTA_SRC, 'componentes', 'inicio-casa')
 const lerTexto = (caminho: string) => readFileSync(caminho, 'utf8').replace(/\r\n/g, '\n')
 const semComentarios = (css: string) => css.replace(/\/\*[\s\S]*?\*\//g, '')
 const colapsar = (texto: string) => texto.replace(/\s+/g, ' ').trim()
-const CSS_DA_CASA = () => lerTexto(join(PASTA_CASA, 'inicio-casa.css'))
-const CSS_DAS_FAIXAS = () => lerTexto(join(PASTA_CASA, 'inicio-faixas.css'))
 const norm = (texto: string | null | undefined) => (texto ?? '').replace(/\s+/g, ' ').trim()
+const CSS_DA_COMPOSICAO = () => lerTexto(join(PASTA_SRC, 'componentes', 'inicio-composicao', 'composicao.css'))
 
-// The three alts of the leader's humanizer pass (COPY_HUMANIZER_SECOND_HALF.md), verbatim.
+// The alts of the leader's humanizer pass (COPY_HUMANIZER_SECOND_HALF.md), verbatim, and the Família one (COMP-PORT).
 const ALT_BANDA_4 = 'Heloísa de bruços no tapete, de cabeça erguida e sorrindo. Juliana está deitada ao lado dela, também de bruços, olhando para a bebê.'
 const ALT_NOTAS = 'Tela de Notas do AppMaternidade com a nota de Juliana em destaque: “Pomada só à noite.” Abaixo, uma nota de Ícaro: “Fraldas P no armário de cima.”'
 const ALT_PORTA = 'Uma mão põe a chave na fechadura de uma porta fechada, num corredor à noite.'
@@ -58,12 +54,12 @@ function declaracoes(css: string): Declaracao[] {
   return saida
 }
 
-// ---- window, media and observer stubs ----------------------------------------------------------------------------
+// ---- window and observer stubs ------------------------------------------------------------------------------------
 
 const LARGURA_ORIGINAL = window.innerWidth
 const MATCHMEDIA_ORIGINAL = window.matchMedia
 
-function fixarJanela(largura: number, reduzido = false) {
+function fixarJanela(largura: number) {
   Object.defineProperty(window, 'innerWidth', { configurable: true, writable: true, value: largura })
   Object.defineProperty(window, 'innerHeight', { configurable: true, writable: true, value: 900 })
   Object.defineProperty(window, 'matchMedia', {
@@ -73,8 +69,7 @@ function fixarJanela(largura: number, reduzido = false) {
       const numero = /(\d+(?:\.\d+)?)(px|rem|em)/.exec(consulta)
       const px = numero ? Number(numero[1]) * (numero[2] === 'px' ? 1 : 16) : Number.NaN
       let matches = false
-      if (/prefers-reduced-motion/.test(consulta)) matches = reduzido
-      else if (/min-width/.test(consulta)) matches = largura >= px
+      if (/min-width/.test(consulta)) matches = largura >= px
       else if (/max-width/.test(consulta)) matches = largura <= px
       return {
         matches,
@@ -94,10 +89,8 @@ class ObservadorFalso {
   static todos: ObservadorFalso[] = []
   alvos = new Set<Element>()
   chamada: IntersectionObserverCallback
-  opcoes: IntersectionObserverInit | undefined
-  constructor(chamada: IntersectionObserverCallback, opcoes?: IntersectionObserverInit) {
+  constructor(chamada: IntersectionObserverCallback) {
     this.chamada = chamada
-    this.opcoes = opcoes
     ObservadorFalso.todos.push(this)
   }
   observe(alvo: Element) {
@@ -127,491 +120,237 @@ afterEach(() => {
   Object.defineProperty(window, 'matchMedia', { configurable: true, writable: true, value: MATCHMEDIA_ORIGINAL })
 })
 
-async function abrir(largura: number, reduzido = false) {
-  fixarJanela(largura, reduzido)
+async function abrir(largura: number) {
+  fixarJanela(largura)
   const resultado = renderizarRota('/', { sessao: null })
   await aguardarCarga()
   return resultado
 }
 
 const principal = () => document.querySelector<HTMLElement>('main')!
-const faixaDe = (filho: string) => principal().querySelector<HTMLElement>(`[data-faixa]:has(${filho})`)!
-
-/** Tells every observer that watches a node matching `seletor` that it is in view. */
-function avisarVista(seletor: string) {
-  act(() => {
-    for (const observador of ObservadorFalso.todos) {
-      const alvos = [...observador.alvos].filter((alvo) => alvo.matches(seletor))
-      if (alvos.length === 0) continue
-      observador.chamada(
-        alvos.map((target) => ({ target, isIntersecting: true, intersectionRatio: 1 }) as unknown as IntersectionObserverEntry),
-        observador as unknown as IntersectionObserver,
-      )
-    }
-  })
-}
+const banda = (classe: string) => principal().querySelector<HTMLElement>(`section.${classe}`)!
+const antes = (a: Element, b: Element) => Boolean(a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING)
 
 // ---- the copy -----------------------------------------------------------------------------------------------------
 
-describe('SH-copy: the three alts come from conteudo/inicio.ts, verbatim', () => {
-  it('altCena3 (band 4), altNotas (band 5) and altPorta (band 6) are the humanizer strings', () => {
+describe('SH-copy: the alts of scenes 4 to 6 come from conteudo/inicio.ts, verbatim', () => {
+  it('altCena3 (lone carer), altNotas (proof) and altPorta (questions) are the humanizer strings', () => {
     expect(INI.altCena3).toBe(ALT_BANDA_4)
-    expect((INI as Record<string, string>).altNotas).toBe(ALT_NOTAS)
-    expect((INI as Record<string, string>).altPorta).toBe(ALT_PORTA)
+    expect(INI.altNotas).toBe(ALT_NOTAS)
+    expect(INI.altPorta).toBe(ALT_PORTA)
   })
 
-  it('no other copy of the three alts exists in the page sources', () => {
-    const fontes = ['paginas/Inicio.tsx', 'componentes/inicio-casa/midia.ts', 'componentes/inicio-casa/FaixaTela.tsx', 'componentes/inicio-casa/FaixaSozinho.tsx']
-    for (const fonte of fontes) {
+  it('no other copy of those alts, or of the Família one, exists in the page source or the stylesheet', () => {
+    for (const fonte of ['paginas/Inicio.tsx', 'componentes/inicio-composicao/composicao.css']) {
       const texto = lerTexto(join(PASTA_SRC, fonte))
-      for (const alt of [ALT_BANDA_4, ALT_NOTAS, ALT_PORTA]) expect(texto, fonte).not.toContain(alt)
+      for (const alt of [ALT_BANDA_4, ALT_NOTAS, ALT_PORTA, INI.altTela3]) expect(texto, fonte).not.toContain(alt)
     }
   })
 })
 
-// ---- the page at 1440 ---------------------------------------------------------------------------------------------
+// ---- the page ------------------------------------------------------------------------------------------------------
 
-describe('SH-1 no floor strip: bands 3 to 7 hold no .ic-chao node and no rule names it', () => {
+describe('SH-1 no floor strip: the page holds no .ic-chao node and no rule names it', () => {
   for (const largura of [390, 1440]) {
     it(`at ${largura} document.querySelectorAll('[data-casa] .ic-chao') is empty`, async () => {
       await abrir(largura)
       expect(document.querySelectorAll('[data-casa] .ic-chao')).toHaveLength(0)
+      expect(document.querySelectorAll('[data-casa] [class^="ic-"], [data-casa] [class*=" ic-"]')).toHaveLength(0)
     })
   }
 
-  it('inicio-casa.css has no .ic-chao rule and no floor-strip comment is left as a contract', () => {
-    expect(semComentarios(CSS_DA_CASA())).not.toContain('ic-chao')
+  it('composicao.css has no .ic-chao rule', () => {
+    expect(semComentarios(CSS_DA_COMPOSICAO())).not.toContain('ic-chao')
   })
 })
 
-describe('SH-2 band 3: the hour as type, its frame on the band edge', () => {
-  it('one h2 with the deck string and no <br>, one framed screen (the night raster) and nothing else', async () => {
+describe('SH-2 scene 3 (20:30): the hour as type, the Hoje screen, and the cradle that waits for art', () => {
+  it('one h2 with the deck string and no <br>, the sentence under it, then the scene with the slot and the Hoje phone', async () => {
     await abrir(1440)
-    const banda = faixaDe('.ic-tela')
-    const titulo = banda.querySelector('h2')!
-    expect(norm(titulo.textContent)).toBe('Dormiu às 20:30.')
+    const cena = banda('co-p3')
+    const titulo = cena.querySelector('h2')!
+    expect(norm(titulo.textContent)).toBe(INI.h2Tela)
+    expect(titulo.classList.contains('co-h2-hora')).toBe(true)
     expect(titulo.querySelector('br')).toBeNull()
-    expect(banda.querySelectorAll('[data-produto-moldura]')).toHaveLength(1)
-    expect(banda.querySelector('[data-produto-moldura-arte]')!.getAttribute('src')).toBe('/molduras/moldura-noite.png')
-    expect(banda.querySelectorAll('.ic-tela > *:last-child')[0].hasAttribute('data-produto-moldura')).toBe(true)
+    expect(cena.querySelectorAll('h2')).toHaveLength(1)
+    const frase = cena.querySelector('.co-p3-texto p')!
+    expect(norm(frase.textContent)).toBe(INI.pTela)
+    const vaga = cena.querySelector('[data-aguarda-arte]')!
+    const fone = cena.querySelector<HTMLImageElement>('figure.co-fone img')!
+    expect(norm(vaga.textContent)).toBe(INI_REF.slotBerco)
+    expect(fone.getAttribute('alt')).toBe(INI.altTela2)
+    expect(antes(titulo, frase) && antes(frase, vaga) && antes(vaga, fone)).toBe(true)
+    // No picture of a person is invented for the slot: the scene holds one image, the phone.
+    expect(cena.querySelectorAll('img')).toHaveLength(1)
   })
 
-  it('the h2 is set from the 404 display tokens (112 / 56) with lining tabular figures, wrapped by max-inline-size in em', () => {
-    const regras = declaracoes(CSS_DA_CASA()).filter((d) => /\.ic-tela-texto h2|\.ic-tela h2|\.ic-h2-hora/.test(d.seletor))
-    const por = (prop: string) => regras.filter((d) => d.prop === prop).map((d) => d.valor)
-    expect(por('font-size')).toContain('var(--texto-exibicao-404-tamanho)')
-    expect(por('line-height')).toContain('var(--texto-exibicao-404-entrelinha)')
-    expect(por('font-variant-numeric')).toContain('tabular-nums lining-nums')
-    expect(por('max-inline-size').some((v) => /^[\d.]+em$/.test(v))).toBe(true)
-  })
-
-  it('no animation lives in the band: no keyframes name, no animation declaration for .ic-tela', () => {
-    const tela = declaracoes(CSS_DA_CASA()).filter((d) => /\.ic-tela/.test(d.seletor))
-    expect(tela.filter((d) => d.prop.startsWith('animation') || d.prop === 'transition')).toEqual([])
+  it('no animation is declared for the 20:30 scene itself', () => {
+    const doTres = declaracoes(CSS_DA_COMPOSICAO()).filter((d) => /\.co-p3\b/.test(d.seletor) && /^animation/.test(d.prop))
+    expect(doTres).toEqual([])
   })
 })
 
-describe('SH-3 band 4: unboxed, the mat cut by the 4/5 line', () => {
-  it('one img, the plate m04-faixa, with the humanizer alt, in a frame that is lazy and has no avif source', async () => {
+describe('SH-3 scene 4 (the lone carer): the text, the Família screen and the cut-out, with their own alts', () => {
+  it('one h2, one sentence, then the Família phone (altTela3) and the M04 figure (altCena3)', async () => {
     await abrir(1440)
-    const banda = faixaDe('.ic-so')
-    const imagens = banda.querySelectorAll('img')
-    expect(imagens).toHaveLength(1)
-    expect(imagens[0].getAttribute('alt')).toBe(ALT_BANDA_4)
-    expect(banda.querySelector('.ic-so-cena')!.contains(imagens[0])).toBe(true)
-    expect(imagens[0].getAttribute('loading')).toBe('lazy')
-    expect([imagens[0].getAttribute('width'), imagens[0].getAttribute('height')]).toEqual(['1200', '870'])
-    expect(banda.querySelector('source[type="image/avif"]')).toBeNull()
-  })
-
-  it('the frame is 1200 / 832, clipped, top-aligned; the text stands 28 px above the band line; one second edge', () => {
-    const css = colapsar(semComentarios(CSS_DA_CASA()))
-    expect(css).toMatch(/\[data-casa\] \.ic-so-cena \{[^}]*aspect-ratio: 1200 \/ 832;/)
-    expect(css).toMatch(/\[data-casa\] \.ic-so-cena \{[^}]*overflow: clip;/)
-    expect(css).toContain('--faixa4-placa')
-    expect(css).toContain('--segunda-borda: calc(100cqi - var(--faixa6-porta))')
-    const texto = declaracoes(CSS_DA_CASA()).filter((d) => d.seletor === '[data-casa] .ic-so-texto' && d.prop === 'padding-block-end')
-    expect(texto.map((d) => d.valor)).toContain('var(--faixa-texto-fundo)')
-  })
-
-  it('the old crop is gone: no 1200 / 800 aspect ratio and no areia floor under the scene', () => {
-    expect(colapsar(semComentarios(CSS_DA_CASA()))).not.toContain('aspect-ratio: 1200 / 800')
+    const cena = banda('co-so')
+    expect(cena.querySelectorAll('h2')).toHaveLength(1)
+    expect(norm(cena.querySelector('h2')!.textContent)).toBe(INI.h2So)
+    expect(norm(cena.querySelector('.co-so-texto p')!.textContent)).toBe(INI.pSo)
+    const fone = cena.querySelector<HTMLImageElement>('figure.co-so-fone img')!
+    const figura = cena.querySelector<HTMLImageElement>('figure.co-m04 img')!
+    expect(fone.getAttribute('alt')).toBe(INI.altTela3)
+    expect(figura.getAttribute('alt')).toBe(INI.altCena3)
+    expect(figura.getAttribute('loading')).toBe('lazy')
+    expect(antes(cena.querySelector('.co-so-texto')!, fone.closest('figure')!)).toBe(true)
+    expect(antes(fone.closest('figure')!, figura.closest('figure')!)).toBe(true)
+    expect(cena.querySelectorAll('img')).toHaveLength(2)
   })
 })
 
-describe('SH-4 band 5: the statement on the rug, with the Notas capture on the band edge', () => {
-  it('one capture img with the humanizer alt, one frame raster (the day one), no svg and no four-sided border', async () => {
+describe('SH-4 scene 5 (the proof): the statement, the four facts as a list, and the Notas capture', () => {
+  it('the heading, the sentence and the four facts in the deck order, then the one capture with its alt', async () => {
     await abrir(1440)
-    const banda = faixaDe('.ic-prova')
-    const telas = banda.querySelectorAll('[data-produto-tela]')
-    expect(telas).toHaveLength(1)
-    expect(telas[0].getAttribute('alt')).toBe(ALT_NOTAS)
-    expect(telas[0].getAttribute('src')).toBe('/telas/t1i/notas-320w.webp')
-    // IMG-RES: the box is that of the largest file, the 1170 x 2532 DPR 3 capture (the aspect of the 640 x 1385 it had).
-    expect([telas[0].getAttribute('width'), telas[0].getAttribute('height')]).toEqual(['1170', '2532'])
-    const artes = banda.querySelectorAll('[data-produto-moldura-arte]')
-    expect(artes).toHaveLength(1)
-    expect(artes[0].getAttribute('src')).toBe('/molduras/moldura-dia.png')
-    expect(artes[0].getAttribute('srcset')).toBe('/molduras/moldura-dia.png 678w, /molduras/moldura-dia-1356w.png 1356w')
-    expect(banda.querySelectorAll('svg')).toHaveLength(0)
-    expect(banda.querySelectorAll('.ic-prova > *:last-child')[0].hasAttribute('data-produto-moldura')).toBe(true)
-  })
-
-  it('the heading is exibicao (80), pProva titulo-3 (28), li2 titulo-4 (22), the other facts corpo; all from variables, outside @layer', () => {
-    const fora = declaracoes(CSS_DA_CASA()).filter((d) => d.pilha.every((p) => !p.startsWith('@layer')))
-    const valor = (seletor: RegExp, prop: string) => fora.filter((d) => seletor.test(d.seletor) && d.prop === prop).map((d) => d.valor)
-    expect(valor(/\.ic-prova \.cm-faixa-prova > h2/, 'font-size')).toContain('var(--texto-exibicao-tamanho)')
-    expect(valor(/\.ic-prova \.cm-faixa-prova > h2/, 'line-height')).toContain('var(--texto-exibicao-entrelinha)')
-    expect(valor(/\.ic-prova \.cm-faixa-prova > p/, 'font-size')).toContain('var(--texto-titulo-3-tamanho)')
-    expect(valor(/\.ic-prova \[data-prova-lista\] > li:nth-child\(2\)/, 'font-size')).toContain('var(--texto-titulo-4-tamanho)')
-    expect(valor(/\.ic-prova \[data-prova-lista\] > li\b(?!:)/, 'font-size')).toContain('var(--texto-corpo-tamanho)')
-    expect(valor(/\.ic-prova \[data-prova-lista\] > li:nth-child\(2\)/, 'font-family').join(' ')).toMatch(/--fonte-titulo|Literata/)
-  })
-
-  it('the LIST is signed by the H2 primitive (not the band wrapper, which is taller than the window on a phone): data-assinada after 60 % in view, the rules draw once (400 ms, linear, from the left)', async () => {
-    await abrir(1440)
-    const prova = principal().querySelector<HTMLElement>('.ic-prova')!
-    const lista = prova.querySelector<HTMLElement>('[data-prova-lista]')!
-    expect(lista.hasAttribute('data-assinada')).toBe(false)
-    expect(prova.hasAttribute('data-assinada'), 'the wrapper is never the signed element').toBe(false)
-    const dele = ObservadorFalso.todos.find((o) => o.alvos.has(lista))!
-    expect(dele, 'an observer watches the list').toBeDefined()
-    expect(dele.opcoes?.threshold).toBe(0.6)
-    expect(ObservadorFalso.todos.some((o) => o.alvos.has(prova)), 'no observer watches the wrapper').toBe(false)
-    avisarVista('[data-prova-lista]')
-    expect(lista.hasAttribute('data-assinada')).toBe(true)
-    expect(prova.hasAttribute('data-assinada')).toBe(false)
-    const css = colapsar(semComentarios(CSS_DA_CASA()))
-    expect(css).toMatch(/\[data-casa\] \.ic-prova \[data-prova-lista\] > li::before \{[^}]*transform: scaleX\(0\);[^}]*transform-origin: left;[^}]*transition: transform 400ms linear;/)
-    expect(css).toMatch(/\[data-casa\] \.ic-prova \[data-prova-lista\]\[data-assinada\] > li::(before|after)[^{]*\{[^}]*transform: scaleX\(1\);/)
-    expect(css).not.toMatch(/\.ic-prova\[data-assinada\]/)
-  })
-
-  it('with reduced motion the list is signed from the first paint (the rules are drawn)', async () => {
-    await abrir(1440, true)
-    expect(principal().querySelector('.ic-prova [data-prova-lista]')!.hasAttribute('data-assinada')).toBe(true)
-  })
-
-  it('the list stays signed after a re-render and never loses the attribute', async () => {
-    await abrir(390)
-    const lista = principal().querySelector<HTMLElement>('.ic-prova [data-prova-lista]')!
-    avisarVista('[data-prova-lista]')
-    expect(lista.hasAttribute('data-assinada')).toBe(true)
-    act(() => window.dispatchEvent(new Event('resize')))
-    expect(lista.hasAttribute('data-assinada')).toBe(true)
-  })
-
-  it('there are five rules: one before each of the four facts and one under the last', () => {
-    const css = colapsar(semComentarios(CSS_DA_CASA()))
-    expect(css).toMatch(/\.ic-prova \[data-prova-lista\] > li:last-child::after/)
-    expect(css).toMatch(/\.ic-prova \[data-prova-lista\] > li \{[^}]*border-(top|block)[^}]*: 0;/)
+    const cena = banda('co-prova')
+    expect(norm(cena.querySelector('h2')!.textContent)).toBe(INI.h2Prova)
+    expect(norm(cena.querySelector('.co-prova-texto > p')!.textContent)).toBe(INI.pProva)
+    const itens = [...cena.querySelectorAll('ul.co-fatos > li')]
+    expect(itens.map((li) => norm(li.textContent))).toEqual([...INI_FATOS])
+    expect(itens).toHaveLength(4)
+    const nota = cena.querySelector<HTMLImageElement>('figure.co-prova-fone img')!
+    expect(nota.getAttribute('alt')).toBe(INI.altNotas)
+    expect(nota.getAttribute('src')).toBe('/composicao/a/notas-780w.webp')
+    expect(cena.querySelectorAll('img')).toHaveLength(1)
+    expect(antes(cena.querySelector('ul.co-fatos')!, nota)).toBe(true)
   })
 })
 
-describe('SH-5 band 6: the questions are the display lines, the heading is the lintel of the door', () => {
-  it('four questions and four open answers, no aria-expanded, the heading and the list kept in the tree', async () => {
+describe('SH-5 scene 6 (the questions): four questions with open answers, and the door', () => {
+  it('four dt/dd pairs in the deck order, always open (no aria-expanded, no details), the heading kept in the tree', async () => {
     await abrir(1440)
-    const alvo = document.getElementById('perguntas')!
-    expect(alvo.querySelectorAll('.cm-perguntas-lista > li')).toHaveLength(4)
-    expect(alvo.querySelectorAll('h3')).toHaveLength(4)
-    expect(alvo.querySelector('[aria-expanded]')).toBeNull()
-    expect(alvo.querySelector('.cm-perguntas > h2')).not.toBeNull()
-    expect(alvo.querySelector('.cm-perguntas > ul')).not.toBeNull()
+    const cena = banda('co-perg')
+    expect(norm(cena.querySelector('h2')!.textContent)).toBe(INI.h2Perg)
+    const pares = [...cena.querySelectorAll('dl.co-perguntas > div')]
+    expect(pares).toHaveLength(INI_PERGUNTAS.length)
+    pares.forEach((par, i) => {
+      expect(norm(par.querySelector('dt')!.textContent)).toBe(INI_PERGUNTAS[i].pergunta)
+      expect(norm(par.querySelector('dd')!.textContent)).toBe(INI_PERGUNTAS[i].resposta)
+    })
+    expect(cena.querySelector('[aria-expanded], details, summary, [hidden]')).toBeNull()
   })
 
-  it('the door is one img inside the field (page markup), with the humanizer alt, after the shared block', async () => {
+  it('the door is one figure after the text block, with the humanizer alt, and its full-body replacement waits as a labelled slot on it', async () => {
     await abrir(1440)
-    const alvo = document.getElementById('perguntas')!
-    const campo = alvo.querySelector<HTMLElement>('.ic-porta')!
-    expect(campo).not.toBeNull()
-    const porta = campo.querySelectorAll('img')
-    expect(porta).toHaveLength(1)
-    expect(porta[0].getAttribute('alt')).toBe(ALT_PORTA)
-    expect(porta[0].getAttribute('src')).toMatch(/inicio-faixas\/porta-noite-\d+w\.webp$/)
-    expect(porta[0].getAttribute('srcset')).toMatch(/porta-noite-1254w\.webp 1254w/)
-    expect([porta[0].getAttribute('width'), porta[0].getAttribute('height')]).toEqual(['1254', '1070'])
-    expect(campo.hasAttribute('aria-hidden')).toBe(false)
-  })
-
-  it('.cm-perguntas dissolves (display: contents) so the heading and the field share one grid; the questions are titulo-2', () => {
-    const css = colapsar(semComentarios(CSS_DA_CASA()))
-    expect(css).toMatch(/\[data-casa\] \.ic-perguntas \.cm-perguntas \{[^}]*display: contents;/)
-    const fora = declaracoes(CSS_DA_CASA()).filter((d) => d.pilha.every((p) => !p.startsWith('@layer')))
-    const h3 = fora.filter((d) => /\.ic-perguntas .*h3/.test(d.seletor))
-    expect(h3.filter((d) => d.prop === 'font-size').map((d) => d.valor)).toContain('var(--texto-titulo-2-tamanho)')
-    expect(h3.filter((d) => d.prop === 'line-height').map((d) => d.valor)).toContain('var(--texto-titulo-2-entrelinha)')
-  })
-
-  it('the door is min(var(--faixa6-porta), 627px) wide, and the field is cacau with no rule beat', () => {
-    const css = colapsar(semComentarios(CSS_DA_CASA()))
-    expect(css).toContain('min(var(--faixa6-porta), 627px)')
-    expect(css).toContain('--faixa6-porta')
-    expect(css).not.toMatch(/\.ic-perguntas[^{]*\{[^}]*(animation|scaleX)/)
+    const cena = banda('co-perg')
+    const porta = cena.querySelector<HTMLImageElement>('figure.co-porta img')!
+    expect(porta.getAttribute('alt')).toBe(INI.altPorta)
+    expect(porta.getAttribute('src')).toBe('/composicao/a/porta.webp')
+    expect(antes(cena.querySelector('.co-perg-texto')!, porta)).toBe(true)
+    const vaga = cena.querySelector('figure.co-porta [data-aguarda-arte]')!
+    expect(norm(vaga.textContent)).toBe(INI_REF.slotPorta)
   })
 })
 
-describe('SH-6 band 7: the closing on its edge, the A05 street lit once at 60 %', () => {
-  it('the only centred band: the Fechamento, then the A05 figure with its light layer, and no floor node after it', async () => {
+describe('SH-6 scene 7 (the closing): the heading, one mel pill, and the street at dusk as decoration', () => {
+  it('one h2, one link (the pill to /criar-conta), then the street and its light layer, both with an empty alt', async () => {
     await abrir(1440)
-    const fecho = principal().querySelector('.ic-fecho')!
-    expect(fecho.querySelector('[data-fechamento]')).not.toBeNull()
-    const figura = fecho.querySelector('.ic-fecho-cena')!
-    const base = figura.querySelector('img:not([data-luz])')!
-    expect(base.getAttribute('alt')).toBe('')
-    expect(base.getAttribute('src')).toMatch(/^\/@imagetools\/[\w-]+$/)
-    expect([base.getAttribute('width'), base.getAttribute('height')]).toEqual(['1672', '642'])
-    const luz = figura.querySelectorAll('[data-luz]')
-    expect(luz).toHaveLength(1)
-    expect(luz[0].getAttribute('src')).toMatch(/inicio-faixas\/a05-rua-luz-1672w\.png$/)
-    expect(luz[0].getAttribute('srcset')).toMatch(/a05-rua-luz-390w\.png 390w.*a05-rua-luz-780w\.png 780w.*a05-rua-luz-1170w\.png 1170w.*a05-rua-luz-1672w\.png 1672w/)
-    expect(fecho.lastElementChild).toBe(figura)
+    const cena = banda('co-fecho')
+    expect(norm(cena.querySelector('h2')!.textContent)).toBe(INI.h2Fecho)
+    const links = [...cena.querySelectorAll<HTMLAnchorElement>('a')]
+    expect(links).toHaveLength(1)
+    expect(links[0].getAttribute('href')).toBe('/criar-conta')
+    expect(norm(links[0].textContent)).toBe(INI.cta3)
+    expect(links[0].hasAttribute('data-botao-mel')).toBe(true)
+    const imagens = [...cena.querySelectorAll('img')]
+    expect(imagens.map((i) => i.getAttribute('alt'))).toEqual(['', ''])
+    expect(imagens[1].classList.contains('co-luz')).toBe(true)
+    expect(antes(links[0], imagens[0])).toBe(true)
   })
 
-  it('the light is watched at 60 % with the key casa-luz-a05: dark on a first visit, lit by the crossing, remembered', async () => {
+  it('it is the last band of the page: nothing but the shell follows it inside main', async () => {
     await abrir(1440)
-    const grupo = principal().querySelector<HTMLElement>('.ic-fecho [data-luz-estado]')!
-    expect(grupo.getAttribute('data-luz-estado')).toBe('apagada')
-    const base = principal().querySelector('.ic-fecho-cena img:not([data-luz])')!
-    const dele = ObservadorFalso.todos.find((o) => o.alvos.has(base))!
-    expect(dele, 'an observer watches the A05 plate').toBeDefined()
-    expect(dele.opcoes?.threshold).toBe(0.6)
+    const faixas = principal().querySelectorAll('.co > section')
+    expect(faixas[faixas.length - 1].classList.contains('co-fecho')).toBe(true)
+    expect(principal().querySelector('.co')!.lastElementChild).toBe(faixas[faixas.length - 1])
+    expect(principal().querySelectorAll('.co-fecho')).toHaveLength(1)
   })
+})
 
-  it('with reduced motion the light is lit from the first paint', async () => {
-    await abrir(1440, true)
-    expect(principal().querySelector('.ic-fecho [data-luz-estado]')!.getAttribute('data-luz-estado')).toBe('acesa')
-  })
+// ---- motion --------------------------------------------------------------------------------------------------------
 
-  it('the figure is min(100cqi, 1672px) wide, 1672 / 642 (the manifest), edge to edge, and the heading is exibicao with balanced lines', () => {
-    const css = colapsar(semComentarios(CSS_DA_CASA()))
-    expect(css).toMatch(/\[data-casa\] \.ic-fecho-cena \{[^}]*inline-size: min\(100cqi, 1672px\);/)
-    expect(css).toMatch(/\[data-casa\] \.ic-fecho-cena \{[^}]*aspect-ratio: 1672 \/ 642;/)
-    // The grid centres the box (`justify-items: center`): a relative `inset-inline-start: 50%` + `translate: -50%` pair on
-    // top of that moves a box wider than its track off-centre (it overflows to one side only), so no rule has the pair.
-    expect(css).toMatch(/\[data-casa\] \.ic-fecho \{[^}]*grid-template-columns: minmax\(0, 1fr\);[^}]*justify-items: center;/)
-    const regras = [...css.matchAll(/([^{}]+)\{([^{}]*)\}/g)].map((m) => ({ seletor: m[1].trim(), corpo: m[2] }))
-    const recentra = regras.filter(
-      (r) => /\[data-casa\]/.test(r.seletor) && /inset-inline-start: 50%/.test(r.corpo) && /translate: -50%/.test(r.corpo),
+/** The scroll-timeline declarations whose enclosing at-rules do not include both gates (no reduced-motion preference, @supports). */
+function semAsDuasPortas(css: string): string[] {
+  return declaracoes(css)
+    .filter((d) => d.prop === 'animation-timeline')
+    .filter(
+      (d) =>
+        !d.pilha.some((p) => p.startsWith('@media') && p.includes('prefers-reduced-motion: no-preference')) ||
+        !d.pilha.some((p) => p.startsWith('@supports') && p.includes('animation-timeline: view()')),
     )
-    expect(recentra.map((r) => r.seletor)).toEqual([])
-    const cena = regras.filter((r) => /\.ic-fecho-cena$/.test(r.seletor)).map((r) => r.corpo).join(' ')
-    expect(cena).not.toMatch(/inset-inline-start/)
-    expect(cena).not.toMatch(/(^|[\s;])translate:/)
-    expect(css).not.toContain('--fecho-janela), 542px')
-    // The street is decorative and rises under the pill from 768 (the pill's own width): it takes no click, and the closing
-    // block stands above it in stacking. Under 768 the pill is the column's width, so there is no overlap.
-    expect(css).toMatch(/\[data-casa\] \.ic-fecho-cena \{[^}]*pointer-events: none;/)
-    expect(css).toMatch(/\[data-casa\] \.ic-fecho \.cm-fechamento \{[^}]*position: relative;[^}]*z-index: 1;/)
-    expect(css).toMatch(/@media \(min-width: 768px\) \{ \[data-casa\] \.ic-fecho-cena \{ margin-block-start: calc\(var\(--espaco-grupo\) \* -1\.5\); \} \}/)
-    const fora = declaracoes(CSS_DA_CASA()).filter((d) => d.pilha.every((p) => !p.startsWith('@layer')))
-    const h2 = fora.filter((d) => /\.ic-fecho .*h2/.test(d.seletor))
-    expect(h2.filter((d) => d.prop === 'font-size').map((d) => d.valor)).toContain('var(--texto-exibicao-tamanho)')
-    expect(h2.filter((d) => d.prop === 'text-wrap').map((d) => d.valor)).toContain('balance')
+    .map((d) => `${d.seletor} { ${d.prop}: ${d.valor} }`)
+}
+
+describe('SH-7 motion: every scroll timeline of the page sits under both gates, and moves only what is cheap', () => {
+  it('the gate checker flags a timeline outside either gate (negative control) and passes one inside both', () => {
+    const solto = '.a {\n  animation-timeline: view();\n}\n'
+    const so_reduzido = '@media (prefers-reduced-motion: no-preference) {\n  .a {\n    animation-timeline: view();\n  }\n}\n'
+    const so_suporte = '@supports ((animation-timeline: view()) and (animation-range: entry)) {\n  .a {\n    animation-timeline: view();\n  }\n}\n'
+    const ok =
+      '@media (prefers-reduced-motion: no-preference) {\n  @supports ((animation-timeline: view()) and (animation-range: entry)) {\n    .a {\n      animation-timeline: view();\n    }\n  }\n}\n'
+    expect(semAsDuasPortas(solto)).toHaveLength(1)
+    expect(semAsDuasPortas(so_reduzido)).toHaveLength(1)
+    expect(semAsDuasPortas(so_suporte)).toHaveLength(1)
+    expect(semAsDuasPortas(ok)).toEqual([])
+  })
+
+  it('every animation-timeline of composicao.css sits inside @media (prefers-reduced-motion: no-preference) and @supports (animation-timeline: view())', () => {
+    const css = CSS_DA_COMPOSICAO()
+    expect(declaracoes(css).filter((d) => d.prop === 'animation-timeline').length).toBeGreaterThanOrEqual(8)
+    expect(semAsDuasPortas(css)).toEqual([])
+  })
+
+  it('every animation shorthand is `<name> linear both` (driven by the scroll, not a clock) or `none`', () => {
+    const atalhos = declaracoes(CSS_DA_COMPOSICAO()).filter((d) => d.prop === 'animation')
+    expect(atalhos.length).toBeGreaterThan(0)
+    for (const atalho of atalhos) expect(atalho.valor, atalho.seletor).toMatch(/^(co-[a-z-]+ linear both|none)$/)
+  })
+
+  it('the keyframes move only clip-path, opacity, object-position and transform (no layout property)', () => {
+    const passos = declaracoes(CSS_DA_COMPOSICAO()).filter((d) => d.pilha[0]?.startsWith('@keyframes'))
+    expect(new Set(passos.map((d) => d.pilha[0].replace('@keyframes ', ''))).size).toBe(6)
+    const props = new Set(passos.map((d) => d.prop))
+    for (const prop of props) expect(['clip-path', 'opacity', 'object-position', 'transform'], prop).toContain(prop)
+  })
+
+  it('no vw unit and no italic in the page rules (the text size follows the root; the width follows the container)', () => {
+    const limpo = semComentarios(CSS_DA_COMPOSICAO())
+    expect(limpo).not.toMatch(/\d\s*vw\b/)
+    expect(limpo).not.toMatch(/font-style:\s*italic/)
   })
 })
 
-// ---- inicio-faixas.css: the two scrubbed Sheet entries -------------------------------------------------------------
+// ---- type ----------------------------------------------------------------------------------------------------------
 
-describe('SH-7 motion: inicio-faixas.css holds the band 4 and band 6 entries under the shared gate', () => {
-  const NATIVO = `@supports (${CONDICAO_NATIVA})`
-  const SEM_REDUZIR = '@media (prefers-reduced-motion: no-preference)'
-  const todas = () => declaracoes(CSS_DAS_FAIXAS())
-
-  it('the file exists and Inicio.tsx imports it before inicio-casa.css', () => {
-    expect(existsSync(join(PASTA_CASA, 'inicio-faixas.css'))).toBe(true)
-    const fonte = lerTexto(join(PASTA_SRC, 'paginas', 'Inicio.tsx'))
-    const faixas = fonte.indexOf("'../componentes/inicio-casa/inicio-faixas.css'")
-    const casa = fonte.indexOf("'../componentes/inicio-casa/inicio-casa.css'")
-    expect(faixas).toBeGreaterThan(-1)
-    expect(casa).toBeGreaterThan(faixas)
-  })
-
-  it('every view-timeline and animation-timeline sits inside the @supports text of CONDICAO_NATIVA and prefers-reduced-motion: no-preference', () => {
-    const css = colapsar(semComentarios(CSS_DAS_FAIXAS()))
-    expect(css.match(/@supports/g)).toHaveLength(1)
-    expect(css).toContain(NATIVO)
-    const linhas = todas().filter((d) => ['view-timeline', 'view-timeline-inset', 'animation-timeline', 'animation-range'].includes(d.prop))
-    expect(linhas.length).toBeGreaterThanOrEqual(6)
-    for (const d of linhas) {
-      expect(d.pilha, `${d.seletor} { ${d.prop} }`).toContain(NATIVO)
-      expect(d.pilha, `${d.seletor} { ${d.prop} }`).toContain(SEM_REDUZIR)
+describe('SH-9 type: every font-size and line-height reads a token, and no raw colour is written', () => {
+  it('no font-size or line-height of the page is a px, rem or em length (token variables, or multiples of them)', () => {
+    const tipo = declaracoes(CSS_DA_COMPOSICAO()).filter((d) => d.prop === 'font-size' || d.prop === 'line-height')
+    expect(tipo.length).toBeGreaterThan(10)
+    for (const d of tipo) {
+      expect(d.valor, `${d.seletor} { ${d.prop} }`).not.toMatch(/\d(px|rem|em)\b/)
+      if (d.prop === 'font-size') expect(d.valor, d.seletor).toMatch(/var\(--texto-/)
     }
   })
 
-  it('the longhands come after the animation shorthand, which is linear with an explicit auto duration and fills both ways', () => {
-    const porRegra = new Map<string, Declaracao[]>()
-    for (const d of todas()) porRegra.set(d.pilha.join('|'), [...(porRegra.get(d.pilha.join('|')) ?? []), d])
-    let comTimeline = 0
-    for (const [regra, lista] of porRegra) {
-      const props = lista.map((d) => d.prop)
-      if (!props.includes('animation-timeline')) continue
-      comTimeline += 1
-      const a = props.indexOf('animation')
-      expect(a, regra).toBeGreaterThanOrEqual(0)
-      expect(lista[a].valor, regra).toMatch(/\bauto linear both\b/)
-      expect(props.indexOf('animation-timeline'), regra).toBeGreaterThan(a)
-      expect(props.indexOf('animation-range'), regra).toBeGreaterThan(a)
-    }
-    expect(comTimeline).toBe(2)
+  it('the type check sees a px size and a rem line height (negative control)', () => {
+    const amostra = '.a {\n  font-size: 17px;\n  line-height: 1.5rem;\n}\n.b {\n  font-size: var(--texto-corpo-tamanho);\n}\n'
+    const tipo = declaracoes(amostra).filter((d) => /\d(px|rem|em)\b/.test(d.valor))
+    expect(tipo.map((d) => d.prop)).toEqual(['font-size', 'line-height'])
   })
 
-  it('both ranges are entry 0% entry 100% of the still clip frame; the keyframes move transform only, 56 px (24 below 1024)', () => {
-    const faixas = todas().filter((d) => d.prop === 'animation-range')
-    expect(faixas.map((d) => d.valor)).toEqual(['entry 0% entry 100%', 'entry 0% entry 100%'])
-    const css = colapsar(semComentarios(CSS_DAS_FAIXAS()))
-    expect(css).toMatch(/translateX\(-56px\)/)
-    expect(css).toMatch(/translateX\(56px\)/)
-    expect(css).toMatch(/translateX\(-24px\)/)
-    expect(css).toMatch(/translateX\(24px\)/)
-    expect(css).toMatch(/max-width: 1023px/)
-    const quadros = todas().filter((d) => d.pilha.some((p) => p.startsWith('@keyframes')))
-    expect(quadros.length).toBeGreaterThan(0)
-    for (const d of quadros) expect(d.prop, d.seletor).toBe('transform')
-    for (const d of quadros) expect(d.valor, d.seletor).toMatch(/^translateX\(/)
-  })
-
-  it('no vw, no will-change, no opacity, no clip-path and no fixed or sticky position in the file', () => {
-    const css = semComentarios(CSS_DAS_FAIXAS())
-    expect(css).not.toMatch(/\d\s*vw\b|\d\s*vh\b|\d\s*svh\b/)
-    expect(css).not.toMatch(/will-change|opacity|clip-path|position:\s*(sticky|fixed)|scroll-snap|transition/)
-  })
-
-  it('the timeline is on the clip frame and the animation on its image, never on the frame itself', () => {
-    const t = todas().filter((d) => d.prop === 'view-timeline')
-    expect(t.map((d) => d.seletor).sort()).toEqual(['[data-casa] .ic-porta', '[data-casa] .ic-so-cena'])
-    const a = todas().filter((d) => d.prop === 'animation-timeline')
-    for (const d of a) expect(d.seletor, d.prop).toMatch(/ img$/)
-  })
-
-  it('bands 3, 5 and 7 hold no view timeline anywhere (band 5 draws once on the H2 primitive, band 7 is a light)', () => {
-    expect(semComentarios(CSS_DA_CASA())).not.toMatch(/view-timeline|animation-timeline/)
-  })
-})
-
-// ---- midia.ts ------------------------------------------------------------------------------------------------------
-
-describe('SH-8a A05 `sizes` follow the drawn width of the figure', () => {
-  // The figure is min(100cqi, 1672px) wide (edge to edge up to the master's width), so `sizes` is that same length and the
-  // light layer reads the same string: both pick the same tier.
-  it('sizes is `min(100cqi, 1672px)` for the plate and its light layer', async () => {
-    const { A05_RUA, LUZ_A05 } = await import('../componentes/inicio-casa/midia.ts')
-    expect(A05_RUA.sizes).toBe('min(100cqi, 1672px)')
-    expect(LUZ_A05.sizes).toBe(A05_RUA.sizes)
-  })
-
-  it('the drawn width the string describes: a 390 phone at DPR 2 takes the 780 tier, 1440 at DPR 2 the 1672 one, never upscaled', () => {
-    const largura = (vw: number) => Math.min(vw, 1672)
-    const escolhe = (vw: number, dpr: number) => ([390, 780, 1170, 1672].find((arquivo) => arquivo >= largura(vw) * dpr) ?? 1672)
-    expect(escolhe(390, 1)).toBe(390)
-    expect(escolhe(390, 2)).toBe(780)
-    expect(escolhe(390, 3)).toBe(1170)
-    expect(escolhe(1440, 2)).toBe(1672)
-    expect(escolhe(1920, 1)).toBe(1672)
-  })
-})
-
-describe('SH-8 midia.ts: the plates and layers of the half exist where the constants say', () => {
-  it('M04_FAIXA is the m04-faixa master, lossless; A05_RUA the unlit street, lossless, of the manifest size; LUZ_A05, PORTA_NOITE and CAPTURA_NOTAS are served files', async () => {
-    const midia = await import('../componentes/inicio-casa/midia.ts')
-    const texto = lerTexto(join(PASTA_CASA, 'midia.ts'))
-    const manifesto = JSON.parse(lerTexto(join(process.cwd(), 'public', 'cenas', 'inicio-faixas', 'a05-rua.MANIFESTO.json'))) as {
-      scene: { width_px: number; height_px: number }
-      light: { tiers: { file: string }[] }
-    }
-    expect(texto).toContain('inicio-faixas/m04-faixa-1200w.webp')
-    expect(texto).toContain('inicio-faixas/a05-rua-fundo-1672w.webp')
-    expect(texto).not.toContain('m11-apagada-542w')
-    expect([midia.M04_FAIXA.largura, midia.M04_FAIXA.altura]).toEqual([1200, 870])
-    // The older M04 ladder stays exported (inicioCapturas.test.ts pins it) but band 4 no longer serves it.
-    expect(M04.src).not.toBe(midia.M04_FAIXA.src)
-    expect([midia.A05_RUA.largura, midia.A05_RUA.altura]).toEqual([manifesto.scene.width_px, manifesto.scene.height_px])
-    expect([midia.LUZ_A05.largura, midia.LUZ_A05.altura]).toEqual([manifesto.scene.width_px, manifesto.scene.height_px])
-    expect(midia.A05_RUA.src).toMatch(/^\/@imagetools\//)
-    expect(midia.M04_FAIXA.src).toMatch(/^\/@imagetools\//)
-    // Every width of the plate is at most the master's: nothing is upscaled.
-    for (const parte of (midia.A05_RUA.srcSet ?? '').split(', ')) expect(Number(/\s(\d+)w$/.exec(parte)?.[1]), parte).toBeLessThanOrEqual(manifesto.scene.width_px)
-    // The light's four tiers are the manifest's, in order of width.
-    const nomes = (midia.LUZ_A05.srcSet ?? '').split(',').map((p) => p.trim().split(/\s+/)[0].replace(/^\/+/, 'web/public/'))
-    expect(nomes.sort()).toEqual(manifesto.light.tiers.map((t) => t.file).sort())
-    for (const imagem of [midia.LUZ_A05, midia.PORTA_NOITE, midia.CAPTURA_NOTAS]) {
-      for (const parte of [imagem.src, ...(imagem.srcSet ?? '').split(',').map((p) => p.trim().split(/\s+/)[0])]) {
-        expect(existsSync(join(process.cwd(), 'public', parte.replace(/^\/+/, ''))), parte).toBe(true)
-      }
-    }
-    expect([midia.PORTA_NOITE.largura, midia.PORTA_NOITE.altura]).toEqual([1254, 1070])
-    expect([midia.CAPTURA_NOTAS.largura, midia.CAPTURA_NOTAS.altura]).toEqual([1170, 2532])
-  })
-
-  it('the WIDTH `sizes` of M05 stay byte-identical', async () => {
-    const { M05, LUZ_M05 } = await import('../componentes/inicio-casa/midia.ts')
-    const sizes = '(min-width: 1440px) min(62.5vw, 1600px), (min-width: 1180px) 62.5vw, min(100vw, 760px)'
-    expect(M05.sizes).toBe(sizes)
-    expect(LUZ_M05.sizes).toBe(sizes)
-  })
-})
-
-describe('SH-10 clip frames: a frame that crops an in-flow img must not be held open by it', () => {
-  // `overflow: clip` does not make a scroll container, so the img's block-size (auto) would set the frame's automatic
-  // minimum height (grid item or aspect-ratio box) and the frame would show the whole file instead of cutting it. The
-  // frame says `min-block-size: 0`, or the img fills the frame (`block-size: 100%`, `object-fit: cover`, aligned to the
-  // edge it stands on: top for the plates, bottom for the door of band 6 below 1024, where its frame is 13 / 10; from
-  // 1024 the door's frame has no ratio and is sized by the whole door, so `min-block-size: 0` there would collapse the row).
-  const regras = () => declaracoes(CSS_DA_CASA())
-  const quadros = () => {
-    const porSeletor = new Map<string, Declaracao[]>()
-    for (const d of regras()) porSeletor.set(d.seletor, [...(porSeletor.get(d.seletor) ?? []), d])
-    return [...porSeletor.entries()].filter(([, lista]) => lista.some((d) => d.prop === 'overflow' && d.valor === 'clip') && lista.some((d) => d.prop === 'aspect-ratio'))
-  }
-
-  it('the clip frames of bands 4, 6 and 7 are found (the test cannot pass by finding none)', () => {
-    expect(quadros().map(([seletor]) => seletor).sort()).toEqual(['[data-casa] .ic-fecho-cena', '[data-casa] .ic-porta', '[data-casa] .ic-so-cena'])
-  })
-
-  it('every clip frame with an aspect ratio declares min-block-size: 0 or its img fills it', () => {
-    for (const [seletor, lista] of quadros()) {
-      const zero = lista.some((d) => d.prop === 'min-block-size' && d.valor === '0')
-      const img = regras().filter((d) => d.seletor.startsWith(`${seletor} img`))
-      const preenche =
-        img.some((d) => d.prop === 'block-size' && d.valor === '100%') &&
-        img.some((d) => d.prop === 'object-fit' && d.valor === 'cover') &&
-        img.some((d) => d.prop === 'object-position' && /^50% (0|100)(%|px)?$/.test(d.valor))
-      expect(zero || preenche, `${seletor} is held open by its img`).toBe(true)
-    }
-  })
-
-  it('the frame of band 4 stays 1200 / 832 and the one of band 7 is 1672 / 642 (the A05 street), both clipped', () => {
-    const css = colapsar(semComentarios(CSS_DA_CASA()))
-    expect(css).toMatch(/\[data-casa\] \.ic-so-cena \{[^}]*aspect-ratio: 1200 \/ 832;[^}]*overflow: clip;/)
-    expect(css).toMatch(/\[data-casa\] \.ic-fecho-cena \{[^}]*aspect-ratio: 1672 \/ 642;[^}]*overflow: clip;/)
-  })
-
-  it('every observed element of bands 3 to 7 is smaller than window / 0.6: the band 5 list and the A05 plate, never a band wrapper', async () => {
-    await abrir(390)
-    const observados = ObservadorFalso.todos.filter((o) => o.opcoes?.threshold === 0.6).flatMap((o) => [...o.alvos])
-    const lista = principal().querySelector('.ic-prova [data-prova-lista]')!
-    const placa = principal().querySelector('.ic-fecho-cena img:not([data-luz])')!
-    expect(observados).toContain(lista)
-    expect(observados).toContain(placa)
-    for (const alvo of observados) expect(alvo.closest('[data-faixa]') === alvo, 'a band wrapper is observed at 60 %').toBe(false)
-    expect(observados.some((alvo) => alvo.matches('.ic-prova, .ic-fecho, [data-faixa]'))).toBe(false)
-  })
-})
-
-describe('SH-9 type: no new size, variable or italic in the band rules', () => {
-  it('no raw hex or rgb and no italic in inicio-casa.css or inicio-faixas.css', () => {
-    for (const css of [CSS_DA_CASA(), CSS_DAS_FAIXAS()]) {
-      const limpo = semComentarios(css)
-      expect(limpo).not.toMatch(/#[0-9a-fA-F]{3,8}\b/)
-      expect(limpo).not.toMatch(/\brgba?\(/)
-      expect(limpo).not.toMatch(/font-style:\s*italic/)
-    }
-  })
-
-  it('every font-size and line-height of bands 3 to 7 reads a token variable (no px, rem or em length)', () => {
-    const faixas = declaracoes(CSS_DA_CASA()).filter(
-      (d) => /\.ic-(tela|so|prova|perguntas|fecho)|\.cm-faixa-prova|\.cm-perguntas|\.cm-fechamento/.test(d.seletor) && (d.prop === 'font-size' || d.prop === 'line-height'),
-    )
-    expect(faixas.length).toBeGreaterThan(8)
-    for (const d of faixas) expect(d.valor, `${d.seletor} { ${d.prop} }`).toMatch(/^var\(--texto-/)
+  it('no raw hex or rgb colour in composicao.css', () => {
+    const limpo = semComentarios(CSS_DA_COMPOSICAO())
+    // The one exemption: the floor line's own declaration (--co-breu, A05) lives on .co, not in the shared tokens.
+    expect(limpo.replace('--co-breu: #18110F;', '')).not.toMatch(/#[0-9a-fA-F]{3,8}\b/)
+    expect(limpo).not.toMatch(/\brgba?\(/)
   })
 })

@@ -10,15 +10,15 @@ import { describe, expect, it } from 'vitest'
 //              its licence, its PROVENANCE line and the meter's FONTES allow-list.
 //   REPH-I-21  DESIGN.md: a Motion row per moment 1-3 and a note on the variants.
 //   REPH-I-22  catalogo.ts: the records M15-M17 hold every motion number of the spec section 3.3.
-// The page sources are the ones the card creates: `paginas/Inicio.tsx`, `componentes/inicio-casa/**`
-// and `movimento/troca/**`.
+// The page sources are the ones of the composition "a luz, pela hora": `paginas/Inicio.tsx` and
+// `componentes/inicio-composicao/**` (inicio-casa and movimento/troca are not the page any more).
 
 const PASTA_WEB = process.cwd()
 const SRC = join(PASTA_WEB, 'src')
 const lerWeb = (...partes: string[]) => readFileSync(join(PASTA_WEB, ...partes), 'utf8')
 const lerSrc = (...partes: string[]) => readFileSync(join(SRC, ...partes), 'utf8')
 
-const PASTAS_DA_PAGINA = [join(SRC, 'componentes', 'inicio-casa'), join(SRC, 'movimento', 'troca')]
+const PASTAS_DA_PAGINA = [join(SRC, 'componentes', 'inicio-composicao')]
 
 function arquivosDe(pasta: string): string[] {
   if (!existsSync(pasta)) return []
@@ -28,7 +28,7 @@ function arquivosDe(pasta: string): string[] {
   })
 }
 
-/** The page's own sources (not its tests): the page file plus the two folders. */
+/** The page's own sources (not its tests): the page file plus the composition folder. */
 const fontesDaPagina = () => [join(SRC, 'paginas', 'Inicio.tsx'), ...PASTAS_DA_PAGINA.flatMap(arquivosDe)].filter((arquivo) => !/\.test\.tsx?$/.test(arquivo))
 
 /** sha256 of a file's bytes with CRLF folded to LF (byte-safe via latin1), so a Windows CRLF checkout hashes like the LF file. */
@@ -64,6 +64,34 @@ const EFEITOS_PROIBIDOS: Array<[nome: string, padrao: RegExp]> = [
 /** The forbidden effects a source text carries (comments removed). */
 const efeitosProibidos = (texto: string) => EFEITOS_PROIBIDOS.filter(([, padrao]) => padrao.test(semComentarios(texto))).map(([nome]) => nome)
 
+// The one gradient the composition keeps: a wall split at the seam (hard stop, no blend), as in estilo.test.ts. Only this
+// exact shape, only in composicao.css, is taken out of the text before the scan; the 'gradient' pattern itself stays.
+const COMPOSICAO_CSS = join(SRC, 'componentes', 'inicio-composicao', 'composicao.css')
+const DIVISAO_NA_COSTURA =
+  /^linear-gradient\(to right, (transparent|var\(--[\w-]+\)) 0 var\(--costura\), var\(--[\w-]+\) var\(--costura\)\)$/
+
+/** The `*-gradient(...)` calls of a text, whole (nested parentheses included). */
+function gradientes(texto: string): string[] {
+  const achados: string[] = []
+  for (const m of texto.matchAll(/(?:repeating-)?(?:linear|radial|conic)-gradient\(/g)) {
+    let fundo = 1
+    let i = m.index + m[0].length
+    while (i < texto.length && fundo > 0) {
+      if (texto[i] === '(') fundo += 1
+      else if (texto[i] === ')') fundo -= 1
+      i += 1
+    }
+    achados.push(texto.slice(m.index, i))
+  }
+  return achados
+}
+
+/** The text with its seam-division gradients removed (any other gradient stays in it). */
+const semDivisoesNaCostura = (texto: string) => gradientes(texto).filter((g) => DIVISAO_NA_COSTURA.test(g)).reduce((t, g) => t.split(g).join(''), texto)
+
+/** The forbidden effects of a page source: the seam exception applies to composicao.css only. */
+const efeitosDaFonte = (arquivo: string, texto: string) => efeitosProibidos(arquivo === COMPOSICAO_CSS ? semDivisoesNaCostura(texto) : texto)
+
 describe('REPH-I-15 no forbidden library or effect on /', () => {
   it('REPH-I-15 package.json has no forbidden package, the page sources exist and carry no forbidden effect, and the scanner sees each one', () => {
     // Controls of the scanners.
@@ -76,12 +104,20 @@ describe('REPH-I-15 no forbidden library or effect on /', () => {
     expect(efeitosProibidos('.a { transform: perspective(10px) }')).toContain('3D transform')
     expect(efeitosProibidos("import gsap from 'gsap'")).toContain('forbidden library import')
     expect(efeitosProibidos('/* infinite */ .a { color: red }')).toEqual([])
+    // Controls of the seam exception: the hard-stop division passes on composicao.css, a blend or another file does not.
+    const costura = '.a { background: linear-gradient(to right, transparent 0 var(--costura), var(--noite) var(--costura)); }'
+    expect(efeitosDaFonte(COMPOSICAO_CSS, costura)).toEqual([])
+    expect(efeitosDaFonte('outro.css', costura)).toContain('gradient')
+    expect(efeitosDaFonte(COMPOSICAO_CSS, '.a { background: linear-gradient(to right, var(--a), var(--b)); }')).toContain('gradient')
+    expect(efeitosDaFonte(COMPOSICAO_CSS, `${costura} .b { background: radial-gradient(closest-side, var(--a), transparent); }`)).toContain('gradient')
     // The real thing.
     expect(pacotesProibidos(lerWeb('package.json'))).toEqual([])
     for (const pasta of PASTAS_DA_PAGINA) expect(existsSync(pasta), pasta).toBe(true)
     const fontes = fontesDaPagina()
-    expect(fontes.length).toBeGreaterThan(2)
-    for (const arquivo of fontes) expect(efeitosProibidos(readFileSync(arquivo, 'utf8')), arquivo).toEqual([])
+    // The page file and the composition stylesheet (the folder holds nothing else).
+    expect(fontes.length).toBeGreaterThanOrEqual(2)
+    expect(fontes).toContain(COMPOSICAO_CSS)
+    for (const arquivo of fontes) expect(efeitosDaFonte(arquivo, readFileSync(arquivo, 'utf8')), arquivo).toEqual([])
   })
 
   it('REPH-I-15 the motion library is motion 12.43.0 (exact) and the page imports only from motion/react', () => {
@@ -96,13 +132,14 @@ describe('REPH-I-15 no forbidden library or effect on /', () => {
     }
   })
 
-  it('REPH-I-15 the troca stylesheet has no infinite loop and no cm-letreiro rule exists for /', () => {
-    const css = arquivosDe(join(SRC, 'movimento', 'troca')).filter((f) => f.endsWith('.css'))
+  it('REPH-I-15 the composition stylesheet has no infinite loop and no cm-letreiro rule exists for /', () => {
+    const css = arquivosDe(join(SRC, 'componentes', 'inicio-composicao')).filter((f) => f.endsWith('.css'))
     expect(css.length).toBeGreaterThan(0)
-    for (const arquivo of css) expect(semComentarios(readFileSync(arquivo, 'utf8')), arquivo).not.toMatch(/infinite/)
-    const casa = arquivosDe(join(SRC, 'componentes', 'inicio-casa')).filter((f) => f.endsWith('.css'))
-    expect(casa.length).toBeGreaterThan(0)
-    for (const arquivo of casa) expect(semComentarios(readFileSync(arquivo, 'utf8')), arquivo).not.toMatch(/cm-letreiro/)
+    for (const arquivo of css) {
+      const limpo = semComentarios(readFileSync(arquivo, 'utf8'))
+      expect(limpo, arquivo).not.toMatch(/infinite/)
+      expect(limpo, arquivo).not.toMatch(/cm-letreiro/)
+    }
   })
 })
 
@@ -148,6 +185,8 @@ describe('REPH-I-17 display variants A/B/C and the M PLUS Rounded 1c package', (
     expect(principal).not.toMatch(/exibicao/)
     expect(principal).not.toMatch(/URLSearchParams/)
     expect(principal).not.toMatch(/dataset\./)
+    // The removed ?paleta boot (palette B): the page runs on palette A only.
+    expect(principal).not.toMatch(/paleta/)
   })
 
   it('REPH-I-17 @fontsource/m-plus-rounded-1c is 5.3.0 exactly, no longer imported by index.css, its licence copied and its PROVENANCE line written', () => {
@@ -186,19 +225,6 @@ describe('REPH-I-17 display variants A/B/C and the M PLUS Rounded 1c package', (
     const lista = /export const FAMILIAS_PERMITIDAS = \[([^\]]*)\]/.exec(medidor)
     expect(lista).not.toBeNull()
     for (const familia of ['Literata', 'Outfit', 'M PLUS Rounded 1c']) expect(lista![1]).toContain(`'${familia}'`)
-  })
-})
-
-describe('REP-HOME-R1-01 the M06 plate is the containing block of its light group', () => {
-  it('REP-HOME-R1-01 the narrow-width .ic-m06 rule is positioned (relative) and the desktop one stays absolute', () => {
-    const css = semComentarios(lerSrc('componentes', 'inicio-casa', 'inicio-casa.css'))
-    const regras = [...css.matchAll(/\[data-casa\] \.ic-m06\s*\{([^}]*)\}/g)].map((m) => m[1])
-    // Narrow (relative), a grid-column placement inside the stacked media query, then the room one (absolute).
-    expect(regras).toHaveLength(3)
-    const estreita = regras[0]
-    const larga = regras[regras.length - 1]
-    expect(estreita).toMatch(/position:\s*relative\b/)
-    expect(larga).toMatch(/position:\s*absolute\b/)
   })
 })
 
@@ -300,14 +326,10 @@ describe('REPH-I-22 catalogo.ts: M15 (lamp), M16 (night wipe) and M17 (caption) 
     expect(m17).toMatch(/\[\s*0\.4,\s*0,\s*0\.2,\s*1\s*\]/)
   })
 
-  it('REPH-I-22 the records are in the catalogue object and the page reads them (no loose motion number in the troca sources)', () => {
+  it('REPH-I-22 the three records are in the catalogue object and the page folders exist', () => {
+    // The composition runs on native scroll/CSS, so no source reads CATALOGO.M15..M17 any more: the records stay as the spec.
     const texto = catalogo()
     for (const id of ['M15', 'M16', 'M17']) expect(registro(texto, id), id).not.toBeNull()
     expect(PASTAS_DA_PAGINA.every((pasta) => existsSync(pasta))).toBe(true)
-    const usos = arquivosDe(join(SRC, 'movimento', 'troca'))
-      .filter((f) => /\.tsx?$/.test(f) && !/\.test\./.test(f))
-      .map((f) => readFileSync(f, 'utf8'))
-      .join('\n')
-    for (const id of ['M15', 'M16', 'M17']) expect(usos, id).toMatch(new RegExp(`CATALOGO\\.${id}\\b`))
   })
 })

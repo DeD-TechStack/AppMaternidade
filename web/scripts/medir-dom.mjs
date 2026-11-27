@@ -307,6 +307,7 @@ export function fundoVisivelDaPilha(pilha, ponto) {
   if (!Array.isArray(pilha)) return 'ilegível'
   if (!ponto || typeof ponto !== 'object' || !ehNumero(ponto.x) || !ehNumero(ponto.y)) return 'ilegível'
   for (const entrada of pilha) {
+    if (entrada?.pinturaCasaIlegivel === true) return PINTURA_CASA_ILEGIVEL
     const cor = entrada?.cor
     if (typeof cor !== 'string' || cor.trim() === '') return 'ilegível'
     const lida = parseCor(cor)
@@ -321,6 +322,8 @@ export function fundoVisivelDaPilha(pilha, ponto) {
   return undefined
 }
 
+const PINTURA_CASA_ILEGIVEL = 'pintura da composição ilegível'
+
 /**
  * G11: alvo de toque de 44 × 44 (56 de altura na BarraRegistrar e na madrugada) e contraste do texto
  * de 4,5:1, ou de 3:1 para texto grande (≥ 24 px, ou ≥ 18,66 px com peso ≥ 700).
@@ -332,6 +335,18 @@ export function g11(nos, tema) {
   if (alvos.length === 0) return { ...falhaFechada('G11', 'nenhum alvo de toque'), alvos_por_rotulo: [] }
   if (textos.length === 0) return { ...falhaFechada('G11', 'nenhum nó com texto'), alvos_por_rotulo: [] }
   const falhas = []
+  const arte = nos.filter((no) => no.horaDecorativaCasa)
+  if (nos.some((no) => marca(no, 'heroiComposicao'))) {
+    for (const cena of ['dia', 'noite']) {
+      if (arte.filter((no) => no.horaDecorativaCasa.cena === cena).length !== 1) {
+        falhas.push({ no: 'documento', motivo: 'a cena de ' + cena + ' precisa de uma hora decorativa na parede' })
+      }
+    }
+  }
+  for (const no of arte) {
+    const erro = erroHoraDecorativaCasa(no, nos)
+    if (erro !== null) falhas.push({ no: descrever(no), motivo: descrever(no) + ': hora decorativa ' + erro })
+  }
   // Os radios e checkboxes medidos pela caixa do rótulo: o resultado os mostra, para a conferência.
   const alvosPorRotulo = []
   for (const no of alvos) {
@@ -349,6 +364,8 @@ export function g11(nos, tema) {
   }
   let menor = Infinity
   for (const no of textos) {
+    // A arte da parede já foi conferida acima. A hora na legenda segue o contraste normal.
+    if (no.horaDecorativaCasa) continue
     // O texto recortado para fora da tela (`recortadoFora === true` estrito) não está à vista: não tem contraste a ler.
     if (no.recortadoFora === true) continue
     if (!(no.rect?.w > 0)) {
@@ -388,6 +405,10 @@ export function g11(nos, tema) {
     // não tem fundo opaco (a pílula de mel tem o dela: o `fundoSob` é o chão sob a pílula, não o do texto). Senão, a
     // cadeia de fundos dos ancestrais (as paredes do herói são camadas irmãs, que a cadeia não vê).
     const fundoProprioOpaco = parseCor(no.estilo?.backgroundColor)?.a >= 0.999
+    if (!fundoProprioOpaco && no.fundoSob === PINTURA_CASA_ILEGIVEL) {
+      falhas.push({ no: descrever(no), motivo: descrever(no) + ': ' + PINTURA_CASA_ILEGIVEL })
+      continue
+    }
     const fundos = lido(no.fundoSob) && parseCor(no.fundoSob) !== null && !fundoProprioOpaco ? [no.fundoSob] : no.cadeia
     const razao = contraste(estiloDoTexto?.color, fundos, opacidade)
     if (razao === null) {
@@ -789,14 +810,18 @@ export function sombra(nos, doc) {
     if (!lido(e.boxShadow)) falhar('box-shadow ausente')
     else {
       const canonica = sombraCanonica(e.boxShadow)
-      if (canonica === null) falhar(`box-shadow ilegível (${e.boxShadow})`)
-      else if (canonica !== 'none' && !sombrasOk.includes(canonica)) falhar(`box-shadow fora dos tokens (${e.boxShadow})`)
+      if (!anelDaCasa(no)) {
+        if (canonica === null) falhar(`box-shadow ilegível (${e.boxShadow})`)
+        else if (canonica !== 'none' && !sombrasOk.includes(canonica)) falhar(`box-shadow fora dos tokens (${e.boxShadow})`)
+      }
     }
     const imagens = leituraDeImagens(e.backgroundImage)
     if (imagens.erro) falhar(imagens.erro)
     else {
       for (const gradiente of imagens.gradientes) {
-        if (gradiente === null || !gradientesOk.includes(gradiente)) falhar(`gradiente fora dos tokens (${e.backgroundImage.slice(0, 120)})`)
+        if ((gradiente === null || !gradientesOk.includes(gradiente)) && !emendaPintadaCasa(no)) {
+          falhar(`gradiente fora dos tokens (${e.backgroundImage.slice(0, 120)})`)
+        }
       }
     }
     for (const [propriedade, nome] of [['filter', 'filter'], ['backdropFilter', 'backdrop-filter']]) {
@@ -902,6 +927,7 @@ const COR = {
   cacau: [43, 35, 32],
   areia: [234, 221, 197],
   chaoNoite: [110, 101, 96],
+  cartaoNoite: [58, 48, 43],
   mel: [242, 193, 78],
   melClaro: [247, 214, 132],
 }
@@ -1281,7 +1307,10 @@ export function larguraCodificadaDe(srcset, currentSrc, naturalWidth, base, src)
 /** CENA: a placa de estúdio tem densidade ≥ 1,50; em 1440 mede de 836 a 1115 px e até `data-largura-max`. */
 export function cena(nos, doc) {
   const placas = nos.filter((no) => marca(no, 'cenaPlaca'))
-  if (placas.length === 0) return nenhumElemento('CENA')
+  if (placas.length === 0) {
+    if (nos.some((no) => marca(no, 'heroiComposicao'))) return falhaFechada('CENA', 'nenhuma placa base do herói da composição')
+    return nenhumElemento('CENA')
+  }
   const falhas = []
   for (const no of placas) {
     const r = retanguloDe(no)
@@ -1302,9 +1331,18 @@ export function cena(nos, doc) {
     }
     const densidade = r.w > 0 ? Math.round((codificada / r.w) * 100) / 100 : Number.NaN
     if (!(densidade >= 1.5)) falharNo(falhas, no, `densidade ${Number.isFinite(densidade) ? densidade.toFixed(2) : '?'} (o mínimo é 1,50)`)
+    const casa = marca(no, 'placaComposicao')
+    if (casa) {
+      const master = masterM05Casa(no, doc)
+      if (!master || codificada !== master.largura) falharNo(falhas, no, 'master M05 escolhido não corresponde ao recorte Casa')
+      // composicao.css: natural / (largura CSS × 2) >= 0,9, além do mínimo de densidade já verificado.
+      else if (r.w > master.largura / (2 * 0.9) + 0.5) falharNo(falhas, no, 'largura acima do máximo do master M05')
+    }
     if (doc?.largura >= 1440) {
-      if (!Number.isFinite(no.larguraMax)) falharNo(falhas, no, 'data-largura-max ausente')
-      else if (r.w > no.larguraMax + 0.5) falharNo(falhas, no, `placa de ${r.w.toFixed(1)} px acima do máximo declarado (${no.larguraMax})`)
+      if (!casa) {
+        if (!Number.isFinite(no.larguraMax)) falharNo(falhas, no, 'data-largura-max ausente')
+        else if (r.w > no.larguraMax + 0.5) falharNo(falhas, no, `placa de ${r.w.toFixed(1)} px acima do máximo declarado (${no.larguraMax})`)
+      }
       if (r.w < 836 - 0.5 || r.w > 1115 + 0.5) falharNo(falhas, no, `placa de ${r.w.toFixed(1)} px fora de 836 a 1115 em 1440`)
     }
   }
@@ -1312,6 +1350,67 @@ export function cena(nos, doc) {
 }
 
 const HORA_SOLTA = /^\d{1,2}:\d{2}$/
+
+function masterM05Casa(placa, doc) {
+  const larga = doc?.pinturaHeroiCasa?.larga
+  if (typeof larga !== 'boolean') return null
+  const nome = larga ? 'm05' : 'm05m'
+  try {
+    if (!new URL(placa.currentSrc).pathname.endsWith('/composicao/a/' + nome + '.webp')) return null
+    const master = JSON.parse(fs.readFileSync(path.join(PUBLICO_PADRAO, 'composicao', 'medidas.json'), 'utf8'))[nome]
+    return Number.isInteger(master?.largura) && master.largura > 0 &&
+      ehNumero(master.costura) && master.costura > 0 && master.costura < 1 &&
+      ehNumero(master.chao) && master.chao > 0 && master.chao < 1 ? master : null
+  } catch {
+    return null
+  }
+}
+
+const HORAS_REGUA_CASA = ['16:00', '17:30', '20:30']
+
+function reguaDaCasa(no) {
+  return no?.textoReguaCasa?.length === HORAS_REGUA_CASA.length &&
+    HORAS_REGUA_CASA.every((hora, i) => no.textoReguaCasa[i] === hora) &&
+    (no.estilo?.display === 'none' || (ehCor(no.estilo?.backgroundColor, COR.cacau) && ehCor(no.estilo?.color, COR.papel)))
+}
+
+// Os três contornos de composicao.css têm uma única camada sem deslocamento ou desfoque.
+// A forma, a espessura e a cor calculada têm de corresponder ao papel da peça.
+function anelDaCasa(no) {
+  const papel = no.anelCasa
+  if (!papel || !lido(no.estilo?.boxShadow)) return false
+  const partes = dividirNoTopo(no.estilo.boxShadow, ' ')
+  const inset = partes.includes('inset')
+  const cor = partes.find((p) => parseCor(p) !== null)
+  const medidas = partes.filter((p) => p !== 'inset' && p !== cor)
+  if (!cor || partes.length !== 5 + Number(inset) || medidas.length !== 4 ||
+      !medidas.slice(0, 3).every((v) => v === '0' || px(v) === 0) ||
+      px(medidas[3]) !== (papel === 'regua' ? 1 : 1.5) || inset !== (papel === 'cta')) return false
+  if (papel === 'cta') return ehCor(cor, COR.cacau) && ehCor(no.estilo.backgroundColor, COR.mel)
+  if (papel === 'transparente') return parseCor(cor).a === 0
+  if (papel === 'regua' && (!reguaDaCasa(no) || no.estilo.display === 'none')) return false
+  const { r, g, b, a } = parseCor(cor)
+  return Math.round(a * 100) === (papel === 'regua' ? 30 : 38) && ehCor('rgb(' + [r, g, b].join(', ') + ')', COR.papel)
+}
+
+function emendaPintadaCasa(no) {
+  const pintura = no.pinturaParedeCasa
+  if (!pintura) return false
+  const { emenda, piso, paredeDia, larga } = pintura
+  return emenda && piso && caixaPositiva(emenda.rect) &&
+    emenda.x > emenda.rect.x && emenda.x < emenda.rect.x + emenda.rect.w &&
+    ehCor(paredeDia?.cor, COR.papel) && ehCor(emenda.direita, COR.cacau) &&
+    (ehCor(emenda.esquerda, COR.papel) || (!larga && parseCor(emenda.esquerda)?.a === 0)) &&
+    ehCor(piso.esquerda, COR.areia) && ehCor(piso.direita, COR.chaoNoite) &&
+    Math.abs(emenda.x - piso.x) <= 0.5
+}
+
+function fundoDoCtaMelConforme(no) {
+  // A cena 1 põe o CTA na parede clara com contorno, e a cena 7 no chão escuro da rua.
+  if (no.anelCasa === 'cta') return anelDaCasa(no) && ehCor(no.fundoSob, COR.papel, 2)
+  if (marca(no, 'ctaFechoCasa')) return ehCor(no.estilo?.backgroundColor, COR.mel) && ehCor(no.fundoSob, COR.chaoNoite, 2)
+  return ehCor(no.fundoSob, COR.cacau, 2)
+}
 
 /** O que a casa não pode ter: sombra, gradiente, opacidade, painel, peça viva, hora solta e mel de chão. */
 function casaLimpaDe(regra, nos, noEscopo) {
@@ -1323,11 +1422,11 @@ function casaLimpaDe(regra, nos, noEscopo) {
     if (marca(no, 'noMenu') && no.visivel === false) continue
     const e = no.estilo ?? {}
     if (!lido(e.boxShadow)) falharNo(falhas, no, 'box-shadow ausente')
-    else if (sombraCanonica(e.boxShadow) !== 'none') falharNo(falhas, no, `box-shadow ${e.boxShadow}`)
+    else if (sombraCanonica(e.boxShadow) !== 'none' && !anelDaCasa(no)) falharNo(falhas, no, `box-shadow ${e.boxShadow}`)
     if (!lido(e.textShadow)) falharNo(falhas, no, 'text-shadow ausente')
     else if (e.textShadow.trim() !== 'none') falharNo(falhas, no, `text-shadow ${e.textShadow}`)
     if (!lido(e.backgroundImage)) falharNo(falhas, no, 'background-image ausente')
-    else if (/gradient\(/i.test(e.backgroundImage)) falharNo(falhas, no, 'gradiente de fundo')
+    else if (/gradient\(/i.test(e.backgroundImage) && !emendaPintadaCasa(no)) falharNo(falhas, no, 'gradiente de fundo')
     const opacidade = numeroDe(e.opacity)
     if (!Number.isFinite(opacidade)) falharNo(falhas, no, `opacity ilegível (${leitura(e.opacity)})`)
     else if (opacidade !== 1) falharNo(falhas, no, `opacity ${opacidade}`)
@@ -1336,13 +1435,19 @@ function casaLimpaDe(regra, nos, noEscopo) {
     if (marca(no, 'painel')) falharNo(falhas, no, 'painel (a casa não tem painel)')
     if (marca(no, 'vivo') && !marca(no, 'noProduto')) falharNo(falhas, no, 'peça viva fora da moldura do produto')
     // A hora de uma legenda (`[data-legenda]`) é parte dela, não uma hora solta: só a hora fora de legenda e de moldura falha.
-    if (marca(no, 'folha') && !marca(no, 'noProduto') && !marca(no, 'noLegenda') && HORA_SOLTA.test(leitura(no.texto))) falharNo(falhas, no, 'hora solta fora da moldura do produto')
+    if (marca(no, 'folha') && !marca(no, 'noProduto') && !marca(no, 'noLegenda') && HORA_SOLTA.test(leitura(no.texto))) {
+      const arte = no.horaDecorativaCasa && erroHoraDecorativaCasa(no, nos) === null
+      const regua = ehNumero(no.ordemDaReguaCasa) && reguaDaCasa(nos.find((n) => n.ordemDom === no.ordemDaReguaCasa))
+      if (!arte && !regua) falharNo(falhas, no, 'hora solta fora da moldura do produto')
+    }
     const fundo = parseCor(e.backgroundColor)
     if (fundo === null) falharNo(falhas, no, `fundo ${leitura(e.backgroundColor) || 'ausente'} ilegível`)
     else if (ehCor(e.backgroundColor, COR.mel) || ehCor(e.backgroundColor, COR.melClaro)) {
       // O mel é luz: só a pílula primária, e só sobre o cacau.
       if (!marca(no, 'botaoMel')) falharNo(falhas, no, 'mel de chão (o mel só existe como pílula)')
-      else if (!ehCor(no.fundoSob, COR.cacau, 2)) falharNo(falhas, no, `pílula de mel sobre ${leitura(no.fundoSob) || 'fundo não lido'} (só vale sobre o cacau)`)
+      else if (!fundoDoCtaMelConforme(no)) {
+        falharNo(falhas, no, `pílula de mel sobre ${leitura(no.fundoSob) || 'fundo não lido'} (só vale sobre o cacau)`)
+      }
     }
   }
   return resultado(regra, falhas, `${escopo.length} nós sem sombra, gradiente, opacidade, painel nem mel de chão`)
@@ -1425,6 +1530,93 @@ function nomeDaCor(texto) {
 const corDoFundo = (no) => (lido(no.fundoSob) ? parseCor(no.fundoSob) : fundoReal(no.cadeia))
 const fundoDoNo = (no) => (lido(no.fundoSob) ? no.fundoSob : null)
 
+// A folga de meio pixel já usada no medidor absorve arredondamento da caixa calculada pelo navegador.
+const caixaPositiva = (r) => r && ['x', 'y', 'w', 'h'].every((chave) => ehNumero(r[chave])) && r.w > 0 && r.h > 0
+const dentroDaCaixa = (r, caixa) =>
+  caixaPositiva(r) && caixaPositiva(caixa) && r.x >= caixa.x - 0.5 && r.y >= caixa.y - 0.5 &&
+  r.x + r.w <= caixa.x + caixa.w + 0.5 && r.y + r.h <= caixa.y + caixa.h + 0.5
+
+function erroHoraDecorativaCasa(no, nos) {
+  const arte = no.horaDecorativaCasa
+  if (!arte.semantica) return 'com semântica exposta ou interativa'
+  const horaDaLegenda = nos.find((n) => n.ordemDom === arte.ordemHoraDaLegenda)
+  if (!arte.legendaAcessivel || !HORA_SOLTA.test(no.texto) || !horaDaLegenda || horaDaLegenda.texto !== no.texto ||
+      !visivel(horaDaLegenda) || !caixaPositiva(horaDaLegenda.rect)) return 'sem hora correspondente na legenda visível e acessível'
+  if (arte.larga === false) return no.visivel === false ? null : 'visível no modo empilhado estreito'
+  const painel = nos.find((n) => n.ordemDom === arte.ordemPainel)
+  if (arte.larga !== true || !visivel(no) || no.estilo?.position !== 'absolute' || !dentroDaCaixa(no.rect, painel?.rect) ||
+      no.rect.y + no.rect.h > horaDaLegenda.rect.y) return 'fora da parede acima da legenda'
+
+  // As misturas sRGB são as do texto de parede em composicao.css (.co-fantasma e .co-p2 .co-fantasma).
+  const [parede, tom, peso] = arte.cena === 'dia' ? [COR.papel, COR.areia, 0.52] : [COR.cacau, COR.cartaoNoite, 0.78]
+  const tinta = parede.map((canal, i) => canal + (tom[i] - canal) * peso)
+  if (!ehCor(no.fundoSob, parede) || !ehCor(no.estilo?.color, tinta) || Number(no.estilo?.opacity) !== 1) {
+    return 'com tinta ou fundo pintado diferente do tom de parede'
+  }
+  return null
+}
+
+/** Casa, cena 1 do COMPOSICAO_README: o recorte atravessa a emenda e o texto e as duas ações ficam na parede de dia. */
+function heroiCasa(nos, doc, placa) {
+  const { paredeDia, emenda, larga } = doc.pinturaHeroiCasa ?? {}
+  if (!paredeDia || !emenda) return falhaFechada('HEROI', 'parede ou emenda da Casa sem leitura')
+  const falhas = []
+  const r = placa.rect
+  const emendaClara = ehCor(emenda.esquerda, COR.papel) || (!larga && parseCor(emenda.esquerda)?.a === 0)
+  if (!dentroDaCaixa(r, emenda.rect) || !(placa.naturalWidth > 0) || !ehCor(paredeDia.cor, COR.papel) ||
+      !emendaClara || !ehCor(emenda.direita, COR.cacau) || !(r.x < emenda.x && emenda.x < r.x + r.w)) {
+    falharNo(falhas, placa, 'base sem imagem carregada ou sem atravessar a emenda de dia e noite')
+  }
+  const texto = nos.filter((no) => marca(no, 'textoHeroiComposicao'))
+  for (const [marcador, rotulo] of [
+    ['h1Span1', 'primeiro trecho do título'], ['h1Span2', 'segundo trecho do título'],
+    ['ledeHeroiComposicao', 'introdução'], ['heroiBotao', 'ação principal'], ['linkHeroiComposicao', 'ação secundária'],
+  ]) {
+    const no = texto.find((candidato) => marca(candidato, marcador))
+    if (!no || !visivel(no) || !temTexto(no) || !dentroDaCaixa(no.rect, paredeDia.rect)) {
+      falharDoc(falhas, rotulo + ' ausente ou fora da parede de dia')
+    }
+  }
+  if (!larga) {
+    if (Math.abs(r.x - paredeDia.rect.x) > 0.5 || Math.abs(r.w - paredeDia.rect.w) > 0.5) {
+      falharNo(falhas, placa, 'recorte empilhado não ocupa a largura da cena')
+    }
+    const acoes = texto.filter((no) => marca(no, 'heroiBotao') || marca(no, 'linkHeroiComposicao'))
+    const primeiraAcao = Math.min(...acoes.map((no) => no.rect?.y ?? Infinity))
+    const legenda = nos.find((no) => marca(no, 'legendaHeroi'))
+    if (primeiraAcao > 312.5 && !(caixaPositiva(legenda?.rect) && legenda.rect.y + legenda.rect.h <= doc.altura)) {
+      falharDoc(falhas, 'primeira ação abaixo de 312 px e legenda da Casa fora da primeira dobra')
+    }
+  }
+  return resultadoInicio('HEROI', falhas, 'Casa: recorte na emenda, título, introdução e ações na parede de dia')
+}
+
+/** Casa: legenda adjacente no mesmo chão do recorte, do lado claro na sala e do lado escuro na pilha. */
+function legendaCasa(nos, doc, placa, legenda) {
+  const { piso, emenda, larga } = doc.pinturaHeroiCasa ?? {}
+  if (!piso || !emenda) return falhaFechada('LEGENDA_PRESA', 'piso ou emenda da Casa sem leitura')
+  const falhas = []
+  const { rect } = piso
+  const lado = larga ? { ...rect, w: piso.x - rect.x } : { ...rect, x: piso.x, w: rect.x + rect.w - piso.x }
+  const r = placa.rect
+  const l = legenda.rect
+  if (!ehCor(piso.esquerda, COR.areia) || !ehCor(piso.direita, COR.chaoNoite) || Math.abs(emenda.x - piso.x) > 0.5 ||
+      !visivel(legenda) || !dentroDaCaixa(l, lado) || !(r.y < rect.y && r.y + r.h > rect.y)) {
+    falharNo(falhas, legenda, 'legenda ou recorte fora do piso pintado junto à emenda')
+  }
+  if (!ehCor(legenda.estilo?.color, larga ? COR.cacau : COR.papel, 2)) {
+    falharNo(falhas, legenda, 'tinta da legenda não acompanha o lado do piso da Casa')
+  }
+  if (!larga) {
+    const proxima = nos.find((no) => marca(no, 'cenaDepoisHeroiComposicao'))
+    if (l.y < r.y + r.h - 0.5 || !caixaPositiva(proxima?.rect) || proxima.rect.y < l.y + l.h - 0.5) {
+      falharNo(falhas, legenda, 'legenda fora da pilha vertical entre a imagem e a cena seguinte')
+    }
+    for (const no of nos.filter((n) => marca(n, 'trocaLegenda'))) falharNo(falhas, no, 'legenda de troca na composição empilhada')
+  }
+  return resultadoInicio('LEGENDA_PRESA', falhas, 'Casa: legenda da cena no lado previsto do piso')
+}
+
 /**
  * HEROI: em 1440 a placa M05 mede 900 e a costura dela cai na costura do h1 (±2), com a pílula de mel no herói; em 390
  * a caixa da imagem é o recorte (390 × 305,8 em x 0, a placa em y 392), as linhas 144 a 364 são uma parede de cacau de
@@ -1435,6 +1627,7 @@ export function heroi(nos, doc) {
   if (largura !== 1440 && largura !== 390) return foraDoEscopo('HEROI', doc)
   const placa = nos.find((no) => marca(no, 'cenaPlaca'))
   if (!placa || !comRetangulo(placa)) return falhaFechada('HEROI', 'nenhuma placa de estúdio com retângulo')
+  if (nos.some((no) => marca(no, 'heroiComposicao'))) return heroiCasa(nos, doc, placa)
   const r = placa.rect
   const falhas = []
   const botoes = nos.filter((no) => marca(no, 'heroiBotao'))
@@ -1495,8 +1688,11 @@ export function legendaPresa(nos, doc) {
   const placa = nos.find((no) => marca(no, 'cenaPlaca'))
   if (!placa || !comRetangulo(placa)) return falhaFechada('LEGENDA_PRESA', 'nenhuma placa de estúdio com retângulo')
   const legendas = nos.filter((no) => marca(no, 'legenda') && comRetangulo(no))
-  const legenda = legendas.find((no) => marca(no, 'legendaHeroi')) ?? legendas.sort(emOrdem)[0]
+  const legendaDoHeroi = legendas.find((no) => marca(no, 'legendaHeroi'))
+  const composicao = nos.some((no) => marca(no, 'heroiComposicao'))
+  const legenda = legendaDoHeroi ?? (composicao ? undefined : legendas.sort(emOrdem)[0])
   if (!legenda) return falhaFechada('LEGENDA_PRESA', 'nenhuma legenda do herói medida')
+  if (composicao) return legendaCasa(nos, doc, placa, legenda)
   const falhas = []
   const p = placa.rect
   const l = legenda.rect
@@ -1549,6 +1745,24 @@ const RECUO_DE_P0 = { 1440: 24 }
 export function molduraDobra(nos, doc) {
   const largura = doc?.largura
   if (largura !== 1440 && largura !== 390) return foraDoEscopo('MOLDURA_DOBRA', doc)
+  if (nos.some((no) => marca(no, 'heroiComposicao'))) {
+    const falhas = []
+    const normal = doc.trocaCasa?.normal
+    const quantidade = normal?.suportaPino ? 2 : 1
+    for (const [nome, modo] of [['normal', normal], ['reduzido', doc.trocaCasa?.reduzida]]) {
+      const molduras = modo?.molduras
+      if (!Array.isArray(molduras) || molduras.length < quantidade) {
+        falharDoc(falhas, 'moldura do Histórico ou Hoje sem leitura na janela útil no modo ' + nome)
+        continue
+      }
+      for (const [i, moldura] of molduras.slice(0, quantidade).entries()) {
+        if (!dentroDaCaixa(moldura?.rect, moldura?.util) || !dentroDaCaixa(moldura?.tela, moldura?.rect)) {
+          falharDoc(falhas, 'moldura de ' + (i === 0 ? 'Histórico' : 'Hoje') + ' fora da janela útil no modo ' + nome)
+        }
+      }
+    }
+    return resultadoInicio('MOLDURA_DOBRA', falhas, 'Casa: molduras inteiras na janela útil da cena correspondente')
+  }
   const palco = nos.find((no) => marca(no, 'palco') && comRetangulo(no))
   if (!palco) return falhaFechada('MOLDURA_DOBRA', 'nenhum palco medido')
   const moldura = nos.find((no) => marca(no, 'produto') && comRetangulo(no) && (!Number.isFinite(no.ordemDom) || !Number.isFinite(palco.ordemDom) || no.ordemDom > palco.ordemDom))
@@ -1583,11 +1797,15 @@ export function noite(nos, doc) {
   const largura = doc?.largura
   if (largura !== 1440 && largura !== 390) return foraDoEscopo('NOITE', doc)
   const falhas = []
-  const amostras = doc?.noite?.porRolagem
+  const casa = nos.some((no) => marca(no, 'heroiComposicao'))
+  const amostras = casa ? doc.noitePintadaCasa : doc?.noite?.porRolagem
   if (!Array.isArray(amostras) || amostras.length === 0) {
     falharDoc(falhas, 'amostras de noite ausentes (doc.noite.porRolagem)')
   } else if (!amostras.every((a) => ['total', 'noite', 'cabecalho'].every((k) => ehNumero(a?.[k])))) {
     falharDoc(falhas, 'amostra de noite ilegível (total, noite e cabecalho em px²)')
+  } else if (casa && (amostras.length !== 2 || amostras.some((a, i) =>
+    a.rolagem !== i * doc.altura || !(a.total > a.cabecalho && a.cabecalho >= 0 && a.noite >= 0 && a.noite <= a.total - a.cabecalho)))) {
+    falharDoc(falhas, 'faltam os pixels pintados das duas primeiras telas sem o cabeçalho')
   } else {
     const noturno = amostras.reduce((soma, a) => soma + a.noite, 0)
     const area = amostras.reduce((soma, a) => soma + a.total - a.cabecalho, 0)
@@ -1603,8 +1821,9 @@ export function noite(nos, doc) {
   // Where the pin is built the stage's track pushes the next band down by D, so the band above 2 x innerHeight is the
   // wall of the night sheet (`paredeDaFolha`): as wide as the stage at rest and at every p, and cacau.
   const deNoite = nos.filter((no) => {
-    const lado = marca(no, 'faixa') || marca(no, 'faixaLado') || marca(no, 'paredeDaFolha')
-    return lado && comRetangulo(no) && cacau(no) && no.rect.x <= 1 && no.rect.x + no.rect.w >= largura - 1 && no.rect.y < teto
+    const lado = casa ? marca(no, 'cenaDepoisHeroiComposicao') : marca(no, 'faixa') || marca(no, 'faixaLado') || marca(no, 'paredeDaFolha')
+    const larguraUtil = casa ? doc.clientWidth : largura
+    return lado && comRetangulo(no) && cacau(no) && no.rect.x <= 1 && no.rect.x + no.rect.w >= larguraUtil - 1 && no.rect.y < teto
   })
   if (deNoite.length === 0) falharDoc(falhas, `nenhuma faixa de cacau de ponta a ponta antes de 2 × innerHeight (${teto})`)
   return resultadoInicio('NOITE', falhas, `noite com parcela conforme e ${deNoite.length} faixa de cacau antes de 2 × innerHeight`)
@@ -1614,6 +1833,20 @@ export function noite(nos, doc) {
 export function costura(nos, doc) {
   const largura = doc?.largura
   if (largura !== 1440 && largura !== 1024 && largura !== 390) return foraDoEscopo('COSTURA', doc)
+  if (nos.some((no) => marca(no, 'heroiComposicao'))) {
+    const placa = nos.find((no) => marca(no, 'placaComposicao'))
+    const parede = nos.find((no) => no.pinturaParedeCasa)
+    const master = placa && masterM05Casa(placa, doc)
+    if (!master || !caixaPositiva(placa.rect) || !parede || !emendaPintadaCasa(parede)) {
+      return falhaFechada('COSTURA', 'emenda, piso ou master M05 da Casa ausente ou ilegível')
+    }
+    const { emenda, piso } = parede.pinturaParedeCasa
+    const r = placa.rect
+    if (Math.abs(emenda.x - (r.x + r.w * master.costura)) > 2 || Math.abs(piso.rect.y - (r.y + r.h * master.chao)) > 2) {
+      return falhaFechada('COSTURA', 'a emenda pintada ou o início do piso não afina com o recorte M05 (±2 px)')
+    }
+    return resultadoInicio('COSTURA', [], 'Casa: emenda e início do piso alinhados com o recorte carregado')
+  }
   const dia = nos.filter((no) => marca(no, 'ladoDia') && comRetangulo(no))
   const noiteNos = nos.filter((no) => marca(no, 'ladoNoite') && comRetangulo(no))
   const falhas = []
@@ -1677,17 +1910,19 @@ export function tempo(nos, doc) {
     }
     anterior = { minutos, rotulo: `${m[1]}:${m[2]}` }
     const chao = corDoFundo(no)
-    if (!lido(no.tom)) falharNo(falhas, no, 'tom da legenda ausente')
+    const tom = no.tomLegendaCasa ?? no.tom
+    if (!lido(tom)) falharNo(falhas, no, 'tom da legenda ausente')
     else if (!chao) falharNo(falhas, no, 'chão da legenda ilegível')
-    else if (no.tom === 'dia' && !(ehCor(`rgb(${chao.r}, ${chao.g}, ${chao.b})`, COR.papel, 2) || ehCor(`rgb(${chao.r}, ${chao.g}, ${chao.b})`, COR.areia, 2))) {
+    else if (tom === 'dia' && !(ehCor(`rgb(${chao.r}, ${chao.g}, ${chao.b})`, COR.papel, 2) || ehCor(`rgb(${chao.r}, ${chao.g}, ${chao.b})`, COR.areia, 2))) {
       falharNo(falhas, no, `legenda de tom dia sobre o chão ${nomeDaCor(`rgb(${chao.r}, ${chao.g}, ${chao.b})`)} (o dia é papel ou areia)`)
-    } else if (no.tom === 'noite' && !ehCacauOuChaoNoite(`rgb(${chao.r}, ${chao.g}, ${chao.b})`)) {
+    } else if (tom === 'noite' && !ehCacauOuChaoNoite(`rgb(${chao.r}, ${chao.g}, ${chao.b})`)) {
       falharNo(falhas, no, `legenda de tom noite sobre o chão ${nomeDaCor(`rgb(${chao.r}, ${chao.g}, ${chao.b})`)} (a noite é cacau ou texto-2)`)
-    } else if (no.tom !== 'dia' && no.tom !== 'noite') falharNo(falhas, no, `tom ${no.tom} da legenda (dia ou noite)`)
+    } else if (tom !== 'dia' && tom !== 'noite') falharNo(falhas, no, `tom ${tom} da legenda (dia ou noite)`)
   }
   for (const no of nos) {
     // O botão de mel tem o próprio fundo (o chão sob ele é `fundoSob`): o contraste dele é o do G11.
     if (marca(no, 'botaoMel')) continue
+    if (no.horaDecorativaCasa && erroHoraDecorativaCasa(no, nos) === null) continue
     // O texto recortado para fora da tela (`recortadoFora === true` estrito) não está à vista: não tem tinta a conferir.
     if (no.recortadoFora === true) continue
     if (!visivel(no) || !temTexto(no) || !lido(no.estilo?.color) || !(lido(no.fundoSob) || Array.isArray(no.cadeia))) continue
@@ -1702,15 +1937,16 @@ export function tempo(nos, doc) {
     }
   }
   const meis = nos.filter((no) => marca(no, 'botaoMel'))
+  const noFecho = (no) => marca(no, 'fechamento') || marca(no, 'ctaFechoCasa')
   for (const no of meis) {
     // A pílula do herói existe em toda largura (o cabeçalho fica quieto enquanto ela está à vista).
-    if (!marca(no, 'heroiBotao') && !marca(no, 'fechamento')) {
+    if (!marca(no, 'heroiBotao') && !noFecho(no)) {
       falharNo(falhas, no, 'botão de mel fora do herói e do fechamento')
-    } else if (!ehCor(fundoDoNo(no), COR.cacau, 2)) {
+    } else if (!fundoDoCtaMelConforme(no)) {
       falharNo(falhas, no, `botão de mel sobre ${lido(no.fundoSob) ? nomeDaCor(no.fundoSob) : 'chão não lido'} (o mel só vale sobre o cacau)`)
     }
   }
-  if (!meis.some((no) => marca(no, 'fechamento'))) falharDoc(falhas, 'o botão de mel do fechamento não existe')
+  if (!meis.some(noFecho)) falharDoc(falhas, 'o botão de mel do fechamento não existe')
   return resultadoInicio('TEMPO', falhas, `${legendas.length} legendas em ordem, tinta no chão certo, ${meis.length} botões de mel`)
 }
 
@@ -1719,6 +1955,7 @@ export function tempo(nos, doc) {
  * diante) não tem transform, a luz está acesa, não há capa sobre ela e nenhuma animação roda na casa.
  */
 export function trocaRm(nos, doc) {
+  if (nos.some((no) => marca(no, 'heroiComposicao'))) return trocaDaCasa(nos, doc)
   const falhas = []
   const palcos = nos.filter((no) => marca(no, 'palco'))
   if (palcos.length === 0) falharDoc(falhas, 'nenhum palco medido')
@@ -1751,8 +1988,116 @@ export function trocaRm(nos, doc) {
   return resultadoInicio('TROCA_RM', falhas, 'palco sem pino, camada da noite parada, luz acesa, nenhuma animação')
 }
 
+// V14 e COMPOSICAO_README: cada modo precisa mostrar a sequência pela rolagem vertical.
+function trocaDaCasa(nos, doc) {
+  const { reduzida, normal } = doc?.trocaCasa ?? {}
+  if (reduzida?.reduzido !== true || normal?.reduzido !== false || typeof normal.suportaPino !== 'boolean') {
+    return falhaFechada('TROCA_RM', 'faltam leituras reais dos dois modos de movimento da Casa')
+  }
+  const falhas = []
+  const perto = (a, b) => ehNumero(a) && ehNumero(b) && Math.abs(a - b) <= 0.5
+  const pilha = (modo) => {
+    const { paineis, palco, fita } = modo
+    return ['static', 'relative'].includes(modo.posicao) && modo.semRolagemX === true && modo.transform === 'none' &&
+      dentroDaCaixa(fita, palco) && ehNumero(modo.alturaConteudo) && modo.alturaConteudo <= palco.h + 1 &&
+      Array.isArray(paineis) && paineis.length === 3 &&
+      paineis.every(({ rect }, i) => dentroDaCaixa(rect, fita) && perto(rect.x, fita.x) && perto(rect.w, fita.w) &&
+        (i === 0 || rect.y >= paineis[i - 1].rect.y + paineis[i - 1].rect.h - 0.5))
+  }
+  if (!pilha(reduzida) || reduzida.paineis.some((no) => no.transform !== 'none' || no.clipPath !== 'none')) {
+    falharDoc(falhas, 'modo reduzido fora da pilha sem pino e sem recorte')
+  }
+  if (doc.animacoesCasa !== 0) falharDoc(falhas, 'animações da Casa em movimento reduzido ausentes da leitura ou ativas')
+  const luzes = reduzida.luzes
+  if (!Array.isArray(luzes) || luzes.length !== 3 || ['m05', 'm06', 'rua'].some((cena) => !luzes.some((luz) =>
+    luz.cena === cena && luz.decorativa === true && caixaPositiva(luz.rect) && numeroDe(luz.opacidade) === 1,
+  ))) falharDoc(falhas, 'luz decorativa de M05, M06 ou A05 apagada ou ausente no modo reduzido')
+  for (const no of nos.filter((n) => marca(n, 'luzCapa'))) falharNo(falhas, no, 'capa sobre a luz')
+
+  if (!normal.suportaPino) {
+    if (!pilha(normal)) falharDoc(falhas, 'modo normal sem suporte ao pino fora da pilha vertical')
+  } else {
+    const { palco, fita, depois } = normal
+    const amostras = Array.isArray(normal.amostras) ? normal.amostras : []
+    if (normal.posicao !== 'sticky' || normal.recorteX !== 'clip' || !caixaPositiva(palco) ||
+        !caixaPositiva(fita) || !perto(fita.w, palco.w * 3)) falharDoc(falhas, 'pino ou fita não ocupa três larguras do palco')
+    if (normal.semRolagemX !== true || amostras.some((amostra) => amostra.x !== 0) || (depois && depois.x !== 0)) {
+      falharDoc(falhas, 'a travessia não pode usar rolagem horizontal')
+    }
+    if (amostras.length !== 3) falharDoc(falhas, 'faltam amostras das três cenas durante a rolagem vertical')
+    else {
+      for (const [i, amostra] of amostras.entries()) {
+        if (!ehNumero(amostra.y) || (i > 0 && amostra.y <= amostras[i - 1].y) ||
+            !perto(amostra.palcoY, amostras[0].palcoY) || !perto(amostra.cenasX?.[i], amostra.palcoX)) {
+          falharDoc(falhas, 'cena ' + (i + 1) + ' não alinhou no palco preso durante a rolagem vertical')
+        }
+      }
+      const ultima = amostras.at(-1)
+      if (!depois || !(depois.y > ultima.y) || !(depois.palcoY < ultima.palcoY) ||
+          !perto(depois.palcoY + palco?.h, depois.proximaY) || depois.proximaY > ultima.palcoY + 0.5) {
+        falharDoc(falhas, 'a fita não libera para a próxima faixa vertical')
+      }
+    }
+  }
+  return resultadoInicio('TROCA_RM', falhas, 'Casa: travessia vertical no modo normal e pilha parada com luzes acesas no reduzido')
+}
+
 /** A pasta de web/public: a que o servidor serve e onde mora telas/casa/MANIFESTO.json. */
 const PUBLICO_PADRAO = fileURLToPath(new URL('../public', import.meta.url))
+
+// Recibo de exportar_recortes.py:tela: reexportação em 780/1170, byte a byte, a partir dos
+// masters catalogados. Vincula cada derivada à versão do master que a gerou.
+const CAPTURAS_CASA = {
+  historico: ['casa', 'historico-y-alta', '10db11ff414a9e83b40ca311f982297a7661f3f6f87f45dce2defb5ffd0e3e45', {
+    780: '8ec55774241bdda0146ffd6c949bd738f3c6b38a02ce7ed64ddad6f50523c02d',
+    1170: '6bb051b3fa0399c3c37a7822a36c121a4557fd8bf921f52aa5379750343153e2',
+  }],
+  'hoje-n': ['casa', 'hoje-n', '5c32c07739a27d964ada11ae3bd24d64af590e3aa16e88548f9e0658191127da', {
+    780: '2f31ea2726fd5b1cf8a3d49ad28db3602b2905cfcfb15eb8370e48e21280c4a2',
+    1170: '4303237ff57fa96574342f940569488570b29b044cfcc28fbaa4ffcb07b4a4fb',
+  }],
+  familia: ['t1i', 'familia', 'e1cbb9d7069ffc441fce50a2b02cf0e6599dffe72e83e174d3214e036dc71ec7', {
+    780: '166b1aa0f27389cf9140af8551bc9c785d62586d25935cc8d5a1d78b27bec982',
+    1170: 'e23610f15eab296f2ccc02634553a392b20c9bff2d282b8181c9552d7adb145c',
+  }],
+  notas: ['t1i', 'notas', '3d6e8bcb1802ea04a2d65053c1b347968417c8795e89f9b8dd59f7ff1d9e2e19', {
+    780: 'd5f5c5edab2a93374ac168503e4a7a1098dd6bbe84616e75bb5531236c7daad2',
+    1170: 'a91111b23c54dd4ae2a5c28f0eda0468a3b0fda9c6855a20c4e23bfb212015bf',
+  }],
+}
+
+function capturaRealCasa(nos, publico) {
+  const falhas = []
+  const sha = (relativo) => crypto.createHash('sha256').update(fs.readFileSync(path.join(publico, relativo))).digest('hex')
+  for (const [nome, [catalogo, fonte, shaFonte, saidas]] of Object.entries(CAPTURAS_CASA)) {
+    const telas = nos.filter((no) => no.capturaCasa === nome)
+    if (telas.length !== 1) {
+      falharDoc(falhas, nome + ': é necessário medir uma tela no seu telefone')
+      continue
+    }
+    const [no] = telas
+    try {
+      const base = 'telas/' + catalogo + '/'
+      const origem = base + fonte + '-1170w.webp'
+      const manifesto = JSON.parse(fs.readFileSync(path.join(publico, base, 'MANIFESTO.json'), 'utf8'))
+      const registrada = manifesto.capturas.some((captura) => captura.servidos.some(({ arquivo, sha256 }) =>
+        arquivo === '/' + origem && sha256 === shaFonte))
+      if (!registrada || sha(origem) !== shaFonte) {
+        falharNo(falhas, no, nome + ': master diferente da captura catalogada e reexportada')
+        continue
+      }
+      const carregada = new URL(no.currentSrc).pathname
+      const variante = Object.keys(saidas).find((w) => carregada.endsWith('/composicao/a/' + nome + '-' + w + 'w.webp'))
+      if (!no.capturaCasaOrigemLocal || !(no.naturalWidth > 0) || !variante ||
+          sha('composicao/a/' + nome + '-' + variante + 'w.webp') !== saidas[variante]) {
+        falharNo(falhas, no, nome + ': tela carregada não corresponde à derivada verificada do master')
+      }
+    } catch {
+      falharNo(falhas, no, nome + ': catálogo, master ou derivada ausente ou ilegível')
+    }
+  }
+  return resultadoInicio('CAPTURA_REAL', falhas, 'Casa: quatro capturas com master catalogado e SHA-256 da derivada conferido')
+}
 
 /** Um PNG liso (poucos valores distintos nos bytes das linhas): a tela de esqueleto que a regra recusa. */
 function pngLiso(bytes) {
@@ -1796,6 +2141,7 @@ function pngLiso(bytes) {
  */
 export function capturaReal(nos, _doc, opcoes = {}) {
   const publico = path.resolve(opcoes.publico ?? PUBLICO_PADRAO)
+  if (nos.some((no) => marca(no, 'heroiComposicao'))) return capturaRealCasa(nos, publico)
   const telas = nos.filter((no) => marca(no, 'produtoTela'))
   if (telas.length === 0) return falhaFechada('CAPTURA_REAL', 'nenhuma tela de produto na página (0 molduras)')
   let servidos
@@ -2065,8 +2411,23 @@ export function verificarLoopback(url) {
 
 export function coletarNaPagina() {
   const ignorar = new Set(['SCRIPT', 'STYLE', 'NOSCRIPT', 'TEMPLATE', 'OPTION', 'OPTGROUP'])
-  // A placa de estúdio do herói: a imagem do <picture> da cena (este coletor é serializado: a constante mora aqui dentro).
-  const SELETOR_DA_PLACA = '[data-cena-heroi] .cm-cena-placa picture > img:not([data-luz])'
+  const PLACA_DE_ESTUDIO = '[data-cena-heroi] .cm-cena-placa picture > img:not([data-luz])'
+  // A cena 1 da COMPOSICAO_README associa a base M05 à legenda no chão, no mesmo contêiner da cena.
+  const HEROI_COMPOSICAO = '[data-casa] .co .co-p1[data-cena-heroi]'
+  const CENA_COMPOSICAO = `${HEROI_COMPOSICAO} > .co-p1-cena`
+  const CAIXA_PLACA_COMPOSICAO = `${CENA_COMPOSICAO} > .co-placa.co-m05`
+  const BASE_COMPOSICAO = `${CAIXA_PLACA_COMPOSICAO} > picture > img[alt]:not([alt=""], .co-luz, [data-luz])`
+  const LEGENDA_COMPOSICAO = `${CAIXA_PLACA_COMPOSICAO} + p.co-p1-leg[data-legenda]`
+  const SELETOR_DA_PLACA = `${PLACA_DE_ESTUDIO}, ${BASE_COMPOSICAO}`
+  const TEXTO_HEROI_COMPOSICAO = `${HEROI_COMPOSICAO} > .co-p1-texto`
+  const CTA_DIA_CASA = `${TEXTO_HEROI_COMPOSICAO} .co-acoes a[href][data-botao-mel]`
+  const REGUA_CASA = '[data-casa] > .co > .co-trilho > .co-palco > ol.co-regua'
+  const TELAS_CASA = [
+    ['.co-p2 figure.co-p2-fone', 'historico'], ['.co-p3 figure.co-p3-fone', 'hoje-n'],
+    ['.co-so figure.co-so-fone', 'familia'], ['.co-prova figure.co-prova-fone', 'notas'],
+  ]
+  const HORA_DE_PAREDE = '[data-casa] .co .co-fita > :is(.co-p1, .co-p2) > span.co-fantasma'
+  const largaCasa = window.matchMedia?.('(min-width: 69em) and (min-aspect-ratio: 1/1)').matches
   const sx = window.scrollX
   const sy = window.scrollY
   const raiz = document.documentElement
@@ -2207,8 +2568,16 @@ export function coletarNaPagina() {
       botaoLargoNoHeroi: el.matches('[data-cena-heroi] [data-botao-largo]'),
       // O mel de BotaoLargo leva `data-botao-mel`; `data-botao="mel"` é a forma antiga e continua valendo.
       botaoMel: el.matches('[data-botao-mel], [data-botao="mel"]'),
-      // A placa é a imagem do `<picture>` da cena; as camadas de luz (`[data-luz]`) e as outras imagens do herói não são placa.
+      heroiComposicao: el.matches(HEROI_COMPOSICAO),
+      cenaHeroiComposicao: el.matches(CENA_COMPOSICAO),
+      caixaPlacaComposicao: el.matches(CAIXA_PLACA_COMPOSICAO),
+      cenaDepoisHeroiComposicao: el.matches(`${HEROI_COMPOSICAO} + .co-p2`),
+      textoHeroiComposicao: el.matches(`${TEXTO_HEROI_COMPOSICAO} :is(h1 [data-h1-dia], h1 [data-h1-noite], .co-lede, .co-acoes a[href])`),
+      ledeHeroiComposicao: el.matches(`${TEXTO_HEROI_COMPOSICAO} > p.co-lede`),
+      linkHeroiComposicao: el.matches(`${TEXTO_HEROI_COMPOSICAO} .co-acoes a[href]:not([data-botao-mel])`),
       cenaPlaca: el.matches(SELETOR_DA_PLACA),
+      placaComposicao: el.matches(BASE_COMPOSICAO),
+      ctaFechoCasa: el.matches('[data-casa] .co .co-fecho > .co-dentro > .co-fecho-texto > .co-acoes > a[href][data-botao-mel]'),
       // REP-HOME: as marcas das oito regras do Início, lidas dos atributos que a página e as peças carregam.
       h1Span1: el.matches('h1 [data-h1-dia]'),
       h1Span2: el.matches('h1 [data-h1-noite]'),
@@ -2217,7 +2586,8 @@ export function coletarNaPagina() {
       legenda: el.matches('[data-legenda]'),
       // O que está dentro de uma legenda (a hora dela fica num filho): não é "hora solta" da CASA_LIMPA.
       noLegenda: el.closest('[data-legenda]') !== null,
-      legendaHeroi: el.matches('[data-cena-heroi] [data-legenda]'),
+      legendaHeroi: el.matches('[data-cena-heroi] [data-legenda]') &&
+        (!el.closest(HEROI_COMPOSICAO) || el.matches(LEGENDA_COMPOSICAO)),
       palco: el.matches('[data-troca-palco]'),
       colunaNoite: el.matches('[data-casa] [data-faixa-lado][data-faixa-fundo="cacau"]'),
       ladoDia: el.matches('[data-costura-lado="dia"]'),
@@ -2289,6 +2659,7 @@ export function coletarNaPagina() {
         paddingBottom: cs.paddingBottom,
         textShadow: cs.textShadow,
         visibility: cs.visibility,
+        display: cs.display,
         // O contorno da pílula quieta do cabeçalho (CABECALHO).
         borderColor: cs.borderTopColor,
       },
@@ -2358,6 +2729,11 @@ export function coletarNaPagina() {
       })()
       no.currentSrc = el.currentSrc || el.src || origemAbsoluta
       no.naturalWidth = el.naturalWidth
+      const telaCasa = TELAS_CASA.find(([seletor]) => el.matches('[data-casa] > .co ' + seletor + '.co-fone > img'))
+      if (telaCasa) {
+        no.capturaCasa = telaCasa[1]
+        no.capturaCasaOrigemLocal = URL.canParse(no.currentSrc) && new URL(no.currentSrc).origin === window.location.origin
+      }
     }
     if (no.m.cenaPlaca) {
       // A largura codificada do recurso escolhido (mesma lógica de `larguraCodificadaDe`, inline: este coletor é serializado).
@@ -2422,7 +2798,33 @@ export function coletarNaPagina() {
     if (no.m.cabecalhoPilula) no.tom = el.closest('[data-cabecalho]')?.getAttribute('data-tom') ?? undefined
     // REP-HOME: a posição do nó no DOM, o tom da legenda e a altura do conteúdo do palco.
     no.ordemDom = ordemDom
+    if (el.matches(CTA_DIA_CASA)) no.anelCasa = 'cta'
+    if (el.matches('[data-casa] .co figure.co-fone') && el.querySelector(':scope > img')) {
+      no.anelCasa = el.closest('.co-p2, .co-p3') ? 'noite' : 'transparente'
+    }
+    if (el.matches(REGUA_CASA)) {
+      no.anelCasa = 'regua'
+      if (el.getAttribute('aria-hidden') === 'true' && !el.matches('[role], [tabindex], [contenteditable]') &&
+          [...el.children].every((item) => item.matches('li:not([role], [tabindex], [contenteditable])') && item.childElementCount === 0)) {
+        no.textoReguaCasa = [...el.children].map((item) => textoProprio(item))
+      }
+    }
+    if (el.matches(REGUA_CASA + ' > li')) no.ordemDaReguaCasa = elementos.indexOf(el.parentElement)
+    if (el.matches(HORA_DE_PAREDE)) {
+      const painel = el.parentElement
+      const hora = painel.querySelector(':scope > :is(.co-p1-cena, .co-p2-cena) > p[data-legenda] > span.co-leg-hora')
+      no.horaDecorativaCasa = {
+        cena: painel.matches('.co-p1') ? 'dia' : 'noite',
+        larga: largaCasa,
+        semantica: el.getAttribute('aria-hidden') === 'true' && !el.matches('[role], [tabindex], [contenteditable]') && el.childElementCount === 0,
+        legendaAcessivel: hora !== null && hora.closest('[aria-hidden="true"], [inert], [hidden]') === null,
+        ordemPainel: elementos.indexOf(painel),
+        ordemHoraDaLegenda: elementos.indexOf(hora),
+      }
+    }
     if (no.m.legenda) no.tom = el.getAttribute('data-tom') ?? undefined
+    if (el.matches(LEGENDA_COMPOSICAO) && typeof largaCasa === 'boolean') no.tomLegendaCasa = largaCasa ? 'dia' : 'noite'
+    if (el.matches('[data-casa] .co .co-p2-cena > p.co-p2-leg[data-legenda]')) no.tomLegendaCasa = 'noite'
     if (no.m.palco) no.alturaConteudo = el.scrollHeight
     return no
   })
@@ -2480,10 +2882,99 @@ export function coletarNaPagina() {
     const inset = recorteInset(el)
     return dosAncestrais === null ? inset : inset === null ? dosAncestrais : cortar(dosAncestrais, inset)
   }
+  const contemPonto = (caixa, { x, y }) =>
+    caixa.w > 0 && caixa.h > 0 && x >= caixa.x && x <= caixa.x + caixa.w && y >= caixa.y && y <= caixa.y + caixa.h
+
+  // A Casa usa duas cores chapadas com parada comum, não uma interpolação. O Chrome pode
+  // serializar a primeira cor com duas posições ou como duas paradas consecutivas.
+  const divisaoDeCores = (imagem, caixa) => {
+    const prefixo = 'linear-gradient(to right,'
+    if (!imagem.startsWith(prefixo) || !imagem.endsWith(')')) return null
+    const posicao = (valor) => parseFloat(valor) * (valor.endsWith('%') ? caixa.w / 100 : 1)
+    const declaracoes = imagem.slice(prefixo.length, -1).split(/,(?![^()]*\))/)
+    const lidas = declaracoes.map((parte) => parte.trim().match(/^((?:rgba?|color)\([^()]+\)|transparent)\s+([\d.]+(?:px|%)|0)(?:\s+([\d.]+(?:px|%)|0))?$/))
+    if (lidas.some((m) => m === null)) return null
+    const paradas = lidas.flatMap(([, cor, inicio, fim]) => fim ? [[cor, posicao(inicio)], [cor, posicao(fim)]] : [[cor, posicao(inicio)]])
+    if (paradas.length !== 3) return null
+    const [[esquerda, origem], [repetida, divisa], [direita, inicioDireita]] = paradas
+    if (esquerda !== repetida || origem !== 0 || divisa !== inicioDireita || !Number.isFinite(divisa)) return null
+    return { esquerda, direita, x: caixa.x + divisa }
+  }
+
+  const pisoAtivo = (piso) =>
+    piso.content && piso.content !== 'none' && piso.content !== 'normal' && piso.display !== 'none' && piso.visibility !== 'hidden'
+  const caixaDoPiso = (piso, caixa) => {
+    const px = (valor) => /^-?[\d.]+px$/.test(valor) ? parseFloat(valor) : Number.NaN
+    const h = px(piso.height)
+    const topo = piso.top === 'auto' ? caixa.h - px(piso.bottom) - h : px(piso.top)
+    const area = { x: caixa.x + px(piso.left), y: caixa.y + topo, w: px(piso.width), h }
+    return piso.position === 'absolute' && Object.values(area).every(Number.isFinite) ? area : null
+  }
+
+  // elementsFromPoint lista o dono do pseudoelemento, sem distinguir parede e chão.
+  // Só estas superfícies da composição têm um piso absoluto dentro da caixa do dono.
+  const entradasDoFundo = (el, ponto) => {
+    const estilo = getComputedStyle(el)
+    const recorte = recorteDe(el)
+    const base = { cor: estilo.backgroundColor, recorte }
+    if (!el.matches('[data-casa] .co :is(.co-painel, .co-p1-cena)')) return [base]
+    const caixa = retangulo(el.getBoundingClientRect())
+    if (!contemPonto(caixa, ponto) || (recorte && !contemPonto(recorte, ponto))) return [base]
+    const entradas = []
+    const registrar = (superficie, area) => {
+      const imagem = superficie.getPropertyValue('background-image')
+      if (imagem && imagem !== 'none') {
+        const divisao = divisaoDeCores(imagem, area)
+        if (divisao === null) entradas.push({ pinturaCasaIlegivel: true })
+        else entradas.push({ cor: ponto.x < divisao.x ? divisao.esquerda : divisao.direita, recorte: area })
+      }
+      entradas.push({ cor: superficie.backgroundColor, recorte: area })
+    }
+
+    const pseudo = el.matches('.co-p1-cena') ? '::before' : '::after'
+    const piso = getComputedStyle(el, pseudo)
+    if (pisoAtivo(piso)) {
+      const area = caixaDoPiso(piso, caixa)
+      if (area === null) entradas.push({ pinturaCasaIlegivel: true })
+      else if (contemPonto(area, ponto)) registrar(piso, area)
+    }
+    registrar(estilo, caixa)
+    return entradas
+  }
+
+  // Lê a pintura em coordenadas de documento antes de a sonda rolar até cada texto.
+  const painelHeroi = document.querySelector(HEROI_COMPOSICAO)
+  const cenaHeroi = document.querySelector(CENA_COMPOSICAO)
+  if (painelHeroi && cenaHeroi && typeof largaCasa === 'boolean') {
+    const caixaDe = (el) => {
+      const { x, y, w, h } = retangulo(el.getBoundingClientRect())
+      return { x: x + sx, y: y + sy, w, h }
+    }
+    const parede = getComputedStyle(painelHeroi)
+    const caixaPainel = caixaDe(painelHeroi)
+    const caixaCena = caixaDe(cenaHeroi)
+    const donoDoPiso = largaCasa ? painelHeroi : cenaHeroi
+    const caixaDoDono = largaCasa ? caixaPainel : caixaCena
+    const paredeDividida = largaCasa ? parede : getComputedStyle(cenaHeroi)
+    const emenda = divisaoDeCores(paredeDividida.getPropertyValue('background-image'), caixaDoDono)
+    const estiloPiso = getComputedStyle(donoDoPiso, largaCasa ? '::after' : '::before')
+    const caixaPiso = pisoAtivo(estiloPiso) ? caixaDoPiso(estiloPiso, caixaDoDono) : null
+    const coresPiso = caixaPiso && divisaoDeCores(estiloPiso.getPropertyValue('background-image'), caixaPiso)
+    doc.pinturaHeroiCasa = {
+      larga: largaCasa,
+      emenda: emenda && { ...emenda, rect: caixaDoDono },
+      piso: coresPiso && { ...coresPiso, rect: caixaPiso },
+      paredeDia: largaCasa
+        ? emenda && caixaPiso && { cor: emenda.esquerda, rect: { ...caixaPainel, w: emenda.x - caixaPainel.x, h: caixaPiso.y - caixaPainel.y } }
+        : { cor: parede.backgroundColor, rect: { ...caixaPainel, h: caixaCena.y - caixaPainel.y } },
+    }
+    nos[elementos.indexOf(donoDoPiso)].pinturaParedeCasa = doc.pinturaHeroiCasa
+  }
+
   const sondar = () => {
     elementos.forEach((el, indice) => {
       const marcas = nos[indice].m
-      if (!marcas.botaoMel && !(marcas.casa && marcas.folha && nos[indice].visivel)) return
+      if (!marcas.botaoMel && !(marcas.casa && (marcas.folha || nos[indice].tomLegendaCasa) && nos[indice].visivel)) return
       // Um texto com fundo opaco próprio (o dia do h1 em 390) fica sobre ele: a cadeia de fundos já o lê.
       if (!marcas.botaoMel && fundoOpaco(nos[indice].estilo.backgroundColor)) return
       if (typeof document.elementsFromPoint !== 'function') return
@@ -2496,7 +2987,7 @@ export function coletarNaPagina() {
       nos[indice].pilhaSob = document
         .elementsFromPoint(ponto.x, ponto.y)
         .filter((abaixo) => abaixo !== el && !el.contains(abaixo))
-        .map((abaixo) => ({ cor: getComputedStyle(abaixo).backgroundColor, recorte: recorteDe(abaixo) }))
+        .flatMap((abaixo) => entradasDoFundo(abaixo, ponto))
       nos[indice].pontoSob = ponto
       if (!marcas.botaoMel && r.width > 0 && r.height > 0) {
         // Um nó sem tamanho não é "recortado": o G11 o reprova como texto de largura 0, e isso não pode sumir.
@@ -2553,7 +3044,8 @@ export function coletarNaPagina() {
     const larguraJanela = window.innerWidth
     const alturaJanela = window.innerHeight
     const alturaCabecalho = Number.isFinite(doc.cabecalhoAltura) ? doc.cabecalhoAltura : 0
-    const placa = document.querySelector(SELETOR_DA_PLACA)
+    // A fração 910/1672 presume a parede pintada na placa de estúdio. Na Casa, a base é um recorte.
+    const placa = document.querySelector(PLACA_DE_ESTUDIO)
     const lerCor = (texto) => {
       const m = /^rgba?\(\s*([\d.]+)[\s,]+([\d.]+)[\s,]+([\d.]+)(?:[\s,/]+([\d.]+))?/.exec(texto || '')
       return m ? { r: +m[1], g: +m[2], b: +m[3], a: m[4] === undefined ? 1 : +m[4] } : null
@@ -2595,7 +3087,176 @@ export function coletarNaPagina() {
 // ---------------------------------------------------------------------------------------------
 // CDP (só Node 24: fetch e WebSocket)
 
+// Executado na página por CDP. A leitura normal usa o mesmo alvo e muda só a preferência de movimento.
+export async function coletarTrocaCasaNaPagina() {
+  const casa = document.querySelector('[data-casa] > .co')
+  const trilho = casa?.querySelector(':scope > .co-trilho')
+  const palco = trilho?.querySelector(':scope > .co-palco')
+  const fita = palco?.querySelector(':scope > .co-fita')
+  const paineis = [...(fita?.children ?? [])]
+  const proxima = trilho?.nextElementSibling
+  if (!palco || !fita || paineis.length !== 3 || !paineis.every((el, i) => el.matches('section.co-p' + (i + 1))) ||
+      !proxima?.matches('section.co-faixa')) return null
+  const reduzido = matchMedia('(prefers-reduced-motion: reduce)').matches
+  const suportaPino = matchMedia('(min-width: 69em) and (min-aspect-ratio: 1/1) and (min-height: 40em)').matches &&
+    CSS.supports('animation-timeline', 'view()') && CSS.supports('animation-range', 'entry')
+  const caixa = (el) => {
+    const { x, y, width: w, height: h } = el.getBoundingClientRect()
+    return { x, y, w, h }
+  }
+  const posicaoInicial = { top: window.scrollY, left: window.scrollX, behavior: 'instant' }
+  const rolar = async (top) => {
+    window.scrollTo({ top, left: 0, behavior: 'instant' })
+    // A view timeline atualiza no quadro de renderização após a rolagem.
+    await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)))
+  }
+  const telefone = (i) => paineis[i].querySelector('figure.co-p' + (i + 1) + '-fone')
+  const topoUtil = () => Math.max(0, document.querySelector('[data-cabecalho]')?.getBoundingClientRect().bottom ?? 0)
+  const lerMoldura = (i) => {
+    const quadro = telefone(i)
+    const tela = quadro?.querySelector(':scope > img')
+    const cabecalho = topoUtil()
+    if (!quadro || !tela || !(cabecalho > 0)) return null
+    const cena = caixa(paineis[i])
+    const visivel = caixa(palco)
+    const x = Math.max(0, cena.x, visivel.x)
+    const y = Math.max(cabecalho, cena.y, visivel.y)
+    const direita = Math.min(document.documentElement.clientWidth, cena.x + cena.w, visivel.x + visivel.w)
+    const base = Math.min(window.innerHeight, window.visualViewport?.height ?? window.innerHeight, cena.y + cena.h, visivel.y + visivel.h)
+    const clip = getComputedStyle(paineis[i]).clipPath
+    // A cena estreita de M06 revela a parede ao entrar. Só mede a moldura depois de a máscara abrir.
+    const aberta = clip === 'none' || /^inset\(0(?:px|%)?(?:\s+0(?:px|%)?){0,3}\)$/.test(clip)
+    return { rect: caixa(quadro), tela: caixa(tela), util: aberta ? { x, y, w: direita - x, h: base - y } : null }
+  }
+  try {
+    await rolar(0)
+    const estilo = getComputedStyle(palco)
+    const p = caixa(palco)
+    const doc = document.documentElement
+    const modo = {
+      reduzido, suportaPino, posicao: estilo.position, recorteX: estilo.overflowX, transform: getComputedStyle(fita).transform,
+      semRolagemX: doc.scrollWidth === doc.clientWidth, palco: p, fita: caixa(fita), alturaConteudo: palco.scrollHeight,
+      paineis: paineis.map((el) => {
+        const css = getComputedStyle(el)
+        return { rect: caixa(el), transform: css.transform, clipPath: css.clipPath }
+      }),
+      luzes: ['m05', 'm06', 'rua'].flatMap((cena) =>
+        [...casa.querySelectorAll('.co-' + cena + ' img.co-luz')].map((el) => ({
+          cena, rect: caixa(el), decorativa: el.getAttribute('alt') === '', opacidade: getComputedStyle(el).opacity,
+        })),
+      ),
+    }
+    modo.molduras = []
+    if (reduzido || !suportaPino) {
+      for (const i of suportaPino ? [1, 2] : [1]) {
+        const quadro = telefone(i)
+        if (quadro) await rolar(caixa(quadro).y + window.scrollY - topoUtil())
+        modo.molduras.push(lerMoldura(i))
+      }
+      return modo
+    }
+    const t = caixa(trilho)
+    const inicio = t.y - parseFloat(estilo.top)
+    const percurso = t.h - p.h
+    if (!(percurso > 0) || !Number.isFinite(inicio)) return modo
+    const amostra = () => ({
+      x: window.scrollX, y: window.scrollY, palcoX: caixa(palco).x, palcoY: caixa(palco).y,
+      cenasX: paineis.map((el) => caixa(el).x),
+    })
+    modo.amostras = []
+    // Centros das esperas 0–7%, 46–56% e 94–100% de co-andar.
+    for (const [i, fracao] of [0.035, 0.51, 0.97].entries()) {
+      await rolar(inicio + percurso * fracao)
+      modo.amostras.push(amostra())
+      if (i > 0) modo.molduras.push(lerMoldura(i))
+    }
+    await rolar(inicio + t.h)
+    modo.depois = { ...amostra(), proximaY: caixa(proxima).y }
+    return modo
+  } finally {
+    window.scrollTo(posicaoInicial)
+  }
+}
+
 const espera = (ms) => new Promise((resolver) => setTimeout(resolver, ms))
+
+// A leitura do Chrome já contém recortes, opacidade e pseudoelementos compostos no pixel final.
+export function contarNoitePintada(pixels, largura, altura, larguraUtil, cabecalho) {
+  let noite = 0
+  for (let y = cabecalho; y < altura; y += 1) {
+    for (let x = 0; x < larguraUtil; x += 1) {
+      const i = (y * largura + x) * 4
+      if (pixels[i + 3] !== 255) continue
+      const r = pixels[i]
+      const g = pixels[i + 1]
+      const b = pixels[i + 2]
+      if ((Math.abs(r - 43) <= 2 && Math.abs(g - 35) <= 2 && Math.abs(b - 32) <= 2) ||
+          (Math.abs(r - 110) <= 2 && Math.abs(g - 101) <= 2 && Math.abs(b - 96) <= 2)) noite += 1
+    }
+  }
+  return { total: larguraUtil * altura, cabecalho: cabecalho * larguraUtil, noite }
+}
+
+async function lerNoitePintadaNaPagina(png, contar) {
+  const bytes = Uint8Array.from(atob(png), (c) => c.charCodeAt(0))
+  const quadro = await createImageBitmap(new Blob([bytes], { type: 'image/png' }))
+  try {
+    const { width: w, height: h } = quadro
+    const canvas = document.createElement('canvas')
+    canvas.width = w
+    canvas.height = h
+    const ctx = canvas.getContext('2d')
+    ctx.drawImage(quadro, 0, 0)
+    const util = Math.round(w * document.documentElement.clientWidth / window.innerWidth)
+    const baseDoCabecalho = document.querySelector('[data-cabecalho]')?.getBoundingClientRect().bottom
+    if (!(util > 0 && util <= w) || !(baseDoCabecalho > 0 && baseDoCabecalho < window.innerHeight)) return null
+    const cabecalho = Math.round(h * baseDoCabecalho / window.innerHeight)
+    return { ...contar(ctx.getImageData(0, 0, w, h).data, w, h, util, cabecalho), rolagem: window.scrollY }
+  } finally {
+    quadro.close()
+  }
+}
+
+async function medirNoitePintadaCasa(cdp, altura) {
+  const amostras = []
+  const inicial = await avaliar(cdp, 'window.scrollY')
+  try {
+    for (const top of [0, altura]) {
+      await avaliar(cdp, `(async () => {
+        window.scrollTo({top:${top},left:0,behavior:'instant'});
+        await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+        await Promise.all([...document.images].filter((img) => {
+          const r = img.getBoundingClientRect();
+          return r.width > 0 && r.height > 0 && r.right > 0 && r.left < innerWidth && r.bottom > 0 && r.top < innerHeight;
+        }).map((img) => img.decode()));
+        return true;
+      })()`)
+      const png = await cdp.enviar('Page.captureScreenshot', { format: 'png', fromSurface: true, captureBeyondViewport: false })
+      if (!png.data) return null
+      amostras.push(await avaliar(cdp, `(${lerNoitePintadaNaPagina.toString()})(${JSON.stringify(png.data)}, ${contarNoitePintada.toString()})`))
+    }
+    return amostras
+  } finally {
+    await avaliar(cdp, `window.scrollTo({top:${JSON.stringify(inicial)},left:0,behavior:'instant'}); true`)
+  }
+}
+
+// A página de produção carrega as provas sob demanda. Passe por cada slot reduzido antes
+// de coletar currentSrc, com a mesma seleção nativa de srcset e sem trocar loading ou sizes.
+async function carregarCapturasCasaNaPagina() {
+  const casa = document.querySelector('[data-casa] > .co')
+  if (!casa) return
+  const inicial = { top: window.scrollY, left: window.scrollX, behavior: 'instant' }
+  try {
+    for (const img of casa.querySelectorAll('figure.co-fone > img')) {
+      img.scrollIntoView({ block: 'center', inline: 'nearest', behavior: 'instant' })
+      await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)))
+      await img.decode().catch(() => undefined)
+    }
+  } finally {
+    window.scrollTo(inicial)
+  }
+}
 
 async function abrirAlvo(porta) {
   const resposta = await fetch(`http://127.0.0.1:${porta}/json/new?about:blank`, { method: 'PUT' })
@@ -2839,7 +3500,23 @@ export async function medirPedido(cdp, base, pedido, pasta, opcoes = {}) {
     const aberto = await abrirCaso(cdp, base, pedido, opcoes)
     if (aberto?.naoSeAplica) return { naoSeAplica: aberto.naoSeAplica }
     const pagina = await verificarPagina(cdp, caminhoEsperado(pedido, base))
+    if (CASOS_INICIO.includes(pedido.caso)) await avaliar(cdp, `(${carregarCapturasCasaNaPagina.toString()})()`)
     const leitura = await avaliar(cdp, `(${coletarNaPagina.toString()})()`)
+    if (CASOS_INICIO.includes(pedido.caso) && leitura.nos.some((no) => marca(no, 'heroiComposicao'))) {
+      const expressao = `(${coletarTrocaCasaNaPagina.toString()})()`
+      const reduzida = await avaliar(cdp, expressao)
+      try {
+        await cdp.enviar('Emulation.setEmulatedMedia', { features: [{ name: 'prefers-reduced-motion', value: 'no-preference' }] })
+        leitura.doc.trocaCasa = { reduzida, normal: await avaliar(cdp, expressao) }
+      } finally {
+        await cdp.enviar('Emulation.setEmulatedMedia', { features: [{ name: 'prefers-reduced-motion', value: 'reduce' }] })
+      }
+      try {
+        leitura.doc.noitePintadaCasa = await medirNoitePintadaCasa(cdp, leitura.doc.altura)
+      } catch (erro) {
+        leitura.doc.erroNoitePintadaCasa = erro.message
+      }
+    }
     const resultados = avaliarTudo({ ...leitura, tema: pedido.tema, caso: pedido.caso, rota: pedido.rota })
     const arquivo = arquivoDoPedido(pedido)
     const medidas = {
@@ -2850,6 +3527,9 @@ export async function medirPedido(cdp, base, pedido, pasta, opcoes = {}) {
       nos: leitura.nos.length,
       caminho: pagina.caminho,
       h1_texto: pagina.h1_texto,
+      ...(leitura.doc.trocaCasa && { trocaCasa: leitura.doc.trocaCasa }),
+      ...(leitura.doc.noitePintadaCasa && { noitePintadaCasa: leitura.doc.noitePintadaCasa }),
+      ...(leitura.doc.erroNoitePintadaCasa && { erroNoitePintadaCasa: leitura.doc.erroNoitePintadaCasa }),
     }
     fs.writeFileSync(
       path.join(pasta, arquivo),
