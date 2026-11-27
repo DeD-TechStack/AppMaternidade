@@ -3,8 +3,10 @@ import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, 
 import { tmpdir } from 'node:os'
 import { join, resolve } from 'node:path'
 import { pathToFileURL } from 'node:url'
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from 'vitest'
 import { renderizarRotaPronta } from '../../teste/renderizarRota.tsx'
+
+const TZ_ORIGINAL = process.env.TZ
 
 // Same real-CSS / Chrome approach as resumoDoDia.geometria.test.tsx. Range rectangles,
 // not element widths or class names, detect the inherited 200%-text collisions.
@@ -103,6 +105,14 @@ function separate(a: TextBox, b: TextBox) {
 afterEach(() => vi.useRealTimers())
 
 describe('Últimos and quick actions retain readable text in Chrome', () => {
+  // The app prints hours in the device time zone: pin it, so '16/11 14:50' (São Paulo) does not depend on the host.
+  beforeAll(() => {
+    process.env.TZ = 'America/Sao_Paulo'
+  })
+  afterAll(() => {
+    if (TZ_ORIGINAL === undefined) delete process.env.TZ
+    else process.env.TZ = TZ_ORIGINAL
+  })
   for (const theme of ['claro', 'madrugada']) for (const [width, font] of [[390, 16], [390, 32], [1440, 16]]) {
     it(`${width}px / root ${font}px / ${theme}: full labels and values fit without intersections`, async () => {
       vi.useFakeTimers({ toFake: ['Date'] })
