@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Outlet, useLocation } from 'react-router'
+import { TITULOS } from '../../conteudo/conta.ts'
 import { COMUM, ESTADOS } from '../../conteudo/rotina.ts'
 import type { ContextoRotina } from '../../dados/rotina.tipos.ts'
 import { OPERACOES_ROTINA, podeAlterarItem } from '../../dados/rotina.tipos.ts'
@@ -192,11 +193,11 @@ export function ProvedorRotina() {
   if (!valor) return null
 
   // Sem bebê não há tela de rotina: o estado "Família sem bebê" ou "Sem família" (R38-03). A rota mantém o
-  // próprio h1 (QA-01). Na família sem bebê, quem pode mudar a família (não é observador) ganha o botão que leva
-  // à tela Família, onde fica "Adicionar bebê"; a família é a primeira do contexto, também para o papel.
+  // próprio h1 (QA-01). Na família sem bebê, só o responsável ganha o botão que leva à tela Família,
+  // onde fica "Adicionar bebê"; a família é a primeira do contexto, também para o papel.
   if (situacao !== 'bebe') {
     const familia = contexto?.familias[0]
-    const comBotao = situacao === 'familia_sem_bebe' && !perdeu && familia !== undefined && familia.meuPapel !== 'observador'
+    const comBotao = situacao === 'familia_sem_bebe' && !perdeu && familia !== undefined && familia.meuPapel === 'responsavel'
     return (
       <>
         <main className="text-corpo" data-tela="rotina-sem-bebe">
@@ -207,6 +208,11 @@ export function ProvedorRotina() {
                   titulo={tituloDaRota(pathname)}
                   linha={perdeu ? ESTADOS.acessoPerdido : situacao === 'sem_familia' ? ESTADOS.semFamilia : ESTADOS.familiaSemBebe}
                 />
+                {situacao === 'sem_familia' && !perdeu ? (
+                  <Botao to="/app/comecar" tamanho="app" className="self-start">
+                    {TITULOS.comecar}
+                  </Botao>
+                ) : null}
                 {comBotao ? (
                   <Botao to={`/app/familia?familia=${familia.id}`} tamanho="app" className="self-start">
                     {ESTADOS.cadastrarBebe}
