@@ -97,13 +97,14 @@ const faseDaTela = () => document.querySelector('[data-fase]')?.textContent ?? n
 interface OpcoesCustom {
   mundo: Mundo
   caminho: string
+  basename?: string
   itens?: readonly ItemDeConteudo[]
   siteDeProducao?: boolean
   pendente?: boolean
 }
 
 /** A página num roteador próprio, para injetar o conteúdo, o site de produção e a pendência. */
-function renderizarCustom({ mundo, caminho, itens, siteDeProducao, pendente }: OpcoesCustom) {
+function renderizarCustom({ mundo, caminho, basename, itens, siteDeProducao, pendente }: OpcoesCustom) {
   vi.stubGlobal('scrollTo', vi.fn())
   const roteador = createMemoryRouter(
     [
@@ -136,7 +137,7 @@ function renderizarCustom({ mundo, caminho, itens, siteDeProducao, pendente }: O
         ],
       },
     ],
-    { initialEntries: [caminho] },
+    { basename, initialEntries: [caminho] },
   )
   return render(
     <ProvedorDadosConta dados={mundo.conta}>
@@ -146,6 +147,132 @@ function renderizarCustom({ mundo, caminho, itens, siteDeProducao, pendente }: O
 }
 
 describe('/app/desenvolvimento: a página', () => {
+  it('DEV-NAV-1: Voltar do salto devolve o foco ao atalho sem rolar', async () => {
+    relogioEm()
+    renderizarRota('/app/desenvolvimento')
+    await aguardarCarga()
+
+    const link = screen.getByRole('link', { name: 'Tummy time' })
+    const titulo = screen.getByRole('heading', { level: 2, name: 'Tummy time' })
+    const focarAtalho = vi.spyOn(link, 'focus')
+    const origem = window.location.href
+    const destino = new URL(link.getAttribute('href')!, origem).href
+    // O jsdom não implementa a rolagem nem o foco da navegação por fragmento.
+    document.addEventListener('click', (evento) => evento.preventDefault(), { once: true })
+    fireEvent.click(link)
+    titulo.focus()
+    window.dispatchEvent(new HashChangeEvent('hashchange', { oldURL: origem, newURL: destino }))
+    expect(document.activeElement).toBe(titulo)
+
+    window.dispatchEvent(new HashChangeEvent('hashchange', { oldURL: destino, newURL: origem }))
+    expect(document.activeElement).toBe(link)
+    expect(focarAtalho).toHaveBeenCalledExactlyOnceWith({ preventScroll: true })
+  })
+
+  it.each(['atalho', 'próximo link fora da janela', 'outro foco visível'])(
+    'DEV-NAV-Forward: avança para o bloco com %s',
+    async (foco) => {
+      relogioEm()
+      renderizarRota('/app/desenvolvimento')
+      await aguardarCarga()
+
+      const atalho = screen.getByRole('link', { name: 'Tummy time' })
+      const titulo = screen.getByRole('heading', { level: 2, name: 'Tummy time' })
+      const ideias = screen.getByRole('link', { name: 'Ver ideias para brincar' })
+      const origem = window.location.href
+      const destino = new URL(atalho.getAttribute('href')!, origem).href
+      const mudarFragmento = (oldURL: string, newURL: string) =>
+        window.dispatchEvent(new HashChangeEvent('hashchange', { oldURL, newURL }))
+
+      // A rolagem nativa não é simulada pelo jsdom. Medimos onde ficou o foco após avançar.
+      const focarTitulo = vi.spyOn(titulo, 'focus')
+      document.addEventListener('click', (evento) => evento.preventDefault(), { once: true })
+      atalho.focus()
+      fireEvent.click(atalho)
+      mudarFragmento(origem, destino)
+      expect(focarTitulo).not.toHaveBeenCalled()
+
+      titulo.focus()
+      mudarFragmento(destino, origem)
+      expect(document.activeElement).toBe(atalho)
+      const anterior = foco === 'atalho' ? atalho : ideias
+      anterior.focus()
+      vi.spyOn(anterior, 'getBoundingClientRect').mockReturnValue(new DOMRect(
+        0, foco === 'outro foco visível' ? 200 : -913, 140, 30,
+      ))
+      vi.spyOn(titulo, 'getBoundingClientRect').mockReturnValue(new DOMRect(0, 104, 140, 28))
+      focarTitulo.mockClear()
+
+      mudarFragmento(origem, destino)
+      if (foco === 'outro foco visível') {
+        expect(document.activeElement).toBe(anterior)
+        expect(focarTitulo).not.toHaveBeenCalled()
+      } else {
+        expect(document.activeElement).toBe(titulo)
+        expect(focarTitulo).toHaveBeenCalledExactlyOnceWith({ preventScroll: true })
+      }
+    },
+  )
+
+  it.each([false, true])('DEV-NAV-2: resolve o fragmento quando o bebê chega (entrada da pessoa: %s)', async (interagiu) => {
+    relogioEm()
+    const mundo = criarMundoDeTeste({ fusoDaFamilia: FUSO })
+    const lerFamilia = mundo.conta.detalheFamilia
+    let liberar!: () => void
+    const leitura = new Promise<void>((resolve) => {
+      liberar = resolve
+    })
+    const detalheFamilia = vi.spyOn(mundo.conta, 'detalheFamilia').mockImplementation(async (id) => {
+      await leitura
+      return lerFamilia(id)
+    })
+    const rolar = vi.fn()
+    const descritor = Object.getOwnPropertyDescriptor(Element.prototype, 'scrollIntoView')
+    Object.defineProperty(Element.prototype, 'scrollIntoView', { configurable: true, value: rolar })
+    try {
+      const caminho = '/AppMaternidade/app/desenvolvimento?fixture=1#desenv-tummy-time'
+      renderizarCustom({ mundo, caminho, basename: '/AppMaternidade' })
+      await waitFor(() => expect(detalheFamilia).toHaveBeenCalled())
+      expect(screen.queryByRole('heading', { level: 2, name: 'Tummy time' })).toBeNull()
+      if (interagiu) fireEvent.keyDown(document.body, { key: 'Tab' })
+
+      liberar()
+      await aguardarCarga()
+      const titulo = screen.getByRole('heading', { level: 2, name: 'Tummy time' })
+      if (interagiu) {
+        expect(document.activeElement).not.toBe(titulo)
+        expect(rolar).not.toHaveBeenCalled()
+      } else {
+        expect(document.activeElement).toBe(titulo)
+        expect(rolar.mock.contexts).toEqual([titulo])
+      }
+    } finally {
+      if (descritor) Object.defineProperty(Element.prototype, 'scrollIntoView', descritor)
+      else Reflect.deleteProperty(Element.prototype, 'scrollIntoView')
+    }
+  })
+
+  it.each(['', '/AppMaternidade'])('oferece um link para o título do bloco na mesma página (base %j)', async (base) => {
+    relogioEm()
+    const mundo = await mundoComBebeDe(100)
+    const caminho = `${base}/app/desenvolvimento`
+    if (base) renderizarCustom({ mundo, caminho, basename: base })
+    else renderizarRota(caminho, { mundo })
+    await aguardarCarga()
+
+    const link = screen.getByRole('link', { name: 'Tummy time' })
+    const titulo = screen.getByRole('heading', { level: 2, name: 'Tummy time' })
+    const destino = new URL(link.getAttribute('href')!, `https://exemplo.invalid${caminho}`)
+    expect(link.tagName).toBe('A')
+    expect(destino.pathname).toBe(caminho)
+    expect(destino.hash).toBe('#desenv-tummy-time')
+    expect(document.getElementById(destino.hash.slice(1))).toBe(titulo)
+    expect(titulo.tabIndex).toBe(-1)
+    expect(link.compareDocumentPosition(titulo) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    link.focus()
+    expect(document.activeElement).toBe(link)
+  })
+
   it('DES-13 1: abre com o h1 Desenvolvimento, o título da aba e a linha do bebê', async () => {
     relogioEm()
     const mundo = await mundoComBebeDe(100)
@@ -386,6 +513,8 @@ describe('DES-09: os estados do contexto', () => {
     await aguardarCarga()
     expect(screen.getByText('Você ainda não faz parte de uma família.')).toBeTruthy()
     expect(screen.getByRole('link', { name: 'Começar' }).getAttribute('href')).toBe('/app/comecar')
+    expect(screen.queryByRole('link', { name: 'Tummy time' })).toBeNull()
+    expect(document.getElementById('desenv-tummy-time')).toBeNull()
   })
 
   it('a família sem bebê: T-39 e o link para Família', async () => {
@@ -394,6 +523,8 @@ describe('DES-09: os estados do contexto', () => {
     await aguardarCarga()
     expect(screen.getByText('Nenhum bebê cadastrado nesta família.')).toBeTruthy()
     expect(screen.getByRole('link', { name: 'Ir para Família' }).getAttribute('href')).toBe('/app/familia')
+    expect(screen.queryByRole('link', { name: 'Tummy time' })).toBeNull()
+    expect(document.getElementById('desenv-tummy-time')).toBeNull()
   })
 
   it('o bebê arquivado: T-40 com o nome, no lugar de T-23', async () => {

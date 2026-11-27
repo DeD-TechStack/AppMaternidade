@@ -1,4 +1,4 @@
-import { useEffect, useId, useRef } from 'react'
+import { useEffect, useRef } from 'react'
 import { Link } from 'react-router'
 import { T, bebeArquivado } from '../../../conteudo/desenvolvimento/textosLogada.ts'
 import { TT, iniciarDe } from '../../../conteudo/desenvolvimento/textosTummy.ts'
@@ -29,6 +29,7 @@ interface Props {
 }
 
 const FAIXA_DE_ESTADO = 'm-0 max-w-[65ch] rounded-campo bg-[var(--cor-papel-fundo)] px-4 py-3 font-medium wrap-anywhere'
+export const ID_TITULO_TUMMY = 'desenv-tummy-time'
 
 /**
  * O bloco "Tummy time" da página logada Desenvolvimento (MAT-39b, DES-03 e DES-04): iniciar e encerrar a sessão
@@ -39,7 +40,6 @@ export function BlocoTummy({ bebe, familia, papel, aoPerderAcesso, aoMudarFalhaD
   const raiz = useRef<HTMLElement>(null)
   const bloco = useBlocoTummy({ bebe, familia, papel, raiz, aoPerderAcesso })
   const conteudo = useConteudo()
-  const idTitulo = useId()
   const { acoes } = bloco
   const falhouALeitura = bloco.leitura === 'falha'
 
@@ -59,11 +59,11 @@ export function BlocoTummy({ bebe, familia, papel, aoPerderAcesso, aoMudarFalhaD
     <section
       ref={raiz}
       data-tummy=""
-      aria-labelledby={idTitulo}
+      aria-labelledby={ID_TITULO_TUMMY}
       aria-busy={bloco.leitura === 'carregando' ? 'true' : undefined}
       className="flex flex-col items-start gap-esp-grupo"
     >
-      <h2 id={idTitulo} tabIndex={-1} data-foco={CHAVE.titulo} className="cm-h3 text-titulo-3 alvo-foco">
+      <h2 id={ID_TITULO_TUMMY} tabIndex={-1} data-foco={CHAVE.titulo} className="cm-h3 text-titulo-3 alvo-foco">
         {TT.titulo}
       </h2>
 

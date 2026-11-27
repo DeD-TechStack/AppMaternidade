@@ -6,6 +6,7 @@ import { Cartao } from '../../componentes/base/layout/Cartao.tsx'
 import { Coluna, Colunas } from '../../componentes/base/layout/Colunas.tsx'
 import { Pilha } from '../../componentes/base/layout/Pilha.tsx'
 import { Faixa } from '../../componentes/comunidade/Faixa.tsx'
+import { LINK_ALVO } from '../../componentes/conta/Partes.tsx'
 import {
   AvisoDeEstado,
   AvisoDeFuso,
@@ -21,7 +22,7 @@ import { TituloDaPagina } from '../../componentes/desenvolvimento/TituloDaPagina
 import { useConteudo } from '../../componentes/desenvolvimento/conteudo.tsx'
 import { fasesDaIdade, idadeEmDias, idadeEscrita } from '../../componentes/desenvolvimento/fase.ts'
 import { ID_MARCOS, ID_TODAS_AS_FASES, ID_TUMMY_TIME, type ItemDeConteudo } from '../../componentes/desenvolvimento/itens.ts'
-import { BlocoTummy } from '../../componentes/desenvolvimento/tummy/BlocoTummy.tsx'
+import { BlocoTummy, ID_TITULO_TUMMY } from '../../componentes/desenvolvimento/tummy/BlocoTummy.tsx'
 import { useContextoDoBebe, type ContextoDoBebe } from '../../componentes/desenvolvimento/useContextoDoBebe.ts'
 import {
   T,
@@ -30,10 +31,18 @@ import {
   linhaDaFase,
   linhaDoBebe,
 } from '../../conteudo/desenvolvimento/textosLogada.ts'
+import { TT } from '../../conteudo/desenvolvimento/textosTummy.ts'
 import { diaDaFamilia, lerAparelho } from '../../dados/rotina.dia.ts'
 import { focoDoEstado } from '../../prototipo/foco.ts'
 import { useTituloDaTela } from '../../prototipo/useTituloDaTela.ts'
 import { ProvedorDaPendencia, usePendencia } from './pendencia.tsx'
+
+const HASH_TUMMY = `#${ID_TITULO_TUMMY}`
+
+function naJanela(elemento: Element): boolean {
+  const { top, bottom } = elemento.getBoundingClientRect()
+  return bottom > 0 && top < window.innerHeight
+}
 
 /**
  * `/app/desenvolvimento` (MAT-39a): o bebê da tela, a fase dele, as ideias para brincar e os artigos. O bloco
@@ -77,6 +86,7 @@ export function CorpoDaPagina({ focarTituloAoCarregar = false, aoPerderAcesso }:
   const foco = focoDoEstado(location.state)
   const focadoAoCarregar = useRef(false)
   const carregando = contexto.fase === 'carregando'
+  const ancoraPendente = useRef(!focarTituloAoCarregar && location.hash === HASH_TUMMY ? location : null)
 
   // Chegando por navegação interna que pede o título, o foco vai ao `h1`; pela URL não se move.
   useEffect(() => {
@@ -88,6 +98,30 @@ export function CorpoDaPagina({ focarTituloAoCarregar = false, aoPerderAcesso }:
     focadoAoCarregar.current = true
     focarTitulo()
   }, [focarTituloAoCarregar, carregando, focarTitulo])
+
+  useEffect(() => {
+    const cancelar = () => {
+      ancoraPendente.current = null
+    }
+    if (!ancoraPendente.current) return
+    if (ancoraPendente.current !== location) return cancelar()
+
+    // A casca pode parar de procurar antes de a leitura da família terminar. Só esta âncora
+    // espera o contexto ficar pronto, enquanto a pessoa não interagir com a página.
+    if (carregando) {
+      const eventos = ['keydown', 'pointerdown', 'wheel', 'focusin'] as const
+      for (const evento of eventos) window.addEventListener(evento, cancelar, true)
+      return () => {
+        for (const evento of eventos) window.removeEventListener(evento, cancelar, true)
+      }
+    }
+
+    cancelar()
+    if (contexto.fase !== 'pronto' || document.activeElement !== document.body) return
+    const alvo = principal.current?.querySelector<HTMLElement>(HASH_TUMMY)
+    alvo?.scrollIntoView?.({ block: 'start', behavior: 'auto' })
+    alvo?.focus({ preventScroll: true })
+  }, [carregando, contexto.fase, location, principal])
 
   return (
     <>
@@ -148,6 +182,36 @@ function ConteudoDoBebe({ contexto, aoPerderAcesso }: { contexto: Pronto; aoPerd
   const { conteudo, todasAsFases, artigos } = useBlocosEstaticos()
   const { familia, bebe, bebes, papel, agora } = contexto
   const identidade = `${familia.id}:${bebe.id}`
+  const atalhoTummy = useRef<HTMLAnchorElement>(null)
+  const saltoTummy = useRef<{ origem: string; voltou: boolean } | null>(null)
+
+  useEffect(() => {
+    function aoMudarFragmento(evento: HashChangeEvent) {
+      const link = atalhoTummy.current
+      const salto = saltoTummy.current
+      if (!link || !salto) return
+      const foco = document.activeElement
+      if (evento.newURL === salto.origem && evento.oldURL === link.href) {
+        salto.voltou = true
+        // A volta nativa já restaura a rolagem. Retomamos só a posição na ordem do teclado.
+        if (foco === document.body || foco?.closest('[data-tummy]')) link.focus({ preventScroll: true })
+        return
+      }
+      if (evento.oldURL !== salto.origem || evento.newURL !== link.href) {
+        salto.voltou = false
+        return
+      }
+      if (!salto.voltou) return
+      salto.voltou = false
+
+      // Avançar restaura a rolagem do fragmento, mas pode deixar o foco fora da janela.
+      if (foco && foco !== document.body && naJanela(foco)) return
+      const alvo = document.getElementById(ID_TITULO_TUMMY)
+      if (alvo && naJanela(alvo)) alvo.focus({ preventScroll: true })
+    }
+    window.addEventListener('hashchange', aoMudarFragmento)
+    return () => window.removeEventListener('hashchange', aoMudarFragmento)
+  }, [])
 
   const hoje = diaDaFamilia(agora, familia.fuso)
   const dias = idadeEmDias(bebe.nascimento, hoje)
@@ -223,6 +287,17 @@ function ConteudoDoBebe({ contexto, aoPerderAcesso }: { contexto: Pronto; aoPerd
             <AvisoDeEstado dado="observador">{T.soVer}</AvisoDeEstado>
           ) : null}
           {aparelho !== familia.fuso ? <AvisoDeFuso>{avisoDeFuso(aparelho, familia.fuso)}</AvisoDeFuso> : null}
+          <a
+            ref={atalhoTummy}
+            href={HASH_TUMMY}
+            className={`${LINK_ALVO} self-start`}
+            onClick={(evento) => {
+              if (evento.defaultPrevented || evento.button !== 0 || evento.metaKey || evento.ctrlKey || evento.shiftKey || evento.altKey) return
+              if (window.location.hash !== HASH_TUMMY) saltoTummy.current = { origem: window.location.href, voltou: false }
+            }}
+          >
+            {TT.titulo}
+          </a>
         </Pilha>
       </Faixa>
 
