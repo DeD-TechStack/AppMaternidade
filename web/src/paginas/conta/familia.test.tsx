@@ -219,7 +219,7 @@ describe('o seletor de família e a família atual', () => {
     seletor.focus()
     fireEvent.change(seletor, { target: { value: TESTE } })
     await screen.findByRole('heading', { level: 2, name: 'Família Teste' })
-    expect(localStorage.getItem(CHAVE_FAMILIA_ATUAL)).toBe(TESTE)
+    expect(JSON.parse(localStorage.getItem(CHAVE_FAMILIA_ATUAL)!)).toEqual({ pessoa: PESSOAS.carla.id, familia: TESTE })
     expect(document.activeElement).toBe(seletor)
     // Nela, Carla é responsável.
     expect(await screen.findByRole('button', { name: 'Adicionar bebê' })).toBeTruthy()
@@ -231,22 +231,22 @@ describe('o seletor de família e a família atual', () => {
   })
 
   it('?familia=<id> vale sobre a guardada, grava a escolha e tira o parâmetro sem criar entrada no histórico', async () => {
-    localStorage.setItem(CHAVE_FAMILIA_ATUAL, EXEMPLO)
+    localStorage.setItem(CHAVE_FAMILIA_ATUAL, JSON.stringify({ pessoa: PESSOAS.carla.id, familia: EXEMPLO }))
     const { roteador } = await abrir('carla', await comDuasFamilias(), `/app/familia?familia=${TESTE}`)
 
     await screen.findByRole('heading', { level: 2, name: 'Família Teste' })
     await waitFor(() => expect(roteador.state.location.search).toBe(''))
     expect(roteador.state.historyAction).toBe('REPLACE')
-    expect(localStorage.getItem(CHAVE_FAMILIA_ATUAL)).toBe(TESTE)
+    expect(JSON.parse(localStorage.getItem(CHAVE_FAMILIA_ATUAL)!)).toEqual({ pessoa: PESSOAS.carla.id, familia: TESTE })
   })
 
   it('a família guardada vale quando ainda está entre as famílias; um id que não é delas é ignorado', async () => {
-    localStorage.setItem(CHAVE_FAMILIA_ATUAL, TESTE)
+    localStorage.setItem(CHAVE_FAMILIA_ATUAL, JSON.stringify({ pessoa: PESSOAS.carla.id, familia: TESTE }))
     const guardada = await abrir('carla', await comDuasFamilias())
     await screen.findByRole('heading', { level: 2, name: 'Família Teste' })
     guardada.unmount()
 
-    localStorage.setItem(CHAVE_FAMILIA_ATUAL, 'f9999999-9999-4999-8999-999999999999')
+    localStorage.setItem(CHAVE_FAMILIA_ATUAL, JSON.stringify({ pessoa: PESSOAS.carla.id, familia: 'f9999999-9999-4999-8999-999999999999' }))
     const alheia = await abrir('carla', await comDuasFamilias(), '/app/familia?familia=f8888888-8888-4888-8888-888888888888')
     await screen.findByRole('heading', { level: 2, name: 'Família Exemplo' })
     await waitFor(() => expect(alheia.roteador.state.location.search).toBe(''))

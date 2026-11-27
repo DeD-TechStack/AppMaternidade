@@ -432,6 +432,16 @@ export function criarDadosContaSupabase(cliente: SupabaseClient): DadosConta {
         return paraUsuario(data.user)
       }),
 
+    entrarComGoogle: (voltarPara) =>
+      executar(async () => {
+        const { error } = await auth.signInWithOAuth({
+          provider: 'google',
+          options: { redirectTo: voltarPara, queryParams: { prompt: 'select_account' } },
+        })
+        if (error) throw error
+        return null
+      }),
+
     criarUsuario: (email, senha, nome, voltarPara) =>
       executar(async () => {
         const { data, error } = await auth.signUp({

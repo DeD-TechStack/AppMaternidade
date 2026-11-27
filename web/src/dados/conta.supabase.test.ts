@@ -44,6 +44,7 @@ const ERRO_DE_SESSAO = (code: string) => ({ name: 'AuthApiError', code, status: 
 const CHAMADAS: Record<OperacaoConta, (dados: DadosConta) => Promise<Resultado<unknown>>> = {
   sessaoAtual: (d) => d.sessaoAtual(),
   entrar: (d) => d.entrar('juliana@exemplo.invalid', 'senha-longa'),
+  entrarComGoogle: (d) => d.entrarComGoogle('http://localhost/entrar'),
   criarUsuario: (d) => d.criarUsuario('nova@exemplo.invalid', 'senha-longa', 'Nova', 'http://localhost/entrar'),
   pedirRecuperacao: (d) => d.pedirRecuperacao('juliana@exemplo.invalid', 'http://localhost/redefinir-senha'),
   trocarSenha: (d) => d.trocarSenha('senha-nova'),
@@ -108,6 +109,42 @@ const LINHA_BEBE = { id: BEBE, familia_id: FAMILIA, nome: 'Heloísa', nascimento
 describe('toda operação da interface tem um caso aqui', () => {
   it('a tabela de chamadas cobre exatamente as operações do adaptador', () => {
     expect(Object.keys(CHAMADAS).sort()).toEqual([...OPERACOES_CONTA].sort())
+  })
+})
+
+describe('entrarComGoogle (OAuth com PKCE)', () => {
+  const RETORNO = `${window.location.origin}${import.meta.env.BASE_URL}entrar`
+
+  it('chama signInWithOAuth uma vez, com o provedor google e o redirectTo dado, sem tocar no banco', async () => {
+    const { dados, auth, from, rpc } = montar()
+    expect(valor(await dados.entrarComGoogle(RETORNO))).toBeNull()
+    expect(auth.signInWithOAuth).toHaveBeenCalledTimes(1)
+    expect(auth.signInWithOAuth).toHaveBeenCalledWith({
+      provider: 'google',
+      options: { redirectTo: RETORNO, queryParams: { prompt: 'select_account' } },
+    })
+    expect(RETORNO.startsWith(`${window.location.origin}${import.meta.env.BASE_URL}`)).toBe(true)
+    expect(from).not.toHaveBeenCalled()
+    expect(rpc).not.toHaveBeenCalled()
+  })
+
+  it('o erro do Auth volta como Resultado, classificado pelo catálogo, sem lançar', async () => {
+    const { dados, auth } = montar()
+    auth.signInWithOAuth.mockResolvedValue({
+      data: { provider: 'google', url: null },
+      error: { name: 'AuthApiError', code: 'oauth_provider_not_supported', status: 400, message: 'Unsupported provider: provider is not enabled' },
+    })
+    const erro = falha(await dados.entrarComGoogle(RETORNO))
+    expect([erro.classe, erro.chave]).toEqual(['desconhecido', 'desconhecido'])
+
+    auth.signInWithOAuth.mockResolvedValue({ data: { provider: 'google', url: null }, error: { name: 'AuthApiError', code: 'over_request_rate_limit', status: 429, message: 'x' } })
+    expect(falha(await dados.entrarComGoogle(RETORNO)).chave).toBe('muitas_tentativas')
+  })
+
+  it('a rede que cai é rede, não login_google', async () => {
+    const { dados, auth } = montar()
+    auth.signInWithOAuth.mockRejectedValue(new TypeError('Failed to fetch'))
+    expect(falha(await dados.entrarComGoogle(RETORNO)).classe).toBe('rede')
   })
 })
 
@@ -720,7 +757,7 @@ describe('3. resposta do Supabase com erro ou vazia', () => {
           rpc: Object.fromEntries(POR_RPC.map(([, funcao]) => [funcao, erro])),
         })
         const comErro = { data: { user: null, session: null }, error: { name: 'AuthApiError', code: 'xx_novo', message: 'segredo do banco' } }
-        for (const metodo of [auth.signInWithPassword, auth.signUp, auth.resetPasswordForEmail, auth.updateUser, auth.signOut]) {
+        for (const metodo of [auth.signInWithPassword, auth.signInWithOAuth, auth.signUp, auth.resetPasswordForEmail, auth.updateUser, auth.signOut]) {
           metodo.mockResolvedValue(comErro)
         }
 
@@ -964,7 +1001,7 @@ describe('3. resposta do Supabase com erro ou vazia', () => {
     it('toda operação devolve rede, sem lançar, quando o cliente inteiro lança TypeError: Failed to fetch', async () => {
       for (const nome of OPERACOES_CONTA) {
         const { dados, auth, rpc } = montar({ tabelas: Object.fromEntries(TABELAS.map((tabela) => [tabela, [falhaDeRede]])) })
-        for (const metodo of [auth.signInWithPassword, auth.signUp, auth.resetPasswordForEmail, auth.updateUser, auth.signOut]) {
+        for (const metodo of [auth.signInWithPassword, auth.signInWithOAuth, auth.signUp, auth.resetPasswordForEmail, auth.updateUser, auth.signOut]) {
           metodo.mockRejectedValue(new TypeError('Failed to fetch'))
         }
         rpc.mockRejectedValue(new TypeError('Failed to fetch'))

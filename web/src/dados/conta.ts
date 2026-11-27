@@ -104,6 +104,11 @@ export interface DadosConta {
   sessaoAtual(): Promise<Resultado<Usuario | null>>
   aoMudarSessao(ouvinte: (evento: EventoSessao, usuario: Usuario | null) => void): () => void
   entrar(email: string, senha: string): Promise<Resultado<Usuario>>
+  /**
+   * Abre o login com o Google (OAuth com PKCE): o navegador sai da página e volta em `voltarPara`, onde o
+   * cliente troca o código pela sessão. O resultado só diz se o pedido saiu; a sessão chega por `aoMudarSessao`.
+   */
+  entrarComGoogle(voltarPara: string): Promise<Resultado<null>>
   criarUsuario(
     email: string,
     senha: string,
@@ -148,6 +153,7 @@ export type OperacaoConta = Exclude<keyof DadosConta, 'aoMudarSessao'>
 const TODAS: Record<OperacaoConta, true> = {
   sessaoAtual: true,
   entrar: true,
+  entrarComGoogle: true,
   criarUsuario: true,
   pedirRecuperacao: true,
   trocarSenha: true,

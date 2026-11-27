@@ -290,7 +290,7 @@ describe('com sessão e conta completa', () => {
     await waitFor(() => expect(screen.getByRole('status').textContent).toBe('Você entrou na família Família Exemplo.'))
     expect(await screen.findByRole('heading', { level: 2, name: 'Família Exemplo' })).toBeTruthy()
     expect(sessionStorage.getItem(CHAVE_CONVITE)).toBeNull()
-    expect(localStorage.getItem(CHAVE_FAMILIA_ATUAL)).toBe(FAMILIAS_DEMONSTRACAO.exemplo)
+    expect(JSON.parse(localStorage.getItem(CHAVE_FAMILIA_ATUAL)!)).toEqual({ pessoa: PESSOAS.davi.id, familia: FAMILIAS_DEMONSTRACAO.exemplo })
     const familias = await dados.minhasFamilias()
     expect(familias.ok && familias.valor.map((f) => [f.nome, f.meuPapel])).toEqual([['Família Exemplo', 'observador']])
     // Observador: nenhum controle de escrita.

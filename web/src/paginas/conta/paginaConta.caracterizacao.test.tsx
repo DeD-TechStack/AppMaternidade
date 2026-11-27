@@ -162,7 +162,7 @@ describe('Q-7: comportamento da Conta antes e depois da extração', () => {
         expect(tela.roteador.state.location.pathname).toBe('/conta-excluida')
         return sairOriginal()
       })
-      localStorage.setItem(CHAVE_FAMILIA_ATUAL, 'familia-ficticia')
+      localStorage.setItem(CHAVE_FAMILIA_ATUAL, JSON.stringify({ pessoa: PESSOAS.davi.id, familia: 'familia-ficticia' }))
       sessionStorage.setItem(CHAVE_CONVITE, 'convite-ficticio')
       sessionStorage.setItem(CHAVE_RECUPERACAO, PESSOAS.davi.id)
       fireEvent.click(botao('Excluir minha conta'))

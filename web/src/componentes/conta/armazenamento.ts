@@ -1,7 +1,7 @@
 // As chaves que a área de conta guarda no navegador. O armazenamento pode falhar (modo privado,
 // cota, política do navegador): nada aqui lança, e a falha vale como "sem valor".
 
-/** `localStorage`: a família que a tela Família mostra, entre as famílias com vínculo ativo. */
+/** `localStorage`: a preferência de família, vinculada à conta que a escolheu. */
 export const CHAVE_FAMILIA_ATUAL = 'appmaternidade:familia-atual'
 
 /** `sessionStorage`: o código de convite que precisa sobreviver à entrada (37b). */
@@ -44,14 +44,29 @@ export function apagarChave(tipo: Tipo, chave: string): void {
   }
 }
 
-const PARAMETROS_DE_AUTENTICACAO = /(?:^|[?&#])(?:code|error_code|error_description)=/
-const FRAGMENTO_DE_AUTENTICACAO = /(?:^|[#&])(?:access_token|error_code|error_description|type)=/
+export function lerFamiliaAtual(): { pessoa: string; familia: string } | null {
+  const texto = lerChave('local', CHAVE_FAMILIA_ATUAL)
+  if (texto === null) return null
+  try {
+    const escolha = JSON.parse(texto)
+    if (typeof escolha?.pessoa === 'string' && typeof escolha.familia === 'string') return escolha
+  } catch {
+    // O formato antigo guardava somente o id da família.
+  }
+  return null
+}
+
+export function limparFamiliaAtual(pessoa: string | null): void {
+  const escolha = lerFamiliaAtual()
+  if (!escolha || escolha.pessoa === pessoa) apagarChave('local', CHAVE_FAMILIA_ATUAL)
+}
+
+const PARAMETROS_DE_AUTENTICACAO = ['code', 'access_token', 'error', 'error_code', 'error_description']
 
 /**
  * Há motivo para falar com o Auth agora? É verdade quando o navegador guarda uma sessão do Supabase (`sb-...-auth-token`,
- * que cobre também o verificador do PKCE) ou quando a URL traz o retorno de um link de autenticação (`code=`, `access_token=`,
- * `type=`, `error_code=`, `error_description=`). Uma visita anônima nova dá falso, e o pacote do Supabase nem é pedido.
- * Armazenamento bloqueado dá falso: sem armazenamento não há sessão a retomar.
+ * que cobre também o verificador do PKCE) ou quando a URL traz o retorno de um link de autenticação. Uma visita
+ * anônima nova dá falso, e o pacote do Supabase nem é pedido.
  */
 export function haSinalDeSessao(): boolean {
   try {
@@ -65,10 +80,11 @@ export function haSinalDeSessao(): boolean {
   }
   try {
     const { search, hash } = window.location
-    if (PARAMETROS_DE_AUTENTICACAO.test(search)) return true
-    if (FRAGMENTO_DE_AUTENTICACAO.test(hash)) return true
+    const busca = new URLSearchParams(search)
+    const fragmento = new URLSearchParams(hash.slice(1))
+    return fragmento.has('type') || PARAMETROS_DE_AUTENTICACAO.some((nome) => busca.has(nome) || fragmento.has(nome))
   } catch {
     // Sem `location`: sem sinal.
+    return false
   }
-  return false
 }

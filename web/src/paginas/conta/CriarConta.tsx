@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { Link, Navigate, useSearchParams } from 'react-router'
 import { AreaDoLoginSocial } from '../../componentes/conta/AreaDoLoginSocial.tsx'
+import { BotaoGoogle, retornoDoGoogle } from '../../componentes/conta/BotaoGoogle.tsx'
 import { Campo, CampoSenha } from '../../componentes/conta/Campos.tsx'
 import { caminhoComVolta, destinoDepoisDeEntrar, urlDoSite, voltaValida } from '../../componentes/conta/destino.ts'
 import { useEnvio } from '../../componentes/conta/envio.ts'
@@ -9,6 +10,7 @@ import { fusoDoAparelho } from '../../componentes/conta/fusos.ts'
 import { NOME_DA_CONTA_MAX } from '../../componentes/conta/limitesDeNome.ts'
 import { MolduraPublica } from '../../componentes/conta/MolduraPublica.tsx'
 import { BOTAO_PRINCIPAL, Carregando, LINK_ALVO, RegiaoStatus, ResumoErro } from '../../componentes/conta/Partes.tsx'
+import { useRetornoGoogle } from '../../componentes/conta/retornoGoogle.ts'
 import { useDadosConta, useSessao } from '../../componentes/conta/sessao.tsx'
 import { erroDoEmail } from '../../componentes/conta/validarEmail.ts'
 import { AVISO_BANCO_DEMONSTRACAO, COMUM, CRIAR_CONTA, MANCHETES, TITULOS, textoDoErro } from '../../conteudo/conta.ts'
@@ -18,6 +20,8 @@ import { modoDados } from '../../dados/comum.ts'
 // cria a conta com o nome e o fuso do aparelho e segue para o destino do RF-10. Sem sessão
 // (Confirm email ligado), avisa na região de status e não cria a conta. Se a conta falhar depois
 // do usuário, a pessoa fica com sessão e conta incompleta e o RF-10 a leva ao passo "Seu nome".
+// Com banco, "Entrar com Google" também vale aqui: o Google devolve a pessoa a /entrar, que segue o RF-10
+// (a conta incompleta passa pelo passo "Seu nome").
 export function CriarConta() {
   const sessao = useSessao()
   const dados = useDadosConta()
@@ -37,6 +41,13 @@ export function CriarConta() {
   const erroDoEnvio = estado.fase === 'erro' ? estado.erro : null
   const campoDoErro = erroDoEnvio?.chave === 'senha_fraca' ? 'senha' : erroDoEnvio?.chave === 'email_invalido' ? 'email' : null
   const resumo = useFocoNoResumo(estado.fase === 'erro' && !campoDoErro ? estado : null)
+
+  const comBanco = modoDados() === 'supabase'
+  const carregando = sessao.estado === 'carregando'
+  const podeEntrar = sessao.estado === 'sem_sessao'
+  const retornoGoogle = useRetornoGoogle(comBanco, carregando, sessao.estado === 'com_sessao')
+  const erroDoRetorno = podeEntrar && estado.fase === 'ocioso' ? retornoGoogle.erro : null
+  const resumoDoRetorno = useFocoNoResumo(erroDoRetorno)
 
   useEffect(() => {
     if (estado.fase !== 'erro') return
@@ -64,7 +75,10 @@ export function CriarConta() {
     const emailLimpo = email.trim()
     const retorno = urlDoSite(caminhoComVolta('entrar', volta))
     void enviar({
-      aoComecar: () => setConfirmacao(null),
+      aoComecar: () => {
+        retornoGoogle.dispensarErro()
+        setConfirmacao(null)
+      },
       escrever: () => dados.criarUsuario(emailLimpo, senha, nomeLimpo, retorno),
       aoSucesso: async (criado) => {
         if (!criado) return
@@ -79,8 +93,17 @@ export function CriarConta() {
     })
   }
 
-  const carregando = sessao.estado === 'carregando'
-  const comBanco = modoDados() === 'supabase'
+  // O navegador sai da página para o Google; a sessão chega na volta, a /entrar, que segue o RF-10.
+  function entrarComGoogle() {
+    void enviar({
+      aoComecar: () => {
+        retornoGoogle.dispensarErro()
+        setConfirmacao(null)
+      },
+      escrever: () => dados.entrarComGoogle(retornoDoGoogle(volta)),
+      aoSucesso: () => {},
+    })
+  }
 
   return (
     <MolduraPublica
@@ -98,7 +121,10 @@ export function CriarConta() {
       }
     >
       <RegiaoStatus mensagem={confirmacao} />
-      <AreaDoLoginSocial />
+      {erroDoRetorno ? (
+        <ResumoErro erro={erroDoRetorno} refResumo={resumoDoRetorno} />
+      ) : null}
+      <AreaDoLoginSocial>{comBanco && podeEntrar ? <BotaoGoogle aoClicar={entrarComGoogle} ocupado={enviando} /> : null}</AreaDoLoginSocial>
       {carregando ? (
         <Carregando />
       ) : sessao.estado === 'erro' && sessao.erro ? (

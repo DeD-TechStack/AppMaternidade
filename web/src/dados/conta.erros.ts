@@ -34,6 +34,8 @@ export const CHAVES_ERRO = [
   'email_invalido',
   'muitas_tentativas',
   'link_vencido',
+  'login_google',
+  'login_google_cancelado',
   'sessao_encerrada',
   'desconhecido',
 ] as const
@@ -76,6 +78,8 @@ const POR_CODIGO_DO_AUTH: Record<string, ChaveErro> = {
   over_request_rate_limit: 'muitas_tentativas',
   over_email_send_rate_limit: 'muitas_tentativas',
   otp_expired: 'link_vencido',
+  oauth_login_failed: 'login_google',
+  oauth_login_cancelled: 'login_google_cancelado',
   refresh_token_not_found: 'sessao_encerrada',
   session_not_found: 'sessao_encerrada',
   session_expired: 'sessao_encerrada',
@@ -140,6 +144,8 @@ const ORIGEM_DE_EXEMPLO: Record<ChaveErro, unknown> = {
   email_invalido: { name: 'AuthApiError', code: 'email_address_invalid', status: 400, message: 'Email address is invalid' },
   muitas_tentativas: { name: 'AuthApiError', code: 'over_request_rate_limit', status: 429, message: 'Request rate limit reached' },
   link_vencido: { name: 'AuthApiError', code: 'otp_expired', status: 403, message: 'Email link is invalid or has expired' },
+  login_google: { code: 'oauth_login_failed' },
+  login_google_cancelado: { code: 'oauth_login_cancelled' },
   sessao_encerrada: { name: 'AuthApiError', code: 'session_not_found', status: 403, message: 'Session from session_id claim in JWT does not exist' },
   desconhecido: { code: '22023', message: 'invalid parameter value' },
 }

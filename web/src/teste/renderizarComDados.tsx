@@ -75,6 +75,8 @@ export function criarClienteFalso(opcoes: OpcoesClienteFalso = {}) {
     getSession: vi.fn(async (): Promise<unknown> => ({ data: { session: usuario ? { user: usuario } : null }, error: null })),
     signInWithPassword: vi.fn(async (): Promise<unknown> => ({ data: { user: USUARIO_FALSO, session: {} }, error: null })),
     signUp: vi.fn(async (): Promise<unknown> => ({ data: { user: USUARIO_FALSO, session: null }, error: null })),
+    // O login social só pede o endereço de redirecionamento: o navegador sai da página, sem sessão na resposta.
+    signInWithOAuth: vi.fn(async (): Promise<unknown> => ({ data: { provider: 'google', url: 'https://accounts.exemplo.invalid/o/oauth2' }, error: null })),
     resetPasswordForEmail: vi.fn(async (): Promise<unknown> => ({ data: {}, error: null })),
     updateUser: vi.fn(async (): Promise<unknown> => ({ data: { user: USUARIO_FALSO }, error: null })),
     signOut: vi.fn(async (): Promise<unknown> => ({ error: null })),

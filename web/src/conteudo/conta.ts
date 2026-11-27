@@ -138,6 +138,13 @@ export const CRIAR_CONTA = {
   confirmacao: (email: string) => `Enviamos um link de confirmação para ${email}. Abra o link para entrar.`,
 } as const
 
+/** A ação de login com o Google em /entrar e /criar-conta. */
+export const LOGIN_GOOGLE = {
+  botao: 'Entrar com Google',
+  abrindo: 'Abrindo o Google…',
+  ou: 'ou use e-mail e senha',
+} as const
+
 export const AVISO_BANCO_DEMONSTRACAO =
   'O banco é de teste. Para a família e o bebê, use só nomes e datas inventados.'
 
@@ -454,6 +461,8 @@ export const TEXTOS_ERRO: Readonly<Record<string, string>> = {
   email_invalido: 'Confira o e-mail digitado.',
   muitas_tentativas: 'Muitas tentativas seguidas. Espere alguns minutos e tente de novo.',
   link_vencido: 'Este link venceu ou já foi usado. Peça outro.',
+  login_google: 'Não foi possível entrar com o Google. Tente de novo ou use e-mail e senha.',
+  login_google_cancelado: 'Você cancelou a entrada com o Google. Se quiser, tente de novo ou use e-mail e senha.',
   sessao_encerrada: 'Sua sessão terminou. Entre de novo.',
   desconhecido: 'Algo deu errado. Tente de novo em instantes.',
 }

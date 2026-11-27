@@ -368,6 +368,11 @@ export function criarDadosContaMemoria(fixture: FixtureConta, opcoes: OpcoesMemo
     return ok(dados)
   }
 
+  /** O Google não existe na memória (a tela nem mostra o botão sem banco): a operação falha como `desconhecido`, sem abrir sessão. */
+  function entrarComGoogle(): Resultado<null> {
+    return falhaAuth('desconhecido')
+  }
+
   function criarUsuario(
     emailBruto: string,
     senha: string,
@@ -960,6 +965,7 @@ export function criarDadosContaMemoria(fixture: FixtureConta, opcoes: OpcoesMemo
       }
     },
     entrar: operacao('entrar', entrar),
+    entrarComGoogle: operacao('entrarComGoogle', entrarComGoogle),
     criarUsuario: operacao('criarUsuario', criarUsuario),
     pedirRecuperacao: operacao('pedirRecuperacao', pedirRecuperacao),
     trocarSenha: operacao('trocarSenha', trocarSenha),

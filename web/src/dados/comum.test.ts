@@ -68,6 +68,9 @@ const CATALOGO: Linha[] = [
     origens: [auth('over_request_rate_limit', 429), auth('over_email_send_rate_limit', 429), { name: 'AuthApiError', status: 429, message: 'x' }],
   },
   { chave: 'link_vencido', classe: 'negocio', origens: [auth('otp_expired', 403)] },
+  // A volta do Google: o erro da URL vira uma destas duas (access_denied é a pessoa cancelar).
+  { chave: 'login_google', classe: 'negocio', origens: [auth('oauth_login_failed', 400)] },
+  { chave: 'login_google_cancelado', classe: 'negocio', origens: [auth('oauth_login_cancelled', 400)] },
   {
     chave: 'sessao_encerrada',
     classe: 'sessao_encerrada',

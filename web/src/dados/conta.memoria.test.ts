@@ -63,6 +63,13 @@ async function pessoaNova(dados: ReturnType<typeof criar>) {
 }
 
 describe('sessão e Auth', () => {
+  it('entrarComGoogle não existe na memória: falha como erro do catálogo e não abre sessão', async () => {
+    const dados = criar()
+    const falhou = await erro(dados.entrarComGoogle('http://localhost/entrar'))
+    expect([falhou.classe, falhou.chave]).toEqual(['desconhecido', 'desconhecido'])
+    expect(await valor(dados.sessaoAtual())).toBeNull()
+  })
+
   it('sessaoAtual devolve ninguém ou o usuário da sessão', async () => {
     const dados = criar()
     expect(await valor(dados.sessaoAtual())).toBeNull()

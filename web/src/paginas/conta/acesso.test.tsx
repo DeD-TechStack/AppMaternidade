@@ -816,10 +816,10 @@ describe('sair (RF-11)', () => {
     expect(status().textContent).toBe('')
   })
 
-  it('a saída limpa a marca de recuperação e deixa a família atual e o convite', async () => {
+  it('a saída limpa a marca de recuperação e a família atual e conserva o convite', async () => {
     sessionStorage.setItem(CHAVE_RECUPERACAO, JULIANA.id)
     sessionStorage.setItem(CHAVE_CONVITE, 'a'.repeat(64))
-    localStorage.setItem(CHAVE_FAMILIA_ATUAL, 'f1111111-1111-4111-8111-111111111111')
+    localStorage.setItem(CHAVE_FAMILIA_ATUAL, JSON.stringify({ pessoa: JULIANA.id, familia: 'f1111111-1111-4111-8111-111111111111' }))
     renderizarComDados('/app/conta', { sessao: 'juliana' })
     await screen.findByRole('heading', { level: 1, name: 'Conta' })
 
@@ -828,7 +828,7 @@ describe('sair (RF-11)', () => {
 
     expect(sessionStorage.getItem(CHAVE_RECUPERACAO)).toBeNull()
     expect(sessionStorage.getItem(CHAVE_CONVITE)).toBe('a'.repeat(64))
-    expect(localStorage.getItem(CHAVE_FAMILIA_ATUAL)).toBe('f1111111-1111-4111-8111-111111111111')
+    expect(localStorage.getItem(CHAVE_FAMILIA_ATUAL)).toBeNull()
     apagarChave('sessao', CHAVE_CONVITE)
   })
 

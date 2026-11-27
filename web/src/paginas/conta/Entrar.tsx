@@ -1,18 +1,22 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { Link, Navigate, useLocation, useSearchParams } from 'react-router'
 import { AreaDoLoginSocial } from '../../componentes/conta/AreaDoLoginSocial.tsx'
+import { BotaoGoogle, retornoDoGoogle } from '../../componentes/conta/BotaoGoogle.tsx'
 import { CampoSenha, Campo } from '../../componentes/conta/Campos.tsx'
 import { caminhoComVolta, destinoDepoisDeEntrar, voltaValida } from '../../componentes/conta/destino.ts'
 import { useEnvio } from '../../componentes/conta/envio.ts'
 import { useFocoNoResumo } from '../../componentes/conta/foco.ts'
 import { MolduraPublica } from '../../componentes/conta/MolduraPublica.tsx'
 import { BOTAO_PRINCIPAL, Carregando, LINK_ALVO, RegiaoStatus, ResumoErro } from '../../componentes/conta/Partes.tsx'
+import { useRetornoGoogle } from '../../componentes/conta/retornoGoogle.ts'
 import { useDadosConta, useSessao } from '../../componentes/conta/sessao.tsx'
 import { COMUM, ENTRAR, MANCHETES, TITULOS, textoDaPassagem } from '../../conteudo/conta.ts'
+import { modoDados } from '../../dados/comum.ts'
 
-// /entrar (RF-12): e-mail e senha. Campo vazio dá erro no próprio campo, sem chamar o banco. Erro
-// do catálogo aparece no topo do formulário, e o foco vai para ele. Quem já tem sessão vai ao
-// destino do RF-10.
+// /entrar (RF-12): e-mail e senha, ou "Entrar com Google" quando há banco. Campo vazio dá erro no
+// próprio campo, sem chamar o banco. Erro do catálogo aparece no topo do formulário, e o foco vai
+// para ele. Quem já tem sessão vai ao destino do RF-10; o Google devolve a pessoa a esta mesma tela,
+// que faz o mesmo redirecionamento quando a sessão chega.
 export function Entrar() {
   const sessao = useSessao()
   const dados = useDadosConta()
@@ -27,6 +31,13 @@ export function Entrar() {
   const senhaRef = useRef<HTMLInputElement>(null)
   const { estado, enviar, tentarDeNovo, enviando } = useEnvio()
   const resumo = useFocoNoResumo(estado.fase === 'erro' ? estado : null)
+
+  const comBanco = modoDados() === 'supabase'
+  const carregando = sessao.estado === 'carregando'
+  const podeEntrar = sessao.estado === 'sem_sessao'
+  const retorno = useRetornoGoogle(comBanco, carregando, sessao.estado === 'com_sessao')
+  const erroDoRetorno = podeEntrar && estado.fase === 'ocioso' ? retorno.erro : null
+  const resumoDoRetorno = useFocoNoResumo(erroDoRetorno)
 
   // A saída já mostrou o motivo aqui; ele não vale para a próxima rota logada.
   const { consumirMotivoSaida } = sessao
@@ -48,13 +59,17 @@ export function Entrar() {
     if (novos.senha) return senhaRef.current?.focus()
 
     void enviar({
+      aoComecar: retorno.dispensarErro,
       escrever: () => dados.entrar(email.trim(), senha),
       // Com a sessão lida, esta tela vira o redirecionamento do destino.
       aoSucesso: () => sessao.recarregarConta(),
     })
   }
 
-  const carregando = sessao.estado === 'carregando'
+  // O navegador sai da página para o Google; a sessão chega na volta, a esta mesma tela, que segue o RF-10.
+  function entrarComGoogle() {
+    void enviar({ aoComecar: retorno.dispensarErro, escrever: () => dados.entrarComGoogle(retornoDoGoogle(volta)), aoSucesso: () => {} })
+  }
 
   return (
     <MolduraPublica
@@ -75,7 +90,10 @@ export function Entrar() {
       }
     >
       <RegiaoStatus mensagem={textoDaPassagem(location.state)} />
-      <AreaDoLoginSocial />
+      {erroDoRetorno ? (
+        <ResumoErro erro={erroDoRetorno} refResumo={resumoDoRetorno} />
+      ) : null}
+      <AreaDoLoginSocial>{comBanco && podeEntrar ? <BotaoGoogle aoClicar={entrarComGoogle} ocupado={enviando} /> : null}</AreaDoLoginSocial>
       {carregando ? (
         <Carregando />
       ) : sessao.estado === 'erro' && sessao.erro ? (

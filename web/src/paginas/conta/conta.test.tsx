@@ -690,10 +690,12 @@ describe('excluir conta: a caixa de confirmação', () => {
   })
 
   it('sucesso: exclui a conta, encerra a sessão, apaga as chaves e vai a /conta-excluida', async () => {
-    localStorage.setItem(CHAVE_FAMILIA_ATUAL, FAMILIAS_DEMONSTRACAO.exemplo)
+    const preferencia = JSON.stringify({ pessoa: PESSOAS.davi.id, familia: FAMILIAS_DEMONSTRACAO.exemplo })
+    localStorage.setItem(CHAVE_FAMILIA_ATUAL, preferencia)
     sessionStorage.setItem(CHAVE_CONVITE, 'a'.repeat(64))
     sessionStorage.setItem(CHAVE_RECUPERACAO, PESSOAS.davi.id)
     const { roteador, dados } = await abrirDialogo()
+    expect(localStorage.getItem(CHAVE_FAMILIA_ATUAL)).toBe(preferencia)
 
     fireEvent.change(within(dialogo()).getByLabelText('Senha atual', { selector: 'input' }), { target: { value: SENHA_DEMONSTRACAO } })
     fireEvent.click(within(dialogo()).getByRole('button', { name: 'Excluir conta' }))

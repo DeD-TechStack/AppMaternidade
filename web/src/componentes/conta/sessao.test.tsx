@@ -6,7 +6,8 @@ import { criarDadosConta, type DadosConta, type FamiliaResumo } from '../../dado
 import { SENHA_DEMONSTRACAO } from '../../dados/conta.demonstracao.ts'
 import { erroDaChave } from '../../dados/conta.erros.ts'
 import { criarDadosContaMemoria, simularFalha } from '../../dados/conta.memoria.ts'
-import { PESSOAS, criarFixtureDeTeste } from '../../teste/renderizarComDados.tsx'
+import { criarDadosContaSupabase } from '../../dados/conta.supabase.ts'
+import { PESSOAS, USUARIO_FALSO, criarClienteFalso, criarFixtureDeTeste } from '../../teste/renderizarComDados.tsx'
 import { CHAVE_FAMILIA_ATUAL } from './armazenamento.ts'
 import { ProvedorDadosConta, ProvedorSessao, useDadosConta, useFamiliaAtual, useSessao } from './sessao.tsx'
 
@@ -35,6 +36,9 @@ function Sonda() {
       </button>
       <button type="button" onClick={() => void sessao.recarregarConta()}>
         recarregar conta
+      </button>
+      <button type="button" onClick={() => void sessao.sair()}>
+        sair da sonda
       </button>
       <button type="button" onClick={() => void dados.atualizarMinhaConta('Juliana Souza', 'UTC')}>
         renomear
@@ -152,6 +156,49 @@ describe('useDadosConta', () => {
   })
 })
 
+describe('useSessao com o adaptador do banco: a sessão que o cliente cria depois (volta do Google, PKCE)', () => {
+  const LINHA_CONTA = { id: USUARIO_FALSO.id, nome_privado: 'Juliana', fuso: 'America/Sao_Paulo', criada_em: '2026-10-01T10:00:00+00:00' }
+
+  function montarComBanco(opcoes: Parameters<typeof criarClienteFalso>[0]) {
+    const falso = criarClienteFalso({ tabelas: { contas: [{ data: LINHA_CONTA, error: null }] }, ...opcoes })
+    const roteador = createMemoryRouter(
+      [{ element: <ProvedorSessao />, children: [{ path: '/sonda', element: <Sonda /> }] }],
+      { initialEntries: ['/sonda'] },
+    )
+    render(
+      <ProvedorDadosConta dados={criarDadosContaSupabase(falso.cliente)}>
+        <RouterProvider router={roteador} />
+      </ProvedorDadosConta>,
+    )
+    return falso
+  }
+
+  it('o cliente já tem a sessão na primeira leitura (o código foi trocado na inicialização): com_sessao', async () => {
+    montarComBanco({})
+    await waitFor(() => expect(sessao()).toBe('com_sessao|juliana@exemplo.invalid|Juliana|-'))
+  })
+
+  it('a sessão criada depois de montar chega pelo evento SIGNED_IN e vira com_sessao', async () => {
+    const falso = montarComBanco({ usuario: null })
+    await waitFor(() => expect(sessao()).toBe('sem_sessao|-|-|-'))
+
+    falso.auth.getSession.mockResolvedValue({ data: { session: { user: USUARIO_FALSO } }, error: null })
+    act(() => falso.emitirAuth('SIGNED_IN', { user: USUARIO_FALSO }))
+
+    await waitFor(() => expect(sessao()).toBe('com_sessao|juliana@exemplo.invalid|Juliana|-'))
+  })
+
+  it('o SIGNED_IN da volta sem conta ainda (conta incompleta) vira com_sessao com conta null, para o passo "Seu nome"', async () => {
+    const falso = montarComBanco({ usuario: null, tabelas: { contas: [{ data: null, error: null }] } })
+    await waitFor(() => expect(sessao()).toBe('sem_sessao|-|-|-'))
+
+    falso.auth.getSession.mockResolvedValue({ data: { session: { user: USUARIO_FALSO } }, error: null })
+    act(() => falso.emitirAuth('SIGNED_IN', { user: USUARIO_FALSO }))
+
+    await waitFor(() => expect(sessao()).toBe('com_sessao|juliana@exemplo.invalid|-|-'))
+  })
+})
+
 describe('useFamiliaAtual', () => {
   const JULIANA = PESSOAS.juliana.email
 
@@ -178,7 +225,9 @@ describe('useFamiliaAtual', () => {
 
     await waitFor(() => expect(familia()).toContain('pronto|Segunda|'))
     const segunda = (await dados.minhasFamilias())
-    expect(segunda.ok && localStorage.getItem(CHAVE_FAMILIA_ATUAL)).toBe(segunda.ok ? segunda.valor.find((f) => f.nome === 'Segunda')!.id : '')
+    expect(segunda.ok && JSON.parse(localStorage.getItem(CHAVE_FAMILIA_ATUAL)!)).toEqual({
+      pessoa: PESSOAS.juliana.id, familia: segunda.ok ? segunda.valor.find((f) => f.nome === 'Segunda')!.id : '',
+    })
   })
 
   it('a escolha guardada vale se a família ainda é ativa; senão, volta à mais antiga', async () => {
@@ -187,13 +236,13 @@ describe('useFamiliaAtual', () => {
     const segunda = await dados.criarFamilia('Segunda', 'UTC')
     expect(segunda.ok).toBe(true)
 
-    localStorage.setItem(CHAVE_FAMILIA_ATUAL, segunda.ok ? segunda.valor : '')
+    localStorage.setItem(CHAVE_FAMILIA_ATUAL, JSON.stringify({ pessoa: PESSOAS.juliana.id, familia: segunda.ok ? segunda.valor : '' }))
     montar('/sonda', JULIANA, dados)
     await waitFor(() => expect(familia()).toBe('pronto|Segunda|Família Exemplo,Segunda|-'))
   })
 
   it('uma escolha guardada que não está entre as famílias ativas é ignorada', async () => {
-    localStorage.setItem(CHAVE_FAMILIA_ATUAL, '99999999-9999-4999-8999-999999999999')
+    localStorage.setItem(CHAVE_FAMILIA_ATUAL, JSON.stringify({ pessoa: PESSOAS.juliana.id, familia: '99999999-9999-4999-8999-999999999999' }))
     montar('/sonda', JULIANA)
     await waitFor(() => expect(familia()).toBe('pronto|Família Exemplo|Família Exemplo|-'))
   })
@@ -263,6 +312,77 @@ describe('useFamiliaAtual: a carga pertence a uma pessoa e a uma geração', () 
       await dados.entrar(email, SENHA_DEMONSTRACAO)
     })
   }
+
+  function memoriaComFamiliaCompartilhada() {
+    const agora = Date.parse('2026-11-27T12:00:00Z')
+    const fixture = criarFixtureDeTeste(agora)
+    const compartilhada = 'f3333333-3333-4333-8333-333333333333'
+    const criadaEm = new Date(agora).toISOString()
+    fixture.familias.push({ id: compartilhada, nome: 'Compartilhada', fuso: 'UTC', criadaEm, criadaPor: PESSOAS.juliana.id })
+    for (const [i, pessoa] of [PESSOAS.juliana, PESSOAS.carla].entries()) {
+      fixture.vinculos.push({
+        id: `vinculo-compartilhado-${i}`, familiaId: compartilhada, contaId: pessoa.id, papel: 'responsavel',
+        estado: 'ativo', validoAte: null, criadoEm: criadaEm, concedidoPor: null,
+      })
+    }
+    return { dados: criarDadosContaMemoria(fixture, { agora: () => agora }), compartilhada }
+  }
+
+  it.each(['saída pedida', 'fim externo', 'troca direta', 'outra aba'])('%s: nenhuma pessoa herda a seleção da família compartilhada', async (transicao) => {
+    const { dados, compartilhada } = memoriaComFamiliaCompartilhada()
+    montar('/sonda', JULIANA, dados)
+    fireEvent.click(await screen.findByRole('button', { name: 'escolher Compartilhada' }))
+    expect(familia()).toBe('pronto|Compartilhada|Família Exemplo,Compartilhada|-')
+
+    if (transicao === 'saída pedida') fireEvent.click(screen.getByRole('button', { name: 'sair da sonda' }))
+    if (transicao === 'fim externo') act(() => dados.encerrarSessaoPorFora())
+    if (transicao === 'saída pedida' || transicao === 'fim externo') {
+      await waitFor(() => expect(sessao()).toBe('sem_sessao|-|-|-'))
+      expect(localStorage.getItem(CHAVE_FAMILIA_ATUAL)).toBeNull()
+    }
+    if (transicao === 'outra aba') {
+      dados.sessaoParaTeste(CARLA)
+      const visibilidade = vi.spyOn(document, 'visibilityState', 'get').mockReturnValue('visible')
+      await act(async () => { document.dispatchEvent(new Event('visibilitychange')) })
+      visibilidade.mockRestore()
+    } else {
+      await entrarComo(dados, CARLA)
+    }
+
+    await waitFor(() => expect(familia()).toBe('pronto|Família Teste|Família Teste,Compartilhada|-'))
+    expect(localStorage.getItem(CHAVE_FAMILIA_ATUAL)).toBeNull()
+    fireEvent.click(screen.getByRole('button', { name: 'escolher Compartilhada' }))
+    expect(JSON.parse(localStorage.getItem(CHAVE_FAMILIA_ATUAL)!)).toEqual({ pessoa: PESSOAS.carla.id, familia: compartilhada })
+
+    await entrarComo(dados, JULIANA)
+    await waitFor(() => expect(familia()).toBe('pronto|Família Exemplo|Família Exemplo,Compartilhada|-'))
+    expect(localStorage.getItem(CHAVE_FAMILIA_ATUAL)).toBeNull()
+  })
+
+  it('descarta uma preferência legada sem dono mesmo quando a família está ativa para a conta restaurada', async () => {
+    const { dados, compartilhada } = memoriaComFamiliaCompartilhada()
+    localStorage.setItem(CHAVE_FAMILIA_ATUAL, compartilhada)
+    montar('/sonda', JULIANA, dados)
+    await waitFor(() => expect(familia()).toBe('pronto|Família Exemplo|Família Exemplo,Compartilhada|-'))
+    expect(localStorage.getItem(CHAVE_FAMILIA_ATUAL)).toBeNull()
+  })
+
+  it('a primeira leitura da sessão descarta a escolha persistida de outra conta', async () => {
+    const { dados, compartilhada } = memoriaComFamiliaCompartilhada()
+    localStorage.setItem(CHAVE_FAMILIA_ATUAL, JSON.stringify({ pessoa: PESSOAS.carla.id, familia: compartilhada }))
+    montar('/sonda', JULIANA, dados)
+    await waitFor(() => expect(familia()).toBe('pronto|Família Exemplo|Família Exemplo,Compartilhada|-'))
+    expect(localStorage.getItem(CHAVE_FAMILIA_ATUAL)).toBeNull()
+  })
+
+  it('descarta a seleção persistida quando a sessão já terminou antes de abrir a página', async () => {
+    const { dados, compartilhada } = memoriaComFamiliaCompartilhada()
+    localStorage.setItem(CHAVE_FAMILIA_ATUAL, JSON.stringify({ pessoa: PESSOAS.juliana.id, familia: compartilhada }))
+    montar('/sonda', null, dados)
+    await waitFor(() => expect(sessao()).toBe('sem_sessao|-|-|-'))
+    expect(familia()).toBe(SEM_FAMILIA)
+    expect(localStorage.getItem(CHAVE_FAMILIA_ATUAL)).toBeNull()
+  })
 
   it('sair limpa as famílias, a atual e o estado (encerrada por fora ou pela operação sair)', async () => {
     for (const sair of [(d: ReturnType<typeof novaMemoria>) => d.encerrarSessaoPorFora(), (d: ReturnType<typeof novaMemoria>) => void d.sair()]) {
@@ -402,7 +522,7 @@ describe('useFamiliaAtual: a carga pertence a uma pessoa e a uma geração', () 
     const dados = novaMemoria()
     dados.sessaoParaTeste(JULIANA)
     const segunda = await dados.criarFamilia('Segunda', 'UTC')
-    localStorage.setItem(CHAVE_FAMILIA_ATUAL, segunda.ok ? segunda.valor : '')
+    localStorage.setItem(CHAVE_FAMILIA_ATUAL, JSON.stringify({ pessoa: PESSOAS.juliana.id, familia: segunda.ok ? segunda.valor : '' }))
     montar('/sonda', JULIANA, dados)
     await waitFor(() => expect(familia()).toBe('pronto|Segunda|Família Exemplo,Segunda|-'))
 

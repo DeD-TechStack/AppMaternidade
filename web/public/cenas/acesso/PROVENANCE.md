@@ -1,6 +1,6 @@
 # Provenance: web/public/cenas/acesso/
 
-The generated phone-on-pedestal scene (entrar@1x/@2x) left the site in REP-T3. The only image of the access pages is the Fable-signed door plate 10a. The plate is a read-only source under DIRECAO_FABLE (sha256 asserted by the script), colour-snapped whole, downscaled with LANCZOS, never upscaled, no retouching, no generated pixels.
+The generated phone-on-pedestal scene (entrar@1x/@2x) left the site in REP-T3. The only scene image of the access pages is the Fable-signed door plate 10a. The plate is a read-only source under DIRECAO_FABLE (sha256 asserted by the script), colour-snapped whole, downscaled with LANCZOS, never upscaled, no retouching, no generated pixels.
 
 Columns: file | source + sha256 | script + sha256 | crop | scale | encoder/quality | output sha256 | bytes | size
 
@@ -25,3 +25,7 @@ alt (all four files): `ent.alt.porta` of COPY_entrar.md, rendered by `PORTA_ACES
 - a43-porta-luz-780w.png: 41518 bytes over the 12,000 B lamp-layer cap (cap_open: kept, not hidden; measured PNG, premultiplied LANCZOS tier)
 - a43-porta-luz-720w.png: 36143 bytes over the 12,000 B lamp-layer cap (cap_open: kept, not hidden; measured PNG, premultiplied LANCZOS tier)
 - a43-porta-luz-390w.png: 12529 bytes over the 12,000 B lamp-layer cap (cap_open: kept, not hidden; measured PNG, premultiplied LANCZOS tier)
+
+## Google sign-in mark
+
+`google-g.svg` comes from the existing Google G artwork introduced in `ef084116` in `web/src/componentes/conta/BotaoGoogle.tsx`. The local asset keeps the four path geometries, sRGB fills, 48 ? 48 viewBox and 20 ? 20 display dimensions. The upstream source and licensing status of the original artwork are unverified.
