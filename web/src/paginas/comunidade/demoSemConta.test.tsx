@@ -1,9 +1,11 @@
-import { fireEvent, screen, waitFor, within } from '@testing-library/react'
+import { act, fireEvent, screen, waitFor, within } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { LISTA, TOPICO } from '../../conteudo/comunidade.ts'
 import { criarDadosComunidade, informarContaDaSessao } from '../../dados/comunidade.ts'
+import { fixtureComunidadeDemonstracao } from '../../dados/comunidade.demonstracao.ts'
 import { obterReacoesDaDemonstracao } from '../../dados/comunidade.visitante.ts'
-import { criarClienteFalso, renderizarComDados } from '../../teste/renderizarComDados.tsx'
+import { criarDadosContaMemoria } from '../../dados/conta.memoria.ts'
+import { criarClienteFalso, criarFixtureDeTeste, PESSOAS, renderizarComDados } from '../../teste/renderizarComDados.tsx'
 
 const obterCliente = vi.hoisted(() => vi.fn())
 vi.mock('../../dados/cliente.ts', async (importarOriginal) => ({
@@ -104,6 +106,84 @@ describe('modo demonstração, sem conta', () => {
     expect(depois.getAttribute('aria-pressed')).toBe('true')
     fireEvent.click(depois)
     expect(depois.getAttribute('aria-pressed')).toBe('false')
+    expect(obterCliente).not.toHaveBeenCalled()
+  })
+})
+
+describe('identidade da Comunidade em memória', () => {
+  it('aguarda a sessão fria, lê como autora e volta à leitura de visitante após a saída', async () => {
+    const dados = criarDadosContaMemoria(criarFixtureDeTeste(Date.now()))
+    const lerSessao = dados.sessaoAtual
+    let liberarSessao!: () => void
+    const pendente = new Promise<void>((resolve) => { liberarSessao = resolve })
+    const sessaoAtual = vi.spyOn(dados, 'sessaoAtual').mockImplementationOnce(async () => {
+      await pendente
+      return lerSessao()
+    })
+    const { roteador, container } = renderizarComDados(CAMINHO_DO_TOPICO, { dados, sessao: 'juliana' })
+    await waitFor(() => expect(sessaoAtual).toHaveBeenCalled())
+    expect(screen.queryByRole('heading', { name: 'Sonecas curtas de manhã' })).toBeNull()
+    expect(screen.queryByRole('button', { name: REACAO })).toBeNull()
+
+    await act(async () => { liberarSessao() })
+    const editar = await screen.findByRole('link', { name: TOPICO.editar })
+    expect(editar.getAttribute('href')).toBe(`${CAMINHO_DO_TOPICO}/editar`)
+    const rascunho = await screen.findByRole('textbox', { name: TOPICO.campoResposta })
+    fireEvent.change(rascunho, { target: { value: 'Rascunho da autora anterior' } })
+
+    await act(async () => { dados.encerrarSessaoPorFora() })
+    await screen.findByRole('button', { name: REACAO })
+    expect(roteador.state.location.pathname).toBe(CAMINHO_DO_TOPICO)
+    expect(editar.isConnected).toBe(false)
+    expect(container.querySelector('form, textarea')).toBeNull()
+    expect(screen.queryByDisplayValue('Rascunho da autora anterior')).toBeNull()
+    expect(screen.getByRole('link', { name: TOPICO.paraEntrar })).toBeTruthy()
+    expect(await screen.findByText(/Aqui foi igual até uns 4 meses/)).toBeTruthy()
+    expect(obterCliente).not.toHaveBeenCalled()
+  })
+
+  it('troca a conta sem manter as ações da autora e navega pelo índice, espaço e tópico', async () => {
+    const fixture = criarFixtureDeTeste(Date.now())
+    const dados = criarDadosContaMemoria(fixture)
+    const { roteador } = renderizarComDados('/app/comunidade', { dados, sessao: 'juliana' })
+    fireEvent.click(await screen.findByRole('link', { name: 'Sono' }))
+    fireEvent.click(await screen.findByRole('link', { name: /Sonecas curtas de manhã/ }))
+    const editar = await screen.findByRole('link', { name: TOPICO.editar })
+    const rascunho = await screen.findByRole('textbox', { name: TOPICO.campoResposta })
+    fireEvent.change(rascunho, { target: { value: 'Rascunho da primeira conta' } })
+
+    const outra = fixture.usuarios.find(({ id }) => id === PESSOAS.icaro.id)!
+    await act(async () => { expect((await dados.entrar(outra.email, outra.senha)).ok).toBe(true) })
+    const respostaDaNovaConta = await screen.findByRole('textbox', { name: TOPICO.campoResposta })
+    expect(roteador.state.location.pathname).toBe(CAMINHO_DO_TOPICO)
+    expect(respostaDaNovaConta).not.toBe(rascunho)
+    expect(respostaDaNovaConta).toHaveProperty('value', '')
+    expect(editar.isConnected).toBe(false)
+    expect(screen.queryByRole('link', { name: TOPICO.editar })).toBeNull()
+    expect(screen.queryByRole('button', { name: REACAO })).toBeNull()
+    expect(obterCliente).not.toHaveBeenCalled()
+  })
+
+  it('refaz a leitura do índice quando a sessão de moderação é substituída', async () => {
+    const fixture = criarFixtureDeTeste(Date.now())
+    const id = fixtureComunidadeDemonstracao.papeis!.find(({ papel }) => papel === 'moderador')!.contaId
+    const usuario = { ...fixture.usuarios[0], id, email: 'moderador@exemplo.invalid' }
+    const dados = criarDadosContaMemoria({
+      ...fixture,
+      usuarios: [...fixture.usuarios, usuario],
+      contas: [...fixture.contas, { ...fixture.contas[0], id }],
+    })
+    dados.sessaoParaTeste(usuario.email)
+    const { roteador } = renderizarComDados('/app/comunidade', { dados })
+    const painel = await screen.findByRole('link', { name: LISTA.painel })
+    const juliana = fixture.usuarios.find(({ id: conta }) => conta === PESSOAS.juliana.id)!
+    await act(async () => { expect((await dados.entrar(juliana.email, juliana.senha)).ok).toBe(true) })
+
+    await screen.findByRole('link', { name: LISTA.meuPerfil })
+    expect(roteador.state.location.pathname).toBe('/app/comunidade')
+    expect(painel.isConnected).toBe(false)
+    expect(screen.queryByRole('link', { name: LISTA.painel })).toBeNull()
+    expect(screen.queryByRole('link', { name: LISTA.entrar })).toBeNull()
     expect(obterCliente).not.toHaveBeenCalled()
   })
 })

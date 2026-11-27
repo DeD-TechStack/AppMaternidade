@@ -1,4 +1,4 @@
-import { render, screen, waitFor, within } from '@testing-library/react'
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { createMemoryRouter, RouterProvider } from 'react-router'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { ProvedorDadosConta } from '../../componentes/conta/sessao.tsx'
@@ -6,7 +6,7 @@ import { bancoConfigurado } from '../../dados/cliente.ts'
 import { criarDadosContaMemoria } from '../../dados/conta.memoria.ts'
 import { fixtureComunidadeDemonstracao } from '../../dados/comunidade.demonstracao.ts'
 import { criarRotas } from '../../rotas.tsx'
-import { criarClienteFalso, renderizarComDados } from '../../teste/renderizarComDados.tsx'
+import { criarClienteFalso, criarFixtureDeTeste, PESSOAS, renderizarComDados } from '../../teste/renderizarComDados.tsx'
 
 const obterCliente = vi.hoisted(() => vi.fn())
 vi.mock('../../dados/cliente.ts', async (original) => ({
@@ -25,10 +25,12 @@ beforeEach(() => {
 
 afterEach(() => vi.unstubAllEnvs())
 
-// Usa a árvore real, inclusive lazy e basename. A conta injetada está vazia, sem sessão;
-// nenhuma troca global de modoDados ou identidade visitante abre a introdução.
-function abrirIntroducao(base: string) {
-  const dados = criarDadosContaMemoria({ usuarios: [], contas: [], familias: [], vinculos: [], bebes: [], convites: [] })
+// Usa a árvore real, inclusive lazy e basename. Só o teste de continuidade usa uma sessão fictícia.
+function abrirIntroducao(base: string, sessao: 'juliana' | null = null) {
+  const dados = criarDadosContaMemoria(sessao ? criarFixtureDeTeste(Date.now()) : {
+    usuarios: [], contas: [], familias: [], vinculos: [], bebes: [], convites: [],
+  })
+  if (sessao) dados.sessaoParaTeste(PESSOAS[sessao].email)
   const roteador = createMemoryRouter(criarRotas(), {
     basename: base,
     initialEntries: [`${base}comunidade`],
@@ -51,6 +53,7 @@ describe('introdução pública da Comunidade', () => {
     await waitFor(() => expect(document.title).toBe('Comunidade | AppMaternidade'))
     expect(roteador.state.location.pathname).toBe(`${base}comunidade`)
     expect(bancoConfigurado()).toBe(true)
+    expect(main.getByText('A comunidade é para trocar experiência. Ela não é atendimento de saúde.')).toBeTruthy()
     for (const { nome } of fixtureComunidadeDemonstracao.espacos!) expect(main.getByText(nome)).toBeTruthy()
     const exemplos = within(main.getByRole('region', { name: 'Exemplos fictícios' }))
     expect(exemplos.getAllByText('Exemplo fictício')).toHaveLength(3)
@@ -80,6 +83,40 @@ describe('introdução pública da Comunidade', () => {
     const { container } = abrirIntroducao('/')
     await screen.findByRole('heading', { level: 1, name: 'Conheça a comunidade' })
     expect(container.querySelector('form, textarea')).toBeNull()
+    expect(obterCliente).not.toHaveBeenCalled()
+    expect(fetch).not.toHaveBeenCalled()
+  })
+
+  it('em Pages, participar leva ao login com volta e regras abre no mesmo roteador', async () => {
+    const base = '/AppMaternidade/previa/'
+    vi.stubEnv('BASE_URL', base)
+    const { roteador } = abrirIntroducao(base)
+    await screen.findByRole('heading', { name: 'Conheça a comunidade' })
+    const principal = () => within(screen.getByRole('main'))
+    expect(fireEvent.click(principal().getByRole('link', { name: 'Regras da comunidade' }))).toBe(false)
+    await screen.findByRole('heading', { level: 1, name: 'Regras da comunidade' })
+    expect(roteador.state.location.pathname).toBe(`${base}regras-da-comunidade`)
+    await act(async () => { await roteador.navigate(-1) })
+    const titulo = await screen.findByRole('heading', { name: 'Conheça a comunidade' })
+    await waitFor(() => expect(document.activeElement).toBe(titulo))
+    expect(fireEvent.click(principal().getByRole('link', { name: 'Participar da comunidade' }))).toBe(false)
+    await waitFor(() => expect(roteador.state.location.pathname).toBe(`${base}entrar`))
+    expect(roteador.state.location.search).toBe('?volta=%2Fapp%2Fcomunidade')
+    expect(obterCliente).not.toHaveBeenCalled()
+    expect(fetch).not.toHaveBeenCalled()
+  })
+
+  it('em Pages, participar preserva a sessão em memória e abre a Comunidade', async () => {
+    const base = '/AppMaternidade/previa/'
+    vi.stubEnv('BASE_URL', base)
+    vi.stubEnv('VITE_SUPABASE_URL', '')
+    vi.stubEnv('VITE_SUPABASE_ANON_KEY', '')
+    const { roteador } = abrirIntroducao(base, 'juliana')
+    const sair = await screen.findByRole('button', { name: 'Sair' })
+    fireEvent.click(screen.getByRole('link', { name: 'Participar da comunidade' }))
+    await waitFor(() => expect(roteador.state.location.pathname).toBe(`${base}app/comunidade`))
+    expect(await screen.findByRole('link', { name: 'Meu perfil público' })).toBeTruthy()
+    expect(screen.getByRole('button', { name: 'Sair' })).toBe(sair)
     expect(obterCliente).not.toHaveBeenCalled()
     expect(fetch).not.toHaveBeenCalled()
   })
