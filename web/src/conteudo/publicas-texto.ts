@@ -304,7 +304,9 @@ const PRIVACIDADE: PaginaDeTexto = {
         TEXTO_SEUS_DIREITOS,
         'Quando o seu vínculo com uma família acaba, o arquivo leva só a última versão dos registros que você mesmo escreveu, sem as mudanças feitas depois por outras pessoas, e não leva as notas de passagem de turno dessa família.',
         [
-          'Os pedidos de acesso, com o botão “Baixar meus dados”, e de exclusão são feitos na tela Conta (/app/conta), por quem entrou na conta. Para apagar a conta, veja a página ',
+          'Os pedidos de acesso, com o botão “Baixar meus dados”, e de exclusão são feitos na tela ',
+          ligacao('Conta', CAMINHO_CONTA),
+          ' (/app/conta), por quem entrou na conta. Para apagar a conta, veja a página ',
           ligacao('Exclusão de conta', CAMINHO_EXCLUSAO),
           '.',
         ],

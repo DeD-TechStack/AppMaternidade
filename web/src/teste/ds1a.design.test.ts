@@ -104,10 +104,22 @@ function declaracoesDeVariavel(arquivos: Css[], variavel: string): Array<{ nome:
   )
 }
 
+/** Retira apenas os dois descritores de entrega permitidos, no primeiro @font-face da folha correspondente. */
+function semDescritoresDeEntrega(f: Css): string {
+  const variante = f.nome === 'styles/literata-latin-opsz.css' ? 'opsz-normal'
+    : f.nome === 'styles/literata-latin-wght-italic.css' ? 'wght-italic' : undefined
+  if (!variante) return f.limpo
+  const origem = `url(@fontsource-variable/literata/files/literata-latin-${variante}.woff2) format('woff2-variations')`
+  return f.limpo.replace(/^\s*@font-face\s*\{[^{}]*\}/, (rosto) => rosto
+    .replace(/([;{]\s*)font-family\s*:\s*'Literata Variable'\s*;/, '$1')
+    .replace(/([;{]\s*)src\s*:\s*([^;{}]+);/, (declaracao, prefixo: string, valor: string) =>
+      valor.trim() === origem ? prefixo : declaracao))
+}
+
 /** Os arquivos (e os trechos) fora das exceções do cartão que nomeiam a Literata. */
 function usosDeLiterata(arquivos: Css[]): Array<{ nome: string; trecho: string }> {
   return arquivos.flatMap((f) => {
-    const linhas = f.limpo.split(/\r?\n/).filter((linha) => /Literata/i.test(linha))
+    const linhas = semDescritoresDeEntrega(f).split(/\r?\n/).filter((linha) => /Literata/i.test(linha))
     return linhas
       .filter((linha) => !(/^\s*@import\b/.test(linha) && f.nome === 'index.css'))
       .filter((linha) => !(f.nome === 'styles/tokens.css' && /--fonte-exibicao\s*:/.test(linha)))
@@ -142,7 +154,20 @@ describe('DS1-I-05 uma variável de exibição só', () => {
     expect(declaracoesDeVariavel([tema], '--fonte-exibicao')).toEqual([])
   })
 
-  it('DS1-I-05 nenhuma outra declaração CSS de src nomeia a Literata (o @import do index.css e a variável ficam de fora)', () => {
+  it('DS1-I-05 as duas folhas Latin não liberam uso direto, face extra ou origem de outra variante', () => {
+    const nome = 'styles/literata-latin-opsz.css'
+    const limpo = semComentariosCss(lerSrc(nome))
+    expect(usosDeLiterata([{ nome, limpo }])).toEqual([])
+    for (const alterado of [
+      `${limpo}\n.x { font-family: 'Literata Variable'; }`,
+      `${limpo}\n${limpo}`,
+      limpo.replace('latin-opsz-normal', 'cyrillic-opsz-normal'),
+      limpo.replace("font-family: 'Literata Variable';", "font-family: 'Literata Extra';"),
+    ]) expect(usosDeLiterata([{ nome, limpo: alterado }]), alterado).not.toEqual([])
+    expect(usosDeLiterata([{ nome: 'styles/outro.css', limpo }])).not.toEqual([])
+  })
+
+  it('DS1-I-05 só os descritores de entrega e o token aprovado nomeiam a Literata no CSS', () => {
     expect(usosDeLiterata(cssDoProduto)).toEqual([])
   })
 

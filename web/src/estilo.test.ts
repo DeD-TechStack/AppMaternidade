@@ -21,6 +21,7 @@ const indexHtml = readFileSync(pastaSrc + '../index.html', 'utf8')
 
 const harmoniaCss = lerTexto('styles/harmonia.gerado.css')
 const siteCss = lerTexto('styles/site.css')
+const campoCss = lerTexto('styles/campo.css')
 const design = lerTexto('../DESIGN.md')
 const semComentariosCss = (texto: string) => texto.replace(/\/\*[\s\S]*?\*\//g, '')
 
@@ -60,6 +61,37 @@ function luminancia(hex: string): number {
 function contraste(a: string, b: string): number {
   const [clara, escura] = [luminancia(a), luminancia(b)].sort((x, y) => y - x)
   return (clara + 0.05) / (escura + 0.05)
+}
+
+const focoPrimarioNoturno = ":root[data-tema='madrugada'] .cm-botao-primario:focus-visible:where(:not(:hover, [data-forcar='hover'], [aria-disabled='true']))"
+
+function contrasteDoFocoNoMel(cssSite: string, cssCampo: string): [number, number] {
+  const regra = (css: string, seletor: string) => regras(semComentariosCss(css)).find((r) => r.seletor === seletor)?.corpo ?? ''
+  const cor = (valor: string | undefined): string => {
+    const chave = /^var\(--color-([a-z0-9-]+)\)$/.exec(valor ?? '')?.[1]
+    const hex = chave && lerTokens(tokensCss)[chave]
+    if (!hex) throw new Error(`cor de foco ou superfície não resolvida: ${valor}`)
+    return hex
+  }
+  const foco = regra(cssSite, focoPrimarioNoturno)
+  const contorno = regra(cssSite, ".cm-botao:focus-visible, .cm-botao[data-forcar='foco']")
+  if (declaracao(contorno, 'outline') !== '2px solid var(--cor-foco)' ||
+      declaracao(contorno, 'outline-offset') !== '3px' || declaracao(foco, 'outline-offset') !== '-4px') {
+    throw new Error('o botão deve ter contorno visível, por dentro do preenchimento de mel')
+  }
+  const fundoPrimario = declaracao(regra(cssSite, '.cm-botao-primario'), 'background-color')
+  if (fundoPrimario !== 'var(--cor-primario-fundo)') throw new Error('preenchimento do primário desligado do tema')
+  const noite = regra(cssSite, ":root[data-tema='madrugada']")
+  const painel = regra(cssCampo, '.cm-painel-mel')
+  const focoPainel = regra(cssCampo, '.cm-painel-mel :focus-visible, .cm-painel-areia :focus-visible')
+  const preenchimento = cor(declaracao(noite, '--cor-primario-fundo'))
+  const superficie = cor(declaracao(painel, 'background-color'))
+  const mel = corDe('destaque', madrugada)
+  if (preenchimento !== mel || superficie !== mel) throw new Error('o primário noturno e o painel devem usar o mel')
+  return [
+    contraste(cor(declaracao(foco, 'outline-color')), preenchimento),
+    contraste(cor(declaracao(focoPainel, 'outline-color')), superficie),
+  ]
 }
 
 function canais(hex: string): [number, number, number] {
@@ -119,11 +151,29 @@ describe('contraste e limites dos tokens', () => {
       })
     }
     for (const fundo of paresDeFoco) {
+      // No mel da madrugada o foco é contextual; o alias global continua nos fundos escuros.
+      if (modo === 'madrugada' && fundo === 'destaque') continue
       it(`${modo}: foco contra ${fundo} tem contraste de pelo menos 3`, () => {
         expect(contraste(corDe('foco', tema), corDe(fundo, tema))).toBeGreaterThanOrEqual(3)
       })
     }
   }
+
+  it('madrugada: o foco contrasta pelo menos 3:1 com o mel adjacente no primário e no painel', () => {
+    for (const razao of contrasteDoFocoNoMel(siteCss, campoCss)) expect(razao).toBeGreaterThanOrEqual(3)
+  })
+
+  it('rejeita anel mel sobre mel, seletor sem foco, contorno invisível e anel fora do preenchimento', () => {
+    const siteLf = siteCss.replace(/\r\n/g, '\n')
+    const melSobreMel = siteLf.replace(`${focoPrimarioNoturno} {\n    outline-color: var(--color-cacau)`,
+      `${focoPrimarioNoturno} {\n    outline-color: var(--color-mel)`)
+    expect(melSobreMel).not.toBe(siteLf)
+    expect(contrasteDoFocoNoMel(melSobreMel, campoCss)[0]).toBeLessThan(3)
+    expect(() => contrasteDoFocoNoMel(siteCss.replace(`${focoPrimarioNoturno} {`, '.regra-ausente {'), campoCss)).toThrow()
+    expect(() => contrasteDoFocoNoMel(siteCss.replace(focoPrimarioNoturno, '.cm-botao-primario:hover'), campoCss)).toThrow()
+    expect(() => contrasteDoFocoNoMel(siteCss.replace('outline: 2px solid var(--cor-foco)', 'outline: none'), campoCss)).toThrow()
+    expect(() => contrasteDoFocoNoMel(siteCss.replace('outline-offset: -4px', 'outline-offset: 3px'), campoCss)).toThrow()
+  })
 
   it('o leitor de contraste não confunde alias ausente, papel igual à tinta ou foco igual ao fundo com um tema válido', () => {
     expect(() => corDe('texto', '--cor-texto: var(--color-inexistente);')).toThrow(/não resolve/)
@@ -370,9 +420,9 @@ describe('limites do CSS', () => {
     "'./styles/tokens.css'",
     "'./styles/harmonia.gerado.css'",
     "'./styles/tema.css'",
-    "'@fontsource-variable/literata/opsz.css'",
-    "'@fontsource-variable/literata/wght-italic.css'",
-    "'@fontsource-variable/outfit/wght.css'",
+    "'./styles/literata-latin-opsz.css'",
+    "'./styles/literata-latin-wght-italic.css'",
+    "'./styles/outfit-latin-wght.css'",
     "'./styles/site.css'",
     "'./styles/campo.css'",
     "'./styles/foco.css'",
@@ -395,25 +445,66 @@ describe('limites do CSS', () => {
       `${css}\n@import './extra.css'`,
       ...linhas.map((_, i) => linhas.filter((_, indice) => indice !== i).join('\n')),
       foraDeOrdem.join('\n'),
-      css.replace('literata/opsz.css', 'literata/latin-ext-opsz.css'),
+      css.replace('./styles/literata-latin-opsz.css', '@fontsource-variable/literata/opsz.css'),
+      css.replace('literata-latin-opsz.css', 'literata-latin-ext-opsz.css'),
     ]) {
       expect(importsDoCss(alterado)).not.toEqual(importsEsperados)
     }
   })
 
 
-  it('as três variantes carregam apenas o subconjunto Latin (contrato de entrega, independente da ordem)', () => {
+  const variantesLatin = [
+    ['literata-latin-opsz', 'literata', 'Literata', 'opsz', 'normal', '200 900'],
+    ['literata-latin-wght-italic', 'literata', 'Literata', 'wght', 'italic', '200 900'],
+    ['outfit-latin-wght', 'outfit', 'Outfit', 'wght', 'normal', '100 900'],
+  ] as const
+  const assetLatin = (pacote: string, eixo: string, estilo: string) =>
+    `@fontsource-variable/${pacote}/files/${pacote}-latin-${eixo}-${estilo}.woff2`
+
+  function fontesLatinExtras(arquivos: typeof fontes): string[] {
+    const aprovados = new Set<string>(variantesLatin.map(([folha]) => `styles/${folha}.css`))
+    return arquivos.filter(({ nome, texto }) => !aprovados.has(nome) &&
+      /@fontsource-variable\/(?:literata|outfit)\b/i.test(semComentariosCss(texto))).map(({ nome }) => nome)
+  }
+
+  function rostoLatin(css: string, asset: string): string {
+    const corpo = /^\s*@font-face\s*\{([^{}]+)\}\s*$/.exec(semComentariosCss(css))?.[1] ?? ''
+    if (declaracao(corpo, 'src') !== `url(${asset}) format('woff2-variations')` ||
+        [...corpo.matchAll(/\burl\s*\(/gi)].length !== 1) throw new Error(`origem Latin inválida: ${asset}`)
+    return corpo
+  }
+
+  it('as três variantes carregam apenas os WOFF2 Latin aprovados, sem importar outros subconjuntos nas páginas', () => {
     const resolver = createRequire(import.meta.url)
-    const foraDoLatin = importsDoCss(estiloGlobal)
-      .map((entrada) => /^['"](@fontsource-variable\/[^'"]+)['"]$/.exec(entrada)?.[1])
-      .filter((entrada): entrada is string => entrada !== undefined)
-      .flatMap((entrada) => {
-        const css = readFileSync(resolver.resolve(entrada), 'utf8')
-        const urls = [...css.matchAll(/url\(['"]?\.\/files\/([^)'"\s]+)['"]?\)/g)].map((m) => m[1])
-        expect(urls.length, entrada).toBeGreaterThan(0)
-        return urls.filter((url) => !/^(?:literata|outfit)-latin-(?:opsz|wght)-(?:normal|italic)\.woff2$/.test(url))
-      })
-    expect(foraDoLatin).toEqual([])
+    for (const [folha, pacote, familia, eixo, estilo, peso] of variantesLatin) {
+      const asset = assetLatin(pacote, eixo, estilo)
+      const corpo = rostoLatin(lerTexto(`styles/${folha}.css`), asset)
+      expect(declaracao(corpo, 'font-family')).toBe(`'${familia} Variable'`)
+      expect(declaracao(corpo, 'font-style')).toBe(estilo)
+      expect(declaracao(corpo, 'font-weight')).toBe(peso)
+      expect(declaracao(corpo, 'font-display')).toBe('swap')
+      expect(declaracao(corpo, 'unicode-range')).toMatch(/^U\+0000-00FF,/)
+      expect(existsSync(resolver.resolve(asset)), asset).toBe(true)
+    }
+    expect(fontesLatinExtras(fontes)).toEqual([])
+  })
+
+  it('rejeita wrapper vazio, arquivo errado ou extra, e importação ampla na rota ou em outro CSS', () => {
+    const src = lerTexto('styles/literata-latin-opsz.css')
+    const asset = assetLatin('literata', 'opsz', 'normal')
+    const casos = [
+      ['vazio', ''],
+      ['latin-ext', src.replace(asset, asset.replace('-latin-', '-latin-ext-'))],
+      ['cirílico', src.replace(asset, asset.replace('-latin-', '-cyrillic-'))],
+      ['eixo e estilo errados', src.replace(asset, asset.replace('opsz-normal', 'wght-italic'))],
+      ['face extra', `${src}\n${src}`],
+      ['URL extra', src.replace(`url(${asset})`, `url(${asset}), url(extra.woff2)`)],
+    ]
+    for (const [caso, css] of casos) expect(() => rostoLatin(css, asset), caso).toThrow(/origem Latin inválida/)
+    expect(fontesLatinExtras([
+      { nome: 'paginas/Inicio.tsx', texto: "import '@fontsource-variable/literata/opsz.css'" },
+      { nome: 'styles/extra.css', texto: "@import '@fontsource-variable/outfit/wght.css';" },
+    ])).toEqual(['paginas/Inicio.tsx', 'styles/extra.css'])
   })
 
   it('há de 3 a 6 desenhos de traço distintos; decoração fica muda e imagem informativa tem descrição', () => {

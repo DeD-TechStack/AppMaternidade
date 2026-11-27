@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto'
 import { existsSync, readdirSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
@@ -80,17 +81,63 @@ describe('RF14:RN-01 (2) sem manifesto e sem service worker em web/public e web/
   })
 })
 
-describe('RF14:RN-01 (4) a migração não chama HTTP nem e-mail', () => {
-  const MIGRACAO = join(pastaRaiz, 'supabase', 'migrations', '20261115090300_avisos_entre_cuidadores.sql')
+describe('RF14:RN-01 (4) o SQL entregue não chama HTTP nem e-mail', () => {
+  const MIGRACAO = 'supabase/migrations/20261115090300_avisos_entre_cuidadores.sql'
+  // Inventários de caminhos e conteúdo: migrações + SQL operacional de c3819c42,
+  // e seeds locais do recorte aprovado (inclui os dois ajustes sintéticos de f3a76fc7).
+  const SQL_BASE = '0db1710ac510c0dae5d376d7d8c0f0d89dfc60c77f7e94c0b75a33b20f8fb43f'
+  const SEEDS_LOCAIS = '054b3d9376dbe7eee6fe6eccff93c4d0916f7d8e945c4ba563e7542637ed9d72'
+  const SQL_RF14 = '3bbd599534df5345de2eae829d2034a49b34377123ff5ee95b84deec040697b3'
+  const ignorados = new Set(['supabase/tests', 'supabase/.temp', 'supabase/.branches'])
   const proibidos = (sql: string) =>
     [...sql.replace(/--.*$/gm, '').matchAll(/\bnet\.|\bhttp|\bpg_net\b|\bauth\.admin\b/gi)].map((m) => m[0])
+  const sha256 = (conteudo: string | Buffer) => createHash('sha256').update(conteudo).digest('hex')
+  const shaSql = (bytes: Buffer) => sha256(Buffer.from(bytes.toString('latin1').replaceAll('\r\n', '\n'), 'latin1'))
+  const seedLocal = (caminho: string) => caminho === 'supabase/seed.sql' || caminho.startsWith('supabase/seeds/')
 
-  it('a migração não tem net., http, pg_net nem auth.admin', () => {
-    expect(proibidos(readFileSync(MIGRACAO, 'utf8'))).toEqual([])
+  function caminhosSql(pasta: string): string[] {
+    return readdirSync(join(pastaRaiz, pasta), { withFileTypes: true }).flatMap((entrada) => {
+      const caminho = `${pasta}/${entrada.name}`
+      if (ignorados.has(caminho)) return []
+      if (entrada.isSymbolicLink()) throw new Error(`Link não permitido no inventário SQL: ${caminho}`)
+      if (entrada.isDirectory()) return caminhosSql(caminho)
+      return entrada.isFile() && /\.sql$/i.test(caminho) ? [caminho] : []
+    })
+  }
+
+  const lerSql = () => [...caminhosSql('scripts'), ...caminhosSql('supabase')].sort()
+    .map((caminho) => ({ caminho, bytes: readFileSync(join(pastaRaiz, caminho)) }))
+  const inventario = (sql: ReturnType<typeof lerSql>) => sha256(JSON.stringify(sql.map(({ caminho, bytes }) => [caminho, shaSql(bytes)])))
+
+  it('verifica net., http, pg_net e auth.admin nos bytes de todo SQL entregue, inclusive RF14 quando presente', () => {
+    const achados = lerSql().flatMap(({ caminho, bytes }) =>
+      proibidos(bytes.toString('utf8')).map((marcador) => ({ caminho, marcador })),
+    )
+    expect(achados).toEqual([])
   })
 
-  it('controle negativo: um SQL com pg_net é achado', () => {
-    expect(proibidos("select net.http_post('https://x.invalid');")).not.toEqual([])
+  it('exige o SQL base sem alterações; admite só a migração RF14 exata como entrada adicional', () => {
+    const sql = lerSql()
+    const base = sql.filter(({ caminho }) => caminho !== MIGRACAO && !seedLocal(caminho))
+    expect(inventario(base), 'caminhos e conteúdo do SQL de c3819c42').toBe(SQL_BASE)
+    expect(inventario(sql.filter(({ caminho }) => seedLocal(caminho))), 'seeds locais aprovados').toBe(SEEDS_LOCAIS)
+    // A ausência não dispensa a varredura nem a comparação acima. Se incluído, o arquivo real
+    // precisa ser o aprovado; um SQL vazio, adaptado ou de outro caminho não representa o RF14.
+    const rf14 = sql.find(({ caminho }) => caminho === MIGRACAO)
+    if (rf14) expect(shaSql(rf14.bytes), MIGRACAO).toBe(SQL_RF14)
+  })
+
+  it.each([
+    ["select net.http_post('https://x.invalid');", 'net.'],
+    ['create extension pg_net;', 'pg_net'],
+    ['select auth.admin.send_mail();', 'auth.admin'],
+    ["select HTTP_POST('https://x.invalid');", 'HTTP'],
+  ])('controle negativo: detecta %s', (sql, marcador) => {
+    expect(proibidos(sql)).toContain(marcador)
+  })
+
+  it('não confunde marcadores em comentário de linha com chamadas', () => {
+    expect(proibidos('-- pg_net, net.http_post, auth.admin\nselect 1;')).toEqual([])
   })
 })
 

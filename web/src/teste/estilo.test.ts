@@ -117,10 +117,21 @@ describe('tipo: duas famílias só (DESIGN.md 2 e 8)', () => {
     for (const arquivo of ts) expect(arquivo.limpo, arquivo.nome).not.toMatch(/fontFamily|font-\[|font-mono/)
   })
 
-  it('as fontes vêm do @fontsource-variable (Literata reta e itálica, Outfit), e as quatro antigas saíram', () => {
-    expect(indexCss).toContain("@import '@fontsource-variable/literata/opsz.css';")
-    expect(indexCss).toContain("@import '@fontsource-variable/literata/wght-italic.css';")
-    expect(indexCss).toContain("@import '@fontsource-variable/outfit/wght.css';")
+  it('Literata reta e itálica e Outfit vêm de @fontsource-variable Latin, com reservas locais, e as quatro antigas saíram', () => {
+    for (const [folha, familia, arquivo] of [
+      ['literata-latin-opsz', 'literata', 'literata-latin-opsz-normal'],
+      ['literata-latin-wght-italic', 'literata', 'literata-latin-wght-italic'],
+      ['outfit-latin-wght', 'outfit', 'outfit-latin-wght-normal'],
+    ]) {
+      const origem = `@fontsource-variable/${familia}`
+      expect(semComentariosCss(indexCss)).toContain(`@import './styles/${folha}.css';`)
+      expect(pacote.dependencies[origem]).toBeDefined()
+      expect(declaracoes(semComentariosCss(lerTexto(`styles/${folha}.css`))).filter((d) => d.propriedade === 'src')).toEqual([
+        { propriedade: 'src', valor: `url(${origem}/files/${arquivo}.woff2) format('woff2-variations')` },
+      ])
+    }
+    expect(tokensCss).toMatch(/--fonte-exibicao:\s*'Literata Variable',\s*serif\s*;/)
+    expect(tokensCss).toMatch(/--font-texto:\s*'Outfit Variable',\s*system-ui,\s*sans-serif\s*;/)
     const dependencias = Object.keys(pacote.dependencies).join(' ')
     for (const antiga of ['fraunces', 'instrument-sans', 'instrument-serif', 'zilla-slab']) {
       expect(dependencias, antiga).not.toContain(antiga)
