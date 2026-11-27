@@ -6,6 +6,7 @@ import {
   informarContaDaSessao,
   type DadosComunidade,
 } from '../../dados/comunidade.ts'
+import { obterReacoesDaDemonstracao } from '../../dados/comunidade.visitante.ts'
 import { useSessao } from '../conta/sessao.tsx'
 import { envolverOperacoes } from '../envolverOperacoes.ts'
 
@@ -26,4 +27,10 @@ export function useDadosComunidade(): DadosComunidade {
     () => envolverOperacoes(injetados ?? criarDadosComunidade(), OPERACOES_COMUNIDADE, () => void recarregarConta()),
     [injetados, recarregarConta],
   )
+}
+
+export function useReacoesDaDemonstracao() {
+  const injetados = useContext(ContextoDadosComunidade)
+  const { usuario } = useSessao()
+  return usuario ? undefined : obterReacoesDaDemonstracao(injetados ?? criarDadosComunidade())
 }

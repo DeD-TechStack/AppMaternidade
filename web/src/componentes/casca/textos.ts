@@ -42,7 +42,7 @@ export const ITENS_DO_CABECALHO: Record<Contexto, readonly Link[]> = {
     { rotulo: 'Como funciona', para: '/como-funciona' },
     { rotulo: 'Cuidado compartilhado', para: '/cuidado-compartilhado' },
     { rotulo: 'Desenvolvimento', para: '/desenvolvimento' },
-    { rotulo: 'Comunidade', para: '/regras-da-comunidade' },
+    { rotulo: 'Comunidade', para: '/comunidade' },
   ],
   // Cada área declara os próprios itens (`rotas/<area>.tsx`); a junção vem de `itensNavegacao`.
   logado: itensNavegacao.map((item) => ({ rotulo: item.rotulo, para: item.destino })),

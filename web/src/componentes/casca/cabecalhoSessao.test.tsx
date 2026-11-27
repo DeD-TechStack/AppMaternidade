@@ -4,6 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { ProvedorDadosConta } from '../conta/sessao.tsx'
 import { ProvedorDadosRotina } from '../rotina/dadosRotina.tsx'
 import { NOMES_DO_H1, TEXTOS_ERRO } from '../../conteudo/conta.ts'
+import { LISTA } from '../../conteudo/comunidade.ts'
 import { criarElenco } from '../../dados/comunidade.elenco.ts'
 import { criarDadosComunidadeMemoria, type EstadoComunidade } from '../../dados/comunidade.memoria.ts'
 import { ProvedorDadosComunidade } from '../../dados/comunidade.ts'
@@ -11,9 +12,15 @@ import { simularFalha } from '../../dados/conta.memoria.ts'
 import { criarDadosModeracaoMemoria } from '../../dados/moderacao.memoria.ts'
 import { ProvedorDadosModeracao } from '../../dados/moderacao.ts'
 import { criarRotasProntas } from '../../teste/rotasProntas.ts'
-import { PESSOAS } from '../../teste/renderizarComDados.tsx'
+import { criarClienteFalso, PESSOAS, renderizarComDados } from '../../teste/renderizarComDados.tsx'
 import { aguardarCarga, renderizarRota } from '../../teste/renderizarRota.tsx'
 import { criarMundoDeTeste } from '../../teste/rotina.fixture.ts'
+
+const obterCliente = vi.hoisted(() => vi.fn())
+vi.mock('../../dados/cliente.ts', async (original) => ({
+  ...(await original<typeof import('../../dados/cliente.ts')>()),
+  obterCliente,
+}))
 
 // QA-F1: o cabeçalho segue a sessão. Com sessão, "Conta" e "Sair" em toda página (no cabeçalho em 1440 e
 // no menu em 390) e nenhum "Entrar"/"Criar conta"; sem sessão, os dois links de visitante; enquanto a sessão
@@ -35,12 +42,17 @@ beforeEach(() => {
 
 afterEach(() => {
   fixarLargura(LARGURA_ORIGINAL)
+  vi.unstubAllEnvs()
 })
 
 // O site real com os quatro provedores (conta, rotina, Comunidade e moderação), todos em memória. A pessoa
 // entrada é sempre a Juliana (conta completa, com família): o membro não tem papel na plataforma, o
 // moderador tem o papel `moderador` (por isso as telas do app abrem para os dois no mesmo caminho).
 function renderizar(caminho: string, quem: Quem) {
+  // O visitante da Comunidade usa a fachada real da demonstração, sem injetar a identidade da Juliana.
+  if (caminho === '/app/comunidade' && quem === 'nenhuma') {
+    return renderizarComDados(caminho, { sessao: null })
+  }
   const mundo = criarMundoDeTeste({ sessao: quem === 'nenhuma' ? null : 'juliana' })
   const juliana = PESSOAS.juliana.id
   const elenco = criarElenco()
@@ -69,6 +81,10 @@ function renderizar(caminho: string, quem: Quem) {
 }
 
 async function montar(caminho: string, quem: Quem, largura: number) {
+  if (caminho === '/app/comunidade') {
+    vi.stubEnv('VITE_SUPABASE_URL', '')
+    vi.stubEnv('VITE_SUPABASE_ANON_KEY', '')
+  }
   fixarLargura(largura)
   const resultado = renderizar(caminho, quem)
   await aguardarCarga()
@@ -104,7 +120,7 @@ const lua = () => screen.queryByRole('button', { name: 'Modo madrugada' })
 // pública (abre para todos), da Rotina (a lua vive nela), do app (logada, sem lua) e da Moderação (logada, só
 // abre para quem tem papel). Quem não tem sessão é levado pela guarda a `/entrar?volta=<caminho>`; o membro na
 // Moderação fica no mesmo caminho, com o estado "sem permissão" (o painel não redireciona).
-type Tipo = 'publica' | 'rotina' | 'app' | 'moderacao'
+type Tipo = 'publica' | 'rotina' | 'app' | 'moderacao' | 'comunidade-demo'
 
 const ROTAS: Array<[string, Tipo]> = [
   ['/', 'publica'],
@@ -115,7 +131,7 @@ const ROTAS: Array<[string, Tipo]> = [
   ['/app/lixeira', 'rotina'],
   ['/app/notas', 'rotina'],
   ['/app/registro/novo', 'rotina'],
-  ['/app/comunidade', 'app'],
+  ['/app/comunidade', 'comunidade-demo'],
   ['/app/desenvolvimento', 'app'],
   ['/app/familia', 'app'],
   ['/app/conta', 'app'],
@@ -131,9 +147,9 @@ const CASOS: Array<[Quem, string, Tipo]> = PESSOAS_DA_MATRIZ.flatMap((quem) =>
 
 const TEMPO_DA_MATRIZ = 15_000
 
-/** Onde a pessoa termina: a guarda leva quem não tem sessão de uma página logada a /entrar. */
+/** Na matriz, a Comunidade usa a demonstração sem banco; as outras páginas logadas exigem sessão. */
 function destinoDe(quem: Quem, caminho: string, tipo: Tipo): string {
-  return tipo !== 'publica' && quem === 'nenhuma' ? '/entrar' : caminho
+  return tipo !== 'publica' && tipo !== 'comunidade-demo' && quem === 'nenhuma' ? '/entrar' : caminho
 }
 
 /** O que a matriz confere fora do cabeçalho: o destino e, na Moderação, o estado "sem permissão". */
@@ -141,7 +157,10 @@ async function conferirDestino(roteador: { state: { location: { pathname: string
   // A guarda navega depois da leitura da sessão: espera o destino antes de olhar o cabeçalho (ou abrir o menu).
   await waitFor(() => expect(roteador.state.location.pathname).toBe(destinoDe(quem, caminho, tipo)))
   await aguardarCarga()
-  if (tipo !== 'publica' && quem === 'nenhuma') {
+  if (tipo === 'comunidade-demo' && quem === 'nenhuma') {
+    expect(roteador.state.location.search).toBe('')
+    await screen.findByRole('heading', { level: 1, name: LISTA.manchete.join(' ') })
+  } else if (tipo !== 'publica' && quem === 'nenhuma') {
     expect(roteador.state.location.search).toBe(`?volta=${encodeURIComponent(caminho)}`)
   }
   if (tipo === 'moderacao' && quem === 'membro') {
@@ -155,6 +174,33 @@ async function conferirDestino(roteador: { state: { location: { pathname: string
 /** Onde o cabeçalho mostra a lua: só nas páginas da Rotina, e só para quem chega a elas. */
 const comLuaEsperada = (quem: Quem, tipo: Tipo) => tipo === 'rotina' && quem !== 'nenhuma'
 
+// Sem sessão, a demonstração permanece na casca do app, que não mostra controles de conta.
+// Nos demais casos sem sessão, o destino público (incluindo /entrar) mostra os links de visitante.
+const itensEsperados = (quem: Quem, tipo: Tipo) =>
+  quem !== 'nenhuma' ? COM_SESSAO : tipo === 'comunidade-demo' ? NENHUM : VISITANTE
+
+describe('Comunidade com banco configurado, sem sessão', () => {
+  it.each([1440, 390])('em %s, exige login com volta exata e mantém os itens de visitante', async (largura) => {
+    vi.stubEnv('VITE_SUPABASE_URL', 'https://exemplo.invalid')
+    vi.stubEnv('VITE_SUPABASE_ANON_KEY', 'chave-publica-de-teste')
+    obterCliente.mockReset()
+    obterCliente.mockResolvedValue(criarClienteFalso({ usuario: null }).cliente)
+    vi.stubGlobal('fetch', vi.fn(() => { throw new Error('Rede proibida neste teste') }))
+    fixarLargura(largura)
+    const { roteador } = renderizarComDados('/app/comunidade', { sessao: null })
+
+    await waitFor(() => expect(roteador.state.location.pathname).toBe('/entrar'))
+    expect(roteador.state.location.search).toBe(`?volta=${encodeURIComponent('/app/comunidade')}`)
+    await screen.findByRole('heading', { level: 1, name: NOMES_DO_H1.entrar })
+    await aguardarCarga()
+    if (largura === 390) fireEvent.click(screen.getByRole('button', { name: 'Menu' }))
+    expect(leitura(largura === 390 ? painel() : cabecalho())).toEqual(VISITANTE)
+    expect(lua()).toBeNull()
+    expect(obterCliente).not.toHaveBeenCalled()
+    expect(fetch).not.toHaveBeenCalled()
+  })
+})
+
 describe('o espaço da conta no cabeçalho, em 1440', () => {
   it.each(CASOS)(
     '%s em %s (%s): os itens seguem a sessão, o destino é o esperado e a lua só vive na Rotina',
@@ -162,7 +208,7 @@ describe('o espaço da conta no cabeçalho, em 1440', () => {
       const { roteador } = await montar(caminho, quem, 1440)
 
       await conferirDestino(roteador, quem, caminho, tipo)
-      expect(leitura(cabecalho())).toEqual(quem === 'nenhuma' ? VISITANTE : COM_SESSAO)
+      expect(leitura(cabecalho())).toEqual(itensEsperados(quem, tipo))
       expect(lua() !== null).toBe(comLuaEsperada(quem, tipo))
     },
     TEMPO_DA_MATRIZ,
@@ -213,7 +259,7 @@ describe('o espaço da conta no menu, em 390', () => {
       await conferirDestino(roteador, quem, caminho, tipo)
       fireEvent.click(screen.getByRole('button', { name: 'Menu' }))
 
-      expect(leitura(painel())).toEqual(quem === 'nenhuma' ? VISITANTE : COM_SESSAO)
+      expect(leitura(painel())).toEqual(itensEsperados(quem, tipo))
       expect(lua() !== null).toBe(comLuaEsperada(quem, tipo))
     },
     TEMPO_DA_MATRIZ,

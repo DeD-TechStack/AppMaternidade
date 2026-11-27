@@ -49,15 +49,22 @@ describe('rotasDasAreas: o registro por área', () => {
     ])
   })
 
-  it('as cinco áreas exportam as duas listas; só as rotas de conta, as logadas da rotina e as logadas da Comunidade têm rotas', () => {
-    for (const lista of [
-      rotasRotinaPublicas,
-      rotasDesenvolvimentoPublicas,
-      rotasComunidadePublicas,
-      rotasModeracaoPublicas,
-    ]) {
+  it('as cinco áreas exportam as duas listas; só as rotas de conta, as logadas da rotina e as da Comunidade têm rotas', () => {
+    for (const lista of [rotasRotinaPublicas, rotasDesenvolvimentoPublicas, rotasModeracaoPublicas]) {
       expect(lista).toEqual([])
     }
+    // COMUNIDADE-DEMO: as três telas de leitura da Comunidade ficam sob uma porta sem caminho (sem guarda
+    // na demonstração; com o banco, a porta é a guarda). As demais rotas continuam atrás da guarda.
+    expect(rotasComunidadePublicas).toHaveLength(2)
+    expect(rotasComunidadePublicas[0].path).toBe('comunidade')
+    expect(rotasComunidadePublicas[0].lazy).toBeTypeOf('function')
+    expect(rotasComunidadePublicas[1].path).toBeUndefined()
+    expect(rotasComunidadePublicas[1].lazy).toBeTypeOf('function')
+    expect(rotasComunidadePublicas[1].children!.map(caminhoDe)).toEqual([
+      'app/comunidade',
+      'app/comunidade/topico/:id',
+      'app/comunidade/:slug',
+    ])
     // MAT-39a: a página logada Desenvolvimento passou a ter rotas.
     expect(rotasDesenvolvimentoLogadas.map(caminhoDe)).toContain('app/desenvolvimento')
     expect(rotasModeracaoLogadas.map(caminhoDe)).toEqual([
@@ -68,13 +75,10 @@ describe('rotasDasAreas: o registro por área', () => {
       'moderacao/papeis',
     ])
     expect(rotasComunidadeLogadas.map(caminhoDe)).toEqual([
-      'app/comunidade',
       'app/comunidade/entrar',
       'app/comunidade/perfil',
       'app/comunidade/denuncias',
-      'app/comunidade/topico/:id',
       'app/comunidade/topico/:id/editar',
-      'app/comunidade/:slug',
       'app/comunidade/:slug/novo',
     ])
     expect(rotasContaPublicas.map(caminhoDe)).toEqual([

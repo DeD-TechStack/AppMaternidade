@@ -14,6 +14,7 @@ import {
   criarEstadoComunidade,
   type EstadoComunidade,
 } from './comunidade.memoria.ts'
+import { comVisitante, contaOuVisitante } from './comunidade.visitante.ts'
 
 // A área Comunidade (MAT-40a): os tipos que a tela vê, a interface de dados e a instância da página.
 // Datas e horas são texto ISO 8601 em UTC, como o banco devolve. Nenhuma operação lança exceção.
@@ -216,10 +217,8 @@ export function criarDadosComunidade(): DadosComunidade {
   if (!emMemoria) {
     const estado = criarEstadoComunidade(fixtureComunidadeDemonstracao)
     estadoEmMemoria = estado
-    emMemoria = criarDadosComunidadeMemoria(estado, () => {
-      if (contaDaPagina && !estado.contas.includes(contaDaPagina)) estado.contas.push(contaDaPagina)
-      return contaDaPagina
-    })
+    const memoria = criarDadosComunidadeMemoria(estado, () => contaOuVisitante(estado, contaDaPagina))
+    emMemoria = comVisitante(memoria, () => contaDaPagina)
   }
   return emMemoria
 }

@@ -20,6 +20,7 @@ import {
 import { EtiquetaDeEstado, Meta, Texto } from '../../componentes/comunidade/Itens.tsx'
 import { useCaixasDeProtecao } from '../../componentes/comunidade/Protecao.tsx'
 import { Quadro, TituloDaTela } from '../../componentes/comunidade/Quadro.tsx'
+import { ReacaoDaDemonstracao } from '../../componentes/comunidade/ReacaoDaDemonstracao.tsx'
 import {
   arrumarRespostas,
   lerRespostasComAutores,
@@ -216,6 +217,7 @@ function Conteudo({ topico, autor, situacao, bloqueados, relerTopicoEBloqueios, 
           />
           <EtiquetaDeEstado estado={topico.estado} motivo={topico.motivoModeracao} />
           <Texto>{topico.corpo}</Texto>
+          {podeResponder ? <ReacaoDaDemonstracao topicoId={topico.id} /> : null}
           <AcoesDoItem
             item={`topico-${topico.id}`}
             editar={
