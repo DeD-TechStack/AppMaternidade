@@ -304,8 +304,8 @@ function verificarWorkflow(texto) {
   const normal = texto.replace(/\r\n/g, '\n')
 
   exige(
-    /^ {2}push:\n {4}branches:\n {6}- main\n {4}paths:\n {6}- ["']web\/\*\*["']\n {6}- ["']web\/package\*\.json["']\n {6}- ["']\.github\/workflows\/pages\.yml["']\n/m.test(normal),
-    'push em main com a lista de paths antiga',
+    /^ {2}push:\n {4}branches:\n {6}- main\n {4}paths:\n {6}- ["']web\/\*\*["']\n {6}- ["']scripts\/montar-pages\.mjs["']\n {6}- ["']\.github\/workflows\/pages\.yml["']\n/m.test(normal),
+    'push em main com os paths do site, da montagem e do workflow',
   )
   exige(
     /^ {2}workflow_run:\n {4}workflows:\n {6}- CI\n {4}types:\n {6}- completed\n {4}branches:\n {6}- int\/refazer\n/m.test(normal),
@@ -321,7 +321,19 @@ function verificarWorkflow(texto) {
   const fimConstruir = normal.indexOf('\n  publicar:')
   const construir = inicio >= 0 && fimConstruir > inicio ? normal.slice(inicio, fimConstruir) : ''
   exige(construir !== '', 'jobs construir e publicar')
-  exige(/\n {4}if: [\s\S]*?conclusion == 'success'/.test(construir), "if do construir com conclusion == 'success'")
+  const condicao = /\n {4}if: >-\n((?: {6}\S[^\n]*\n)+)/.exec(construir)?.[1].trim().replace(/\s+/g, ' ')
+  exige(
+    condicao === [
+      "github.event_name == 'push' ||",
+      "github.event_name == 'workflow_dispatch' ||",
+      "(github.event_name == 'workflow_run' &&",
+      "github.event.workflow_run.conclusion == 'success' &&",
+      "github.event.workflow_run.head_branch == 'int/refazer' &&",
+      'github.event.workflow_run.head_repository.full_name == github.repository &&',
+      "github.event.workflow_run.event == 'push')",
+    ].join(' '),
+    'if do construir restringe workflow_run ao CI bem-sucedido de push no int/refazer deste repositório',
+  )
   exige(/^ {10}BASE_SITE: \$\{\{ steps\.pages\.outputs\.base_path \}\}$/m.test(construir), 'build da raiz com BASE_SITE do Pages')
   exige(/run: npm run check\n/.test(construir), 'npm run check na raiz')
   exige(
@@ -340,15 +352,22 @@ test('PREV-I-04 o workflow pages.yml tem o desenho combinado', () => {
 
 test('PREV-I-04 negativo: o verificador reprova um workflow alterado', () => {
   const texto = readFileSync(WORKFLOW, 'utf8')
+  const guarda = 'if do construir restringe workflow_run ao CI bem-sucedido de push no int/refazer deste repositório'
   const mutacoes = [
-    texto.replace('cancel-in-progress: false', 'cancel-in-progress: true'),
-    texto.replace("conclusion == 'success'", "conclusion == 'failure'"),
-    texto.replace('path: _site', 'path: web/dist'),
-    texto.replace('/previa', ''),
-    texto.replace('- int/refazer', '- outra'),
+    ['"scripts/montar-pages.mjs"', '"web/package*.json"', 'push em main com os paths do site, da montagem e do workflow'],
+    ['cancel-in-progress: false', 'cancel-in-progress: true', 'concurrency group pages com cancel-in-progress: false'],
+    ["conclusion == 'success'", "conclusion == 'failure'", guarda],
+    ["head_branch == 'int/refazer'", "head_branch == 'outra'", guarda],
+    ['head_repository.full_name == github.repository', "head_repository.full_name != github.repository", guarda],
+    ["workflow_run.event == 'push'", "workflow_run.event == 'pull_request'", guarda],
+    ['github.repository &&', 'github.repository ||', guarda],
+    ['path: _site', 'path: web/dist', 'upload com path: _site'],
+    ['outputs.base_path }}/previa', 'outputs.base_path }}', 'build da prévia com BASE_SITE .../previa'],
+    ['- int/refazer', '- outra', 'workflow_run do CI, completed, branch int/refazer'],
   ]
-  for (const mutada of mutacoes) {
-    assert.notEqual(mutada, texto)
-    assert.notDeepEqual(verificarWorkflow(mutada), [])
+  for (const [original, substituto, falha] of mutacoes) {
+    const mutada = texto.replace(original, substituto)
+    assert.notEqual(mutada, texto, original)
+    assert.deepEqual(verificarWorkflow(mutada), [falha], original)
   }
 })

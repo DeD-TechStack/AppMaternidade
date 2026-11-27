@@ -1,7 +1,7 @@
 name: Pages
 
 # O Pages serve um único artefato: a main na raiz e o int/refazer em previa/.
-# A prévia é publicada quando o CI do int/refazer termina com sucesso (workflow_run).
+# A prévia é publicada quando o CI de um push no int/refazer deste repositório termina com sucesso.
 # O workflow_run sempre roda o arquivo da branch padrão, então este arquivo precisa estar na main.
 on:
   push:
@@ -9,7 +9,7 @@ on:
       - main
     paths:
       - "web/**"
-      - "web/package*.json"
+      - "scripts/montar-pages.mjs"
       - ".github/workflows/pages.yml"
   workflow_run:
     workflows:
@@ -36,7 +36,9 @@ jobs:
       github.event_name == 'workflow_dispatch' ||
       (github.event_name == 'workflow_run' &&
       github.event.workflow_run.conclusion == 'success' &&
-      github.event.workflow_run.head_branch == 'int/refazer')
+      github.event.workflow_run.head_branch == 'int/refazer' &&
+      github.event.workflow_run.head_repository.full_name == github.repository &&
+      github.event.workflow_run.event == 'push')
     permissions:
       contents: read
       pages: read
@@ -76,13 +78,28 @@ jobs:
         working-directory: web
         run: npm run check
 
+      # O build incorpora a URL pública e a chave pública anon/publishable no cliente.
+      # Use os dois secrets do repositório; os secrets do ambiente github-pages só chegam ao job publicar.
+      # Nunca use uma chave privilegiada (service_role ou sb_secret).
+      # O par atual é compartilhado apenas quando raiz e prévia têm a mesma fronteira de confiança.
+      # Se a confiança for diferente, use bindings separados e explícitos; a prévia jamais deve
+      # recorrer à configuração de produção por padrão. Sem configuração compartilhável, deixe o par vazio.
       - name: Gerar o build com o subcaminho do Pages
         working-directory: web
         env:
           BASE_SITE: ${{ steps.pages.outputs.base_path }}
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
           VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
-        run: npm run build
+        run: |
+          node -e '
+            const temUrl = Boolean(process.env.VITE_SUPABASE_URL)
+            const temChave = Boolean(process.env.VITE_SUPABASE_ANON_KEY)
+            if (temUrl !== temChave) {
+              console.error("::error::Configuração incompleta do Supabase para a raiz. Defina as duas variáveis públicas ou nenhuma.")
+              process.exit(1)
+            }
+            if (!temUrl) console.log("::notice::Build da raiz em modo demonstração.")
+          ' && npm run build
 
       # Prévia: o int/refazer num segundo checkout. No workflow_run, o commit que o CI testou.
       - name: Baixar o código da prévia
@@ -110,7 +127,16 @@ jobs:
           BASE_SITE: ${{ steps.pages.outputs.base_path }}/previa
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
           VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
-        run: npm run build
+        run: |
+          node -e '
+            const temUrl = Boolean(process.env.VITE_SUPABASE_URL)
+            const temChave = Boolean(process.env.VITE_SUPABASE_ANON_KEY)
+            if (temUrl !== temChave) {
+              console.error("::error::Configuração incompleta do Supabase para a prévia. Defina as duas variáveis públicas ou nenhuma.")
+              process.exit(1)
+            }
+            if (!temUrl) console.log("::notice::Build da prévia em modo demonstração.")
+          ' && npm run build
 
       - name: Montar o artefato do Pages
         run: >-
