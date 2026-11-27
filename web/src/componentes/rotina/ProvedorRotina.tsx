@@ -27,7 +27,7 @@ import { useDadosRotina } from './dadosRotina.tsx'
 // O provedor da área da rotina: uma rota sem caminho, pai de todas as telas dela (R38-30). Lê o contexto
 // (famílias, papéis, membros e bebês) pela `DadosConta`, escolhe o bebê ativo (R38-03), guarda a
 // confirmação única (R38-07) e faz as seções relerem: ao abrir, depois de cada escrita, ao voltar à aba
-// e pelo `Atualizar` (R38-12). Desmontar (sair da área) joga tudo fora: nada vai para o navegador (D-5). A
+// e pelo `Atualizar` (R38-12). Sair da área ou trocar de conta descarta esse estado: nada vai para o navegador (D-5). A
 // madrugada acompanha a mesma rota (`handle.area` em `rotas/rotina.tsx`, `componentes/rotina/madrugada.ts`).
 
 const coletor = new Intl.Collator('pt-BR', { sensitivity: 'base' })
@@ -60,6 +60,12 @@ interface Carga {
 }
 
 export function ProvedorRotina() {
+  const { conta } = useSessao()
+  // A rota pode continuar montada ao trocar de conta. Toda a rotina recomeça com a conta resolvida.
+  return conta ? <RotinaDaConta key={conta.id} /> : null
+}
+
+function RotinaDaConta() {
   const base = useDadosRotina()
   const { recarregarConta } = useSessao()
   const { pathname } = useLocation()

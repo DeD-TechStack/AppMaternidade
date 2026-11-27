@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { fireEvent, screen } from '@testing-library/react'
+import { act, fireEvent, screen } from '@testing-library/react'
+import { SENHA_DEMONSTRACAO } from '../../dados/conta.demonstracao.ts'
 import { aguardarCarga, renderizarRotaPronta } from '../../teste/renderizarRota.tsx'
 import { PESSOAS } from '../../teste/renderizarComDados.tsx'
 import { ID_FAMILIA } from '../../teste/rotina.fixture.ts'
@@ -10,6 +11,73 @@ import { ID_FAMILIA } from '../../teste/rotina.fixture.ts'
 beforeEach(() => {
   vi.useFakeTimers()
   vi.setSystemTime(new Date('2026-11-05T10:00:00'))
+})
+
+describe('ROT-01: troca da conta autenticada na Rotina', () => {
+  it('troca de Juliana para Davi na mesma rota limpa a vista antiga antes de oferecer Começar', async () => {
+    const { conta, rotina, roteador } = await renderizarRotaPronta('/app/hoje')
+    const vistaDeJuliana = screen.getByRole('main')
+    expect(screen.getByRole('region', { name: 'Hoje até agora' })).toBeTruthy()
+    expect(screen.getByRole('button', { name: 'Iniciar sono de Heloísa' })).toBeTruthy()
+
+    const lerContexto = rotina.contexto
+    let liberarLeitura!: () => void
+    const espera = new Promise<void>((resolve) => {
+      liberarLeitura = resolve
+    })
+    const leitura = vi.spyOn(rotina, 'contexto').mockImplementation(async () => {
+      await espera
+      return lerContexto()
+    })
+
+    await act(async () => {
+      const entrada = await conta.entrar(PESSOAS.davi.email, SENHA_DEMONSTRACAO)
+      expect(entrada.ok && entrada.valor.id).toBe(PESSOAS.davi.id)
+    })
+
+    expect(roteador.state.location.pathname).toBe('/app/hoje')
+    expect.soft(vistaDeJuliana.isConnected, 'a vista de Juliana sai assim que a conta resolvida muda').toBe(false)
+    expect.soft(screen.getByRole('main').getAttribute('data-tela')).toBe('rotina-carregando')
+    expect.soft(screen.queryByRole('button', { name: 'Iniciar sono de Heloísa' })).toBeNull()
+    expect.soft(leitura).toHaveBeenCalledTimes(1)
+
+    // No código antigo, a releitura ao voltar à aba também expõe o falso aviso de acesso perdido.
+    fireEvent(document, new Event('visibilitychange'))
+    liberarLeitura()
+    await aguardarCarga()
+
+    expect(roteador.state.location.pathname).toBe('/app/hoje')
+    expect(screen.getByRole('heading', { level: 1 }).textContent).toBe('Hoje')
+    expect.soft(screen.queryByText('Você não tem mais acesso a este bebê.')).toBeNull()
+    expect.soft(screen.queryByText('Você ainda não faz parte de uma família.')).not.toBeNull()
+    expect.soft(screen.queryByRole('link', { name: 'Começar' })?.getAttribute('href')).toBe('/app/comecar')
+    expect(screen.queryByRole('button', { name: 'Iniciar sono de Heloísa' })).toBeNull()
+  })
+
+  it('sair e entrar explicitamente como Davi também oferece Começar ao voltar à Rotina', async () => {
+    const { conta, roteador } = await renderizarRotaPronta('/app/hoje')
+    expect(screen.getByRole('button', { name: 'Iniciar sono de Heloísa' })).toBeTruthy()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Sair' }))
+    await aguardarCarga()
+    expect(roteador.state.location.pathname).toBe('/entrar')
+    expect(screen.queryByRole('button', { name: 'Iniciar sono de Heloísa' })).toBeNull()
+
+    await act(async () => {
+      const entrada = await conta.entrar(PESSOAS.davi.email, SENHA_DEMONSTRACAO)
+      expect(entrada.ok && entrada.valor.id).toBe(PESSOAS.davi.id)
+    })
+    await aguardarCarga()
+    await act(async () => {
+      await roteador.navigate('/app/hoje')
+    })
+    await aguardarCarga()
+
+    expect(roteador.state.location.pathname).toBe('/app/hoje')
+    expect(screen.getByRole('link', { name: 'Começar' }).getAttribute('href')).toBe('/app/comecar')
+    expect(screen.queryByText('Você não tem mais acesso a este bebê.')).toBeNull()
+    expect(screen.queryByRole('button', { name: 'Iniciar sono de Heloísa' })).toBeNull()
+  })
 })
 
 const ROTAS: Array<[string, string]> = [
