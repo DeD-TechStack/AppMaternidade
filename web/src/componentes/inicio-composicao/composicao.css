@@ -1,0 +1,914 @@
+/* The Início, composition "a luz, pela hora" (branch fable/home-composicao), palette A only.
+   One floor line under everything: people, lamp, phone and headline stand on it. The walls and the floors are drawn here
+   from the tokens; the plates are cut-outs (public/composicao/a).
+   Night enters from the right (where Ícaro arrives), day from the left (the window side).
+   Sizes: no plate is shown above its master (natural width / (CSS width x 2) >= 0.9): M05 929 px, M06 500 px,
+   M04 667 px, door 697 px, street 929 px, captures 650 px.
+   Type and space come from the harmonia tokens (web/DESIGN.md): the space roles, and the sizes of the composition as
+   multiples of the fixed 15 px token (--texto-pequeno-tamanho; 36 px = 2.4, 24 = 1.6, 17 = 1.1333, 60 = 4, ...).
+   The headings are fluid with the container, as in the reference: clamp(min, N cqw, max) lives in a custom property
+   named --texto-co-*, and font-size and its leading (a ratio of the same size) read it. A px value from 1 to 32 is the
+   only literal. Container units appear only in custom properties and in percentages that resolve against the
+   full-width container. */
+
+.co {
+  /* The street's floor line (A05); only the composition uses it. */
+  --co-breu: #18110F;
+  --dia: var(--color-papel);
+  --noite: var(--color-noite);
+  --chao-dia: var(--color-areia);
+  --chao-noite: var(--color-texto-2);
+  --tinta-dia: var(--color-cacau);
+  --tinta-noite: var(--color-papel);
+  --margem: 1.25rem;
+  container-type: inline-size;
+  overflow-wrap: break-word;
+  overflow-x: clip;
+  color: var(--tinta-dia);
+}
+
+.co img {
+  display: block;
+  max-width: none;
+}
+
+:root:has(.co) .cm-rodape {
+  margin-top: 0;
+}
+
+/* ---- Type ------------------------------------------------------------------------------------------------------ */
+.co-h1,
+.co-h2 {
+  margin: 0;
+  font-family: var(--font-titulo);
+  font-weight: 600;
+  letter-spacing: -0.018em;
+  text-wrap: balance;
+}
+
+/* Stacked: 12.6 cqw between 44 and 60 px (49 px at 390), leading 1.02 of that size. */
+.co-h1 {
+  --texto-co-h1-tamanho: clamp(calc(var(--texto-pequeno-tamanho) * 2.9333), 12.6cqw, calc(var(--texto-pequeno-tamanho) * 4));
+  font-size: var(--texto-co-h1-tamanho);
+  line-height: calc(var(--texto-co-h1-tamanho) * 1.02);
+}
+
+.co-h1 span {
+  display: block;
+}
+
+.co-h2 {
+  --texto-co-h2-tamanho: clamp(calc(var(--texto-pequeno-tamanho) * 2.1333), 8.6cqw, calc(var(--texto-pequeno-tamanho) * 2.9333));
+  font-size: var(--texto-co-h2-tamanho);
+  line-height: calc(var(--texto-co-h2-tamanho) * 1.08);
+}
+
+.co-h2-hora {
+  --texto-co-hora-tamanho: clamp(calc(var(--texto-pequeno-tamanho) * 2.9333), 12.6cqw, calc(var(--texto-pequeno-tamanho) * 4));
+  font-size: var(--texto-co-hora-tamanho);
+  line-height: calc(var(--texto-co-hora-tamanho) * 1.02);
+  font-variant-numeric: lining-nums tabular-nums;
+}
+
+/* 18 px, leading 1.55 (the lede: 20 px, leading 1.45). */
+.co-lede,
+.co-p {
+  --texto-co-p-tamanho: calc(var(--texto-pequeno-tamanho) * 1.2);
+  max-width: 36rem;
+  margin: var(--espaco-pilha) 0 0;
+  font-family: var(--font-texto);
+  font-size: var(--texto-co-p-tamanho);
+  line-height: calc(var(--texto-co-p-tamanho) * 1.55);
+  text-wrap: pretty;
+}
+
+.co-lede {
+  --texto-co-p-tamanho: calc(var(--texto-pequeno-tamanho) * 1.3333);
+  line-height: calc(var(--texto-co-p-tamanho) * 1.45);
+}
+
+.co-texto {
+  position: relative;
+  z-index: 2;
+  padding-inline: var(--margem);
+}
+
+.co-acoes {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--espaco-junto) var(--espaco-grupo);
+  margin-top: var(--espaco-grupo);
+}
+
+/* The mel pill on the day wall: the lamp colour, with the drawing's dark line so its edge reads on papel (1.4.11). */
+.co-p1 a[data-botao-mel] {
+  box-shadow: inset 0 0 0 1.5px var(--color-cacau);
+}
+
+/* The hour voice: the hour alone, heavy and tabular; what was noted and by whom beside it. */
+.co-leg {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  font-family: var(--font-titulo);
+}
+
+.co-leg-hora {
+  --texto-co-leg-tamanho: calc(var(--texto-pequeno-tamanho) * 2.4);
+  font-size: var(--texto-co-leg-tamanho);
+  font-weight: 800;
+  line-height: var(--texto-co-leg-tamanho);
+  letter-spacing: -0.01em;
+  font-variant-numeric: lining-nums tabular-nums;
+}
+
+.co-leg-resto {
+  margin-top: 4.8px;
+  font-size: var(--texto-corpo-tamanho);
+  font-weight: 600;
+  line-height: calc(var(--texto-corpo-tamanho) * 1.35);
+}
+
+.co-fantasma,
+.co-regua {
+  display: none;
+}
+
+/* ---- Plates, phones, slots ------------------------------------------------------------------------------------- */
+.co-placa {
+  position: relative;
+  z-index: 1;
+  margin: 0;
+}
+
+.co-placa picture {
+  display: block;
+}
+
+.co-placa img {
+  width: 100%;
+  height: auto;
+}
+
+.co-placa picture + picture,
+.co-placa > .co-luz {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.co-placa .co-luz {
+  width: 100%;
+  height: 100%;
+}
+
+.co-fone {
+  --bisel: var(--color-cacau);
+  --bisel-fio: transparent;
+  position: relative;
+  z-index: 2;
+  box-sizing: border-box;
+  width: var(--fone-w);
+  margin: 0;
+  padding: calc(var(--fone-w) * 0.028);
+  border-radius: calc(var(--fone-w) * 0.15);
+  background: var(--bisel);
+  box-shadow: 0 0 0 1.5px var(--bisel-fio);
+}
+
+.co-fone img {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 390 / 844;
+  border-radius: calc(var(--fone-w) * 0.124);
+  object-fit: cover;
+  object-position: top;
+}
+
+.co-p2-fone img {
+  object-position: bottom;
+}
+
+.co-p2 .co-fone,
+.co-p3 .co-fone {
+  --bisel: var(--color-noite-cartao);
+  --bisel-fio: color-mix(in srgb, var(--color-papel) 38%, transparent);
+}
+
+.co-vaga {
+  display: flex;
+  align-items: flex-end;
+  box-sizing: border-box;
+  margin: 0;
+  padding: 12px 14px;
+  border: 1.5px dashed color-mix(in srgb, currentColor 55%, transparent);
+  border-radius: 14px;
+  font-family: var(--font-texto);
+  font-size: var(--texto-pequeno-tamanho);
+  font-weight: 500;
+  line-height: calc(var(--texto-pequeno-tamanho) * 1.3);
+}
+
+/* ---- Scene 1, 16:00: the day room ------------------------------------------------------------------------------ */
+.co-painel {
+  position: relative;
+}
+
+.co-p1 {
+  padding-top: 32px;
+  background: var(--dia);
+}
+
+.co-p1-cena {
+  --w: min(100cqw, 40.625rem);
+  --x: calc((100cqw - var(--w)) / 2);
+  --costura: calc(var(--x) + var(--w) * 0.3641);
+  position: relative;
+  margin-top: calc(var(--espaco-grupo) * 1.5);
+  background: linear-gradient(to right, transparent 0 var(--costura), var(--noite) var(--costura));
+}
+
+.co-p1-cena::before {
+  content: '';
+  position: absolute;
+  inset: calc(var(--w) * 0.7846 * 0.8007) 0 0;
+  background: linear-gradient(to right, var(--chao-dia) 0 var(--costura), var(--chao-noite) var(--costura));
+}
+
+.co-m05 {
+  width: var(--w);
+  margin-inline: auto;
+}
+
+.co-p1-leg {
+  position: relative;
+  z-index: 1;
+  margin-left: var(--costura);
+  padding: 4px var(--margem) 24px 16px;
+  color: var(--tinta-noite);
+}
+
+/* ---- Scene 2, 17:30: the night room ---------------------------------------------------------------------------- */
+.co-fita {
+  background: var(--chao-noite);
+}
+
+.co-p2,
+.co-p3 {
+  background: var(--noite);
+  color: var(--tinta-noite);
+}
+
+.co-p2 {
+  padding-top: calc(var(--espaco-secao) * 1.1667);
+}
+
+/* Stacked: the Histórico first (what he reads), then Ícaro under the lamp. The plate's empty wall (its top edge,
+   above the window) slides under the phone's foot, so the two share one wall without the phone covering him. */
+.co-p2-cena {
+  --w6: min(76cqw, 28rem);
+  --h6: calc(var(--w6) * 1470 / 900);
+  --fone-w: min(64cqw, 21rem, (100svh - var(--cm-cabecalho)) / 2.1);
+  position: relative;
+  margin-top: 32px;
+}
+
+.co-p2-fone {
+  margin-left: var(--margem);
+}
+
+/* The right margin is a percentage of the full-width scene (4% of 100cqw). */
+.co-m06 {
+  width: var(--w6);
+  margin: calc(var(--h6) * -0.05) -4% 0 auto;
+}
+
+/* The floor under the plate, edge to edge (the plate's own floor is its last 13.95%). */
+.co-m06::before {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  inset: auto -100cqw 0;
+  height: 13.95%;
+  background: var(--chao-noite);
+}
+
+.co-p2-leg {
+  position: relative;
+  z-index: 1;
+  padding: 4px var(--margem) 24px;
+  background: var(--chao-noite);
+}
+
+/* ---- Scene 3, 20:30: the hour as type -------------------------------------------------------------------------- */
+.co-p3 {
+  display: flow-root;
+  overflow: clip;
+  padding-top: calc(var(--espaco-midia) * 2);
+}
+
+.co-p3-cena {
+  --fone-w: min(78cqw, 22.5rem);
+  margin-top: calc(var(--espaco-midia) * 1.25);
+}
+
+.co-p3-vaga {
+  min-height: 5.5rem;
+  margin: 0 var(--margem) 32px;
+}
+
+.co-p3-fone {
+  margin: 0 auto calc(var(--fone-w) * -0.72);
+}
+
+/* ---- Scenes 4 to 7: the bands ---------------------------------------------------------------------------------- */
+.co-faixa {
+  position: relative;
+  background: var(--antes);
+}
+
+.co-dentro {
+  display: flow-root;
+  position: relative;
+  overflow: clip;
+  padding-top: var(--espaco-secao-ampla);
+  background: var(--fundo);
+  color: var(--tinta, var(--tinta-dia));
+}
+
+.co-so {
+  --fundo: var(--dia);
+  --antes: var(--noite);
+}
+
+.co-prova {
+  --fundo: var(--chao-dia);
+  --antes: var(--dia);
+}
+
+.co-perg {
+  --fundo: var(--noite);
+  --antes: var(--chao-dia);
+  --tinta: var(--tinta-noite);
+}
+
+.co-fecho {
+  --fundo: var(--chao-noite);
+  --antes: var(--noite);
+  --tinta: var(--tinta-noite);
+}
+
+/* 4: the lone carer. The band line cuts the mat, and band 5 goes on in the mat's colour. */
+.co-so-fone {
+  --fone-w: min(64cqw, 20rem);
+  margin: calc(var(--espaco-midia) * 1.25) auto 0;
+}
+
+.co-m04 {
+  --w4: min(100cqw, 41.6875rem);
+  width: var(--w4);
+  margin: var(--espaco-grupo) 0 calc(var(--w4) * 0.725 * -0.07);
+}
+
+/* 5: the statement and the four facts. */
+.co-fatos {
+  max-width: 38rem;
+  margin: 32px 0 0;
+  padding: 0;
+  border-bottom: 1px solid color-mix(in srgb, var(--color-cacau) 28%, transparent);
+  list-style: none;
+  font-family: var(--font-texto);
+  --texto-co-fatos-tamanho: calc(var(--texto-pequeno-tamanho) * 1.1333);
+  font-size: var(--texto-co-fatos-tamanho);
+  line-height: calc(var(--texto-co-fatos-tamanho) * 1.5);
+}
+
+.co-fatos li {
+  padding: var(--espaco-pilha) 0;
+  border-top: 1px solid color-mix(in srgb, var(--color-cacau) 28%, transparent);
+}
+
+.co-prova-fone {
+  --fone-w: min(78cqw, 23.4375rem);
+  margin: var(--espaco-secao) auto calc(var(--fone-w) * -0.6);
+}
+
+/* 6: the questions, open, and the door. */
+.co-perg .co-fone,
+.co-fecho .co-fone {
+  --bisel: var(--color-noite-cartao);
+}
+
+.co-perguntas {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 32px var(--espaco-bloco);
+  margin: calc(var(--espaco-grupo) * 1.5) 0 0;
+}
+
+.co-perguntas dt {
+  --texto-co-dt-tamanho: calc(var(--texto-pequeno-tamanho) * 1.6);
+  font-family: var(--font-titulo);
+  font-size: var(--texto-co-dt-tamanho);
+  font-weight: 600;
+  line-height: calc(var(--texto-co-dt-tamanho) * 1.2);
+  color: var(--color-mel);
+}
+
+.co-perguntas dd {
+  --texto-co-dd-tamanho: calc(var(--texto-pequeno-tamanho) * 1.1333);
+  max-width: 30rem;
+  margin: var(--espaco-junto) 0 0;
+  font-family: var(--font-texto);
+  font-size: var(--texto-co-dd-tamanho);
+  line-height: calc(var(--texto-co-dd-tamanho) * 1.55);
+}
+
+.co-porta {
+  --wp: min(100cqw, 43.5625rem);
+  width: var(--wp);
+  margin-top: calc(var(--espaco-midia) * 1.5);
+}
+
+.co-porta-vaga {
+  position: absolute;
+  top: 6%;
+  left: var(--margem);
+  max-width: 13rem;
+}
+
+/* 7: the close, the street at dusk on the footer line. */
+.co-fecho-texto {
+  padding-bottom: var(--espaco-secao);
+}
+
+.co-rua {
+  --wr: min(200cqw, 52rem);
+  width: var(--wr);
+}
+
+/* ---- The room strip: scenes 1 to 3 side by side (wide, landscape) ---------------------------------------------- */
+@media (min-width: 69em) and (min-aspect-ratio: 1/1) {
+  .co {
+    --margem: max(2rem, 6cqw);
+  }
+
+  /* Wide: the reference clamps, the same custom properties (size and leading follow). */
+  .co-h1 {
+    --texto-co-h1-tamanho: clamp(calc(var(--texto-pequeno-tamanho) * 3.7333), 5.4cqw, calc(var(--texto-pequeno-tamanho) * 5.8667));
+  }
+
+  .co-h2 {
+    --texto-co-h2-tamanho: clamp(calc(var(--texto-pequeno-tamanho) * 2.6667), 3.6cqw, calc(var(--texto-pequeno-tamanho) * 4));
+  }
+
+  .co-h2-hora {
+    --texto-co-hora-tamanho: clamp(calc(var(--texto-pequeno-tamanho) * 4), 6.1cqw, calc(var(--texto-pequeno-tamanho) * 6.6667));
+  }
+
+  .co-lede {
+    --texto-co-p-tamanho: calc(var(--texto-pequeno-tamanho) * 1.4);
+  }
+
+  .co-p {
+    --texto-co-p-tamanho: calc(var(--texto-pequeno-tamanho) * 1.2667);
+  }
+
+  .co-painel {
+    --palco: max(100svh - var(--cm-cabecalho), 38rem);
+    --w5: min(64cqw, 58.0625rem, (var(--palco) - 5rem) / 1.44 / 0.5628);
+    --h5: calc(var(--w5) * 0.5628);
+    --chao: calc(var(--h5) * 0.2009);
+    --x5: calc(100cqw - var(--w5));
+    --costura: calc(var(--x5) + var(--w5) * 0.5437);
+    overflow: clip;
+    height: var(--palco);
+    padding: 0;
+  }
+
+  /* The floor: one line, at the same height in the three scenes. */
+  .co-painel::after {
+    content: '';
+    position: absolute;
+    inset: auto 0 0;
+    height: var(--chao);
+    background: var(--chao-noite);
+  }
+
+  .co-p1 {
+    background: linear-gradient(to right, var(--dia) 0 var(--costura), var(--noite) var(--costura));
+  }
+
+  .co-p1::after {
+    background: linear-gradient(to right, var(--chao-dia) 0 var(--costura), var(--chao-noite) var(--costura));
+  }
+
+  /* The hour, written on the wall in the wall's own tone: 2.4 x exibicao (194 px at 1440). */
+  .co-fantasma {
+    display: block;
+    position: absolute;
+    top: 0.06em;
+    left: calc(var(--margem) - 0.05em);
+    font-family: var(--font-titulo);
+    font-size: calc(var(--texto-exibicao-tamanho) * 2.4);
+    font-weight: 800;
+    line-height: calc(var(--texto-exibicao-tamanho) * 2.4);
+    letter-spacing: -0.03em;
+    font-variant-numeric: lining-nums tabular-nums;
+    color: color-mix(in srgb, var(--chao-dia) 52%, var(--dia));
+    user-select: none;
+  }
+
+  .co-p2 .co-fantasma {
+    color: color-mix(in srgb, var(--color-noite-cartao) 78%, var(--noite));
+  }
+
+  .co-p1-cena,
+  .co-p2-cena,
+  .co-p3-cena {
+    position: static;
+    margin: 0;
+    padding: 0;
+    background: none;
+  }
+
+  .co-p1-cena::before,
+  .co-p2-cena::before {
+    content: none;
+  }
+
+  .co-painel .co-texto {
+    position: absolute;
+    bottom: calc(var(--chao) + 2.25rem);
+    left: var(--margem);
+    padding: 0;
+  }
+
+  .co-painel .co-leg {
+    position: absolute;
+    bottom: 0;
+    left: var(--margem);
+    z-index: 2;
+    flex-direction: row;
+    align-items: center;
+    gap: 14px;
+    height: var(--chao);
+    margin: 0;
+    padding: 0;
+  }
+
+  .co-painel .co-leg-resto {
+    margin-top: 5.6px;
+  }
+
+  .co-p1-leg {
+    color: var(--tinta-dia);
+  }
+
+  .co-p1-texto {
+    width: calc(var(--x5) - var(--margem) - 1rem);
+  }
+
+  .co-m05 {
+    position: absolute;
+    bottom: 0;
+    left: var(--x5);
+    width: var(--w5);
+    margin: 0;
+  }
+
+  .co-p2-texto {
+    width: min(30cqw, 27rem);
+  }
+
+  .co-m06 {
+    position: absolute;
+    bottom: 0;
+    left: 41cqw;
+    width: calc(var(--h5) * 1.44 * 900 / 1470);
+    margin: 0;
+  }
+
+  .co-m06::before {
+    content: none;
+  }
+
+  .co-p2-leg {
+    background: none;
+  }
+
+  .co-p2-fone,
+  .co-p3-fone {
+    --fone-w: min(25cqw, 22.5rem, (var(--palco-util, var(--palco)) - var(--chao) - 4.75rem) / 2.1);
+    position: absolute;
+    top: auto;
+    right: var(--margem);
+    bottom: var(--chao);
+    left: auto;
+    margin: 0;
+  }
+
+  .co-p3-texto {
+    width: min(38cqw, 36rem);
+  }
+
+  .co-p3-vaga {
+    position: absolute;
+    bottom: var(--chao);
+    left: 46cqw;
+    width: 20cqw;
+    height: 34%;
+    min-height: 0;
+    margin: 0;
+  }
+
+  /* 4 */
+  .co-so .co-dentro {
+    --w4: min(46cqw, 41.6875rem);
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    column-gap: var(--espaco-bloco);
+    align-items: end;
+    min-height: 40rem;
+    padding: var(--espaco-midia) var(--margem) 0 calc(var(--w4) - 1%);
+  }
+
+  .co-so-texto {
+    align-self: center;
+    padding: 0 0 var(--espaco-secao);
+  }
+
+  .co-so-fone {
+    --fone-w: min(18cqw, 18rem);
+    margin: 0;
+  }
+
+  .co-m04 {
+    position: absolute;
+    bottom: calc(var(--w4) * 0.725 * -0.07);
+    left: -4cqw;
+    margin: 0;
+  }
+
+  /* 5 */
+  .co-prova .co-dentro {
+    display: grid;
+    grid-template-columns: auto minmax(0, 40rem);
+    column-gap: calc(var(--espaco-midia) * 1.8);
+    align-items: start;
+    justify-content: center;
+    padding: calc(var(--espaco-secao) * 1.3) var(--margem) 0;
+  }
+
+  .co-prova-texto {
+    grid-area: 1 / 2;
+    padding: 0 0 calc(var(--espaco-secao) * 1.2);
+  }
+
+  .co-prova-fone {
+    --fone-w: min(26cqw, 23.4375rem);
+    grid-area: 1 / 1;
+    margin: 0 0 calc(var(--fone-w) * -0.45);
+  }
+
+  /* 6 */
+  .co-perg .co-dentro {
+    --wp: min(40cqw, 43.5625rem);
+    min-height: calc(var(--wp) * 1070 / 1254 + 5rem);
+    padding: calc(var(--espaco-secao) * 1.3) var(--margem) calc(var(--espaco-secao) * 1.3) calc(var(--wp) + 5%);
+  }
+
+  .co-perg-texto {
+    padding: 0;
+  }
+
+  .co-perguntas {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .co-porta {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    margin: 0;
+  }
+
+  /* 7 */
+  .co-fecho .co-dentro {
+    min-height: 34rem;
+    padding: calc(var(--espaco-secao) * 1.3) var(--margem) 0;
+  }
+
+  .co-fecho-texto {
+    max-width: 44cqw;
+    padding: 0 0 calc(var(--espaco-secao) * 1.4);
+  }
+
+  .co-rua {
+    --wr: min(64cqw, 58.0625rem);
+    position: absolute;
+    right: 0;
+    bottom: 0;
+  }
+
+  .co-fecho .co-dentro::after {
+    content: '';
+    position: absolute;
+    inset: auto 0 0;
+    height: calc(min(64cqw, 58.0625rem) * 642 / 1672 * 0.03);
+    background: var(--co-breu);
+  }
+}
+
+/* ---- Motion: only with scroll timelines and no reduced-motion preference. Without them every scene is still. ---- */
+@keyframes co-varre-noite {
+  from {
+    clip-path: inset(0 0 0 100%);
+  }
+
+  to {
+    clip-path: inset(0 0 0 0);
+  }
+}
+
+@keyframes co-varre-dia {
+  from {
+    clip-path: inset(0 100% 0 0);
+  }
+
+  to {
+    clip-path: inset(0 0 0 0);
+  }
+}
+
+@keyframes co-acende {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes co-rolar {
+  from {
+    object-position: top;
+  }
+}
+
+@keyframes co-andar {
+  0%,
+  7% {
+    transform: translateX(0);
+  }
+
+  46%,
+  56% {
+    transform: translateX(-100cqw);
+  }
+
+  94%,
+  100% {
+    transform: translateX(-200cqw);
+  }
+}
+
+@keyframes co-encher {
+  from {
+    transform: scaleX(0);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  @supports ((animation-timeline: view()) and (animation-range: entry)) {
+    /* The wall that slides with the hour: night comes in from the right, day from the left. */
+    .co-p2,
+    .co-perg .co-dentro {
+      animation: co-varre-noite linear both;
+      animation-timeline: view();
+      animation-range: entry 0% entry 50%;
+    }
+
+    .co-so .co-dentro {
+      animation: co-varre-dia linear both;
+      animation-timeline: view();
+      animation-range: entry 0% entry 50%;
+    }
+
+    /* The lights come on with the scroll: the lamp of 17:30 and the windows of the street. */
+    .co-m06 .co-luz,
+    .co-rua .co-luz {
+      animation: co-acende linear both;
+      animation-timeline: view();
+      animation-range: entry 45% cover 42%;
+    }
+
+    .co-rua .co-luz {
+      animation-range: entry 70% entry 130%;
+    }
+
+    /* The Histórico rolls from the morning down to the rows of 16:00 and 17:30. */
+    .co-p2-fone img {
+      animation: co-rolar linear both;
+      animation-timeline: view();
+      animation-range: entry 70% cover 55%;
+    }
+  }
+}
+
+@media (min-width: 69em) and (min-aspect-ratio: 1/1) and (min-height: 40em) and (prefers-reduced-motion: no-preference) {
+  @supports ((animation-timeline: view()) and (animation-range: entry)) {
+    /* The pinned strip: the page scrolls down, the camera walks from the day room into the night room. */
+    .co-trilho {
+      height: calc(100svh - var(--cm-cabecalho) + 230cqw);
+      view-timeline: --co-fita block;
+      view-timeline-inset: var(--cm-cabecalho) 0px;
+    }
+
+    .co-palco {
+      --palco-util: calc(100svh - var(--cm-cabecalho));
+      position: sticky;
+      top: var(--cm-cabecalho);
+      overflow: clip;
+      height: var(--palco-util);
+    }
+
+    .co-fita {
+      display: flex;
+      width: 300cqw;
+      height: 100%;
+      animation: co-andar linear both;
+      animation-timeline: --co-fita;
+      animation-range: contain 0% contain 100%;
+      will-change: transform;
+    }
+
+    .co-painel {
+      flex: 0 0 100cqw;
+      overflow: visible;
+      height: 100%;
+    }
+
+    .co-p2 {
+      animation: none;
+    }
+
+    .co-m06 .co-luz {
+      animation-timeline: --co-fita;
+      animation-range: contain 30% contain 47%;
+    }
+
+    .co-p2-fone img {
+      animation-timeline: --co-fita;
+      animation-range: contain 30% contain 47%;
+    }
+
+    /* The hour rail: where the camera is. */
+    .co-regua {
+      display: flex;
+      position: absolute;
+      top: 1.125rem;
+      right: var(--margem);
+      z-index: 5;
+      gap: var(--espaco-bloco);
+      margin: 0;
+      padding: 7.2px 16px 11.2px;
+      border-radius: var(--radius-pilula);
+      background: var(--color-cacau);
+      box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-papel) 30%, transparent);
+      color: var(--color-papel);
+      list-style: none;
+      font-family: var(--font-titulo);
+      font-size: var(--texto-pequeno-tamanho);
+      font-weight: 700;
+      line-height: calc(var(--texto-pequeno-tamanho) * 1.2);
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+
+    .co-regua::after {
+      content: '';
+      position: absolute;
+      right: 1rem;
+      bottom: 0.4rem;
+      left: 1rem;
+      height: 2px;
+      background: var(--color-mel);
+      transform-origin: left center;
+      animation: co-encher linear both;
+      animation-timeline: --co-fita;
+      animation-range: contain 0% contain 100%;
+    }
+  }
+}
+
+/* ---- The header pill: quiet while the hero's pill is in view (one filled "Criar conta" in the fold) ------------- */
+html[data-inicio-heroi='visivel'] header[data-cabecalho]:not([data-tom='noite']) a[data-cabecalho-pilula] {
+  border-color: var(--color-cacau);
+  background-color: transparent;
+  color: var(--color-cacau);
+}
+
+@media (hover: hover) {
+  html[data-inicio-heroi='visivel'] header[data-cabecalho]:not([data-tom='noite']) a[data-cabecalho-pilula]:hover {
+    background-color: var(--color-cacau);
+    color: var(--color-papel);
+  }
+}

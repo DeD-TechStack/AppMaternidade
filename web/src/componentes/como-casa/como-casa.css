@@ -1,0 +1,518 @@
+/* /como-funciona: "um dia, pela hora" (03:00 -> 15:00 -> 18:00 -> amanhã).
+   Usa os tokens e peças da composição do Início (`.co`, `Legenda`, `Telefone`, `co-rolar`, `co-acende`,
+   `co-varre-noite`, `co-varre-dia`). Sem sombra, sem gradiente, sem cor crua; movimento apenas em 1440 com
+   `@supports ((animation-timeline: view()) and (animation-range: entry))` e `prefers-reduced-motion: no-preference`. */
+
+.cf-pagina {
+  --cf-chao: 5.5rem;
+  --cf-w1: 100cqw;
+  --cf-w6: min(77cqw, 18.75rem);
+  --cf-m01-sobre: calc(var(--cf-w1) * 941 / 1672 * -0.14);
+  --cf-m06-sobre: calc(var(--cf-w6) * 1470 / 900 * -0.1395);
+}
+
+.cf-faixa {
+  position: relative;
+  overflow: clip;
+}
+
+#cf-historico,
+#cf-comecar {
+  hyphens: auto;
+  overflow-wrap: anywhere;
+}
+
+/* ---- Faixa 1, 03:00: noite, família em pé na linha de chão ---- */
+.cf-heroi {
+  --foco-faixa: var(--color-papel);
+
+  display: flex;
+  flex-direction: column;
+  padding-top: var(--espaco-grupo);
+  background-color: var(--noite);
+  color: var(--tinta-noite);
+}
+
+/* Janela baixa: o texto e a ação vêm antes da cena, com espaço para quebrar linhas. */
+@media (max-height: 30em) {
+  .cf-heroi {
+    padding-top: var(--espaco-junto);
+  }
+
+  .cf-heroi-texto .co-h1 {
+    font-size: var(--texto-titulo-1-tamanho);
+    line-height: var(--texto-titulo-1-entrelinha);
+  }
+
+  .cf-heroi-texto .co-lede {
+    margin-top: var(--espaco-junto);
+    font-size: var(--texto-corpo-tamanho);
+    line-height: var(--texto-corpo-entrelinha);
+  }
+
+  .cf-heroi-texto .co-acoes {
+    margin-top: calc(var(--espaco-junto) * 0.75);
+  }
+}
+
+.cf-heroi :focus-visible {
+  outline-color: var(--foco-faixa);
+}
+
+.cf-fantasma-noite {
+  color: color-mix(in srgb, var(--color-noite-cartao) 78%, var(--noite));
+}
+
+.cf-heroi-texto {
+  position: relative;
+  z-index: 3;
+}
+
+.cf-m01 {
+  z-index: 2;
+  width: var(--cf-w1);
+  margin: var(--espaco-grupo) 0 var(--cf-m01-sobre);
+}
+
+.cf-heroi-chao {
+  position: relative;
+  z-index: 1;
+  padding: var(--espaco-bloco) var(--margem) var(--espaco-grupo);
+  background-color: var(--chao-noite);
+  color: var(--tinta-noite);
+}
+
+.cf-heroi-leg {
+  color: var(--tinta-noite);
+}
+
+/* ---- Faixa 2, 15:00: dia, Histórico no celular em pé no chão ---- */
+.cf-hist {
+  --foco-faixa: var(--color-cacau);
+
+  display: flex;
+  flex-direction: column;
+  padding-top: var(--espaco-secao);
+  background-color: var(--dia);
+  color: var(--tinta-dia);
+}
+
+.cf-hist-grade {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  row-gap: var(--espaco-grupo);
+  align-items: end;
+}
+
+.cf-hist-fone {
+  --fone-w: min(77cqw, 18.75rem);
+
+  margin: 0 auto calc(var(--espaco-pilha) * -1);
+}
+
+.cf-hist-fone img {
+  object-position: bottom;
+}
+
+.cf-hist-chao {
+  position: relative;
+  z-index: 1;
+  padding: var(--espaco-bloco) var(--margem) var(--espaco-grupo);
+  background-color: var(--chao-dia);
+  color: var(--tinta-dia);
+}
+
+/* ---- Faixa 3, 18:00: noite entrando pela direita, M06 com luminária ---- */
+.cf-depois {
+  --foco-faixa: var(--color-papel);
+
+  background-color: var(--chao-dia);
+}
+
+.cf-depois-dentro {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  padding-top: var(--espaco-secao);
+  background-color: var(--noite);
+  color: var(--tinta-noite);
+}
+
+.cf-depois-grade {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  row-gap: var(--espaco-grupo);
+  align-items: end;
+}
+
+.cf-m06 {
+  z-index: 2;
+  width: var(--cf-w6);
+  margin: 0 auto var(--cf-m06-sobre);
+}
+
+.cf-depois-chao {
+  position: relative;
+  z-index: 1;
+  padding: var(--espaco-bloco) var(--margem) var(--espaco-grupo);
+  background-color: var(--chao-noite);
+  color: var(--tinta-noite);
+}
+
+.cf-depois-leg {
+  color: var(--tinta-noite);
+}
+
+/* ---- Faixa 4: a nota, chão de areia, celular cortado na base ---- */
+.cf-nota {
+  --foco-faixa: var(--color-cacau);
+
+  padding-top: var(--espaco-secao);
+  background-color: var(--chao-dia);
+  color: var(--tinta-dia);
+}
+
+.cf-nota-grade {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  row-gap: var(--espaco-grupo);
+  align-items: end;
+}
+
+.cf-nota-fone {
+  --fone-w: min(77cqw, 18.75rem);
+  --cf-nota-corte: calc(var(--fone-w) * -0.34);
+
+  margin: 0 auto var(--cf-nota-corte);
+}
+
+/* ---- Faixa 5: para começar, três passos no papel ---- */
+.cf-comecar {
+  --foco-faixa: var(--color-cacau);
+
+  padding-block: var(--espaco-secao);
+  background-color: var(--dia);
+  color: var(--tinta-dia);
+}
+
+.cf-passos {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--espaco-grupo);
+  margin: var(--espaco-bloco) 0 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: cf-passo;
+}
+
+.cf-passo {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espaco-junto);
+  padding-top: var(--espaco-pilha);
+  border-top: 1px solid color-mix(in srgb, var(--color-cacau) 28%, transparent);
+  counter-increment: cf-passo;
+}
+
+.cf-passo::before {
+  --texto-cf-passo-tamanho: clamp(calc(var(--texto-pequeno-tamanho) * 2.9333), 12.6cqw, calc(var(--texto-pequeno-tamanho) * 4));
+
+  content: counter(cf-passo);
+  font-family: var(--font-titulo);
+  font-size: var(--texto-cf-passo-tamanho);
+  font-weight: 800;
+  line-height: var(--texto-cf-passo-tamanho);
+  letter-spacing: -0.02em;
+  font-variant-numeric: lining-nums tabular-nums;
+  color: var(--tinta-dia);
+}
+
+.cf-passo-texto {
+  margin: 0;
+}
+
+.cf-aviso {
+  max-width: 44rem;
+  margin: var(--espaco-bloco) 0 0;
+  font-family: var(--font-texto);
+  font-size: var(--texto-pequeno-tamanho);
+  line-height: var(--texto-pequeno-entrelinha);
+  color: var(--color-texto-2);
+}
+
+/* ---- Faixa 6: amanhã, parede de dia voltando pela esquerda sobre a noite ---- */
+.cf-fecho {
+  --foco-faixa: var(--color-papel);
+
+  display: flex;
+  flex-direction: column;
+  padding-top: var(--espaco-secao);
+  background-color: var(--noite);
+  color: var(--tinta-noite);
+}
+
+.cf-fecho :focus-visible {
+  outline-color: var(--foco-faixa);
+}
+
+.cf-fecho-dia {
+  display: none;
+}
+
+.cf-fecho-texto {
+  position: relative;
+  z-index: 2;
+  padding-bottom: var(--espaco-secao);
+}
+
+.cf-fecho-chao-noite {
+  display: block;
+  width: 100%;
+  height: var(--espaco-grupo);
+  background-color: var(--chao-noite);
+}
+
+/* ---- Composição larga (1440 / >= 69em paisagem): mesma linha de chão em toda a página ---- */
+@media (min-width: 69em) and (min-aspect-ratio: 1/1) {
+  .cf-pagina {
+    --cf-chao: 6.25rem;
+    --cf-w1: min(62cqw, 56.25rem);
+    --cf-w6: min(29cqw, 26.25rem);
+    --cf-heroi-h: calc(var(--cf-w1) * 941 / 1672 + var(--cf-chao) * 0.25);
+    --cf-m01-sobre: 0px;
+    --cf-m06-sobre: 0px;
+  }
+
+  /* 1: 03:00 — M01 rente ao topo e à esquerda no chão (sem corte no facho), texto à direita na noite, 03:00 fantasma */
+  .cf-heroi {
+    display: block;
+    min-height: var(--cf-heroi-h);
+    padding: 0;
+  }
+
+  .cf-heroi-fantasma {
+    top: -0.06em;
+    right: var(--margem);
+    left: auto;
+  }
+
+  .cf-m01 {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: var(--cf-w1);
+    margin: 0;
+  }
+
+  .cf-heroi-texto {
+    position: relative;
+    z-index: 3;
+    max-width: 44cqw;
+    margin-left: 50%;
+    padding: var(--espaco-secao) var(--margem) calc(var(--cf-chao) + var(--espaco-grupo)) 0;
+  }
+
+  .cf-heroi-chao {
+    position: absolute;
+    inset: auto 0 0;
+    display: flex;
+    align-items: center;
+    height: var(--cf-chao);
+    padding: 0 var(--margem) 0 50%;
+  }
+
+  .cf-heroi-leg,
+  .cf-hist-leg,
+  .cf-depois-leg {
+    flex-direction: row;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .cf-heroi-leg .co-leg-resto,
+  .cf-hist-leg .co-leg-resto,
+  .cf-depois-leg .co-leg-resto {
+    margin-top: 4px;
+  }
+
+  /* 2: 15:00 — texto à esquerda, Histórico à direita sobre a linha de chão (cabe numa tela de 1440x900) */
+  .cf-hist {
+    position: relative;
+    display: block;
+    padding-top: var(--espaco-bloco);
+  }
+
+  .cf-hist-grade {
+    position: relative;
+    z-index: 2;
+    grid-template-columns: minmax(0, 1fr) auto;
+    column-gap: var(--espaco-midia);
+    align-items: end;
+    padding: 0 var(--margem);
+  }
+
+  .cf-hist-texto {
+    align-self: center;
+    padding: 0 0 var(--espaco-bloco);
+  }
+
+  .cf-hist-fone {
+    --fone-w: min(24cqw, 22rem, (100svh - var(--cm-cabecalho) - var(--cf-chao) - 5.5rem) / 2.15);
+
+    margin: 0;
+  }
+
+  .cf-hist-chao {
+    display: flex;
+    align-items: center;
+    height: var(--cf-chao);
+    margin-top: 0;
+    padding: 0 var(--margem);
+  }
+
+  /* 3: 18:00 — M06 à esquerda no chão de noite, texto à direita */
+  .cf-depois-dentro {
+    display: block;
+    padding-top: var(--espaco-secao);
+  }
+
+  .cf-depois-grade {
+    position: relative;
+    z-index: 2;
+    grid-template-columns: auto minmax(0, 1fr);
+    column-gap: var(--espaco-midia);
+    align-items: end;
+    padding: 0 var(--margem);
+  }
+
+  .cf-m06 {
+    grid-area: 1 / 1;
+    width: var(--cf-w6);
+    margin: 0 0 calc(var(--cf-w6) * 1470 / 900 * -0.1395);
+  }
+
+  .cf-depois-texto {
+    grid-area: 1 / 2;
+    align-self: center;
+    padding: 0 0 var(--espaco-bloco);
+  }
+
+  .cf-depois-chao {
+    display: flex;
+    align-items: center;
+    height: var(--cf-chao);
+    padding: 0 var(--margem) 0 calc(var(--margem) + var(--cf-w6) + var(--espaco-midia));
+  }
+
+  /* 4: a nota — celular à esquerda nascendo da linha de chão, texto à direita */
+  .cf-nota {
+    padding-top: var(--espaco-secao);
+  }
+
+  .cf-nota-grade {
+    grid-template-columns: auto minmax(0, 38rem);
+    column-gap: var(--espaco-midia);
+    align-items: end;
+    justify-content: center;
+    padding: 0 var(--margem);
+  }
+
+  .cf-nota-fone {
+    --fone-w: min(25cqw, 22.5rem);
+    --cf-nota-corte: calc(var(--fone-w) * -0.34);
+
+    grid-area: 1 / 1;
+    margin: 0 0 var(--cf-nota-corte);
+  }
+
+  .cf-nota-texto {
+    grid-area: 1 / 2;
+    align-self: center;
+    padding: 0 0 var(--espaco-secao);
+  }
+
+  /* 5: para começar — três colunas com algarismos na voz da hora */
+  .cf-comecar {
+    padding-block: var(--espaco-secao-ampla);
+  }
+
+  .cf-passos {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--espaco-bloco);
+  }
+
+  .cf-passo::before {
+    --texto-cf-passo-tamanho: clamp(calc(var(--texto-pequeno-tamanho) * 4), 6.1cqw, calc(var(--texto-pequeno-tamanho) * 6.6667));
+  }
+
+  /* 6: amanhã — parede de dia voltando pela esquerda (0..42cqw), costura limpa, texto + CTA na noite */
+  .cf-fecho {
+    display: block;
+    min-height: 28rem;
+    padding: 0;
+  }
+
+  .cf-fecho-dia {
+    position: absolute;
+    inset: 0 58% 0 0;
+    z-index: 1;
+    display: block;
+    background-color: var(--dia);
+  }
+
+  .cf-fecho-fantasma {
+    top: 0.12em;
+    left: var(--margem);
+  }
+
+  .cf-fecho-chao-dia {
+    position: absolute;
+    inset: auto 0 0;
+    height: var(--cf-chao);
+    background-color: var(--chao-dia);
+  }
+
+  .cf-fecho-texto {
+    position: relative;
+    z-index: 2;
+    max-width: 52%;
+    margin-left: 42%;
+    padding: var(--espaco-secao-ampla) var(--margem) calc(var(--cf-chao) + var(--espaco-secao)) var(--espaco-midia);
+  }
+
+  .cf-fecho-chao-noite {
+    position: absolute;
+    inset: auto 0 0 42%;
+    width: auto;
+    height: var(--cf-chao);
+  }
+}
+
+/* ---- Movimento (1440, view timeline, sem movimento reduzido): fora disso, tudo parado no estado final ---- */
+@media (min-width: 69em) and (min-aspect-ratio: 1/1) and (prefers-reduced-motion: no-preference) {
+  @supports ((animation-timeline: view()) and (animation-range: entry)) {
+    .cf-hist-fone img {
+      animation: co-rolar linear both;
+      animation-timeline: view();
+      animation-range: entry 15% entry 95%;
+    }
+
+    .cf-depois-dentro {
+      animation: co-varre-noite linear both;
+      animation-timeline: view();
+      animation-range: entry 0% entry 50%;
+    }
+
+    .cf-m06 .co-luz {
+      animation: co-acende linear both;
+      animation-timeline: view();
+      animation-range: entry 35% cover 45%;
+    }
+
+    .cf-fecho-dia {
+      animation: co-varre-dia linear both;
+      animation-timeline: view();
+      animation-range: entry 0% entry 55%;
+    }
+  }
+}

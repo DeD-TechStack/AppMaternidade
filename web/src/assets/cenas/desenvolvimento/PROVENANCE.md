@@ -1,0 +1,20 @@
+# Provenance: web/public/cenas/desenvolvimento/
+
+## IMG-RES native tier (2026-11-19)
+
+| file | SHA256 | bytes | dimensions | source and operation |
+|---|---|---|---|---|
+| m04-heroi-390c-1170w.webp | 28a3faa88516def99b43d124ed550c9150da26b4df11f49dc20e74c65c8164be | 32714 | 1170x714 | m04-heroi-1672w.webp (dd18f5fdefa3f837bfb1a9b36a26ec5251684c18f353e311a37aa851eda1c6ff), same native crop (0,40,1360,870), LANCZOS downscale, WebP q92 method6; no upscaling |
+
+Plates are read-only sources under DIRECAO_FABLE (sha256 asserted by the script), snapped whole, cropped, downscaled with LANCZOS, never upscaled, no retouching, no generated pixels.
+
+Columns: file | source + sha256 | script + sha256 | crop | scale | encoder/quality | output sha256 | bytes | size
+
+m04-heroi-1100w.webp | IMG_DEFECT/accept_20261119/out/04_tummy_espelho_v2.png sha256:d50e9125f03c45d1ad626a0be8c29efae178e370bf71448c0b21c0eb92e6e2f0 | .oc/ativos/recortar.py sha256:0dabcebe6a4e2c07ecfd3bdcffd4ae025a934db8cb4f5c4200fff0e659aef3bc; IMG-SWAP re-cut of the accepted IMG-DEFECT plate, crop, downscale | crop 0,0,1672,941 (1672x941) | LANCZOS to 1100x619 from 1672x941 | WebP q82 method 6, Pillow 12.3.0 | sha256:c2d0dcaebd40b1a5550cb3431860b378aefbcb4b0a4d93419949d904c9102209 | 16588 B | 1100x619
+m04-heroi-1672w.webp | IMG_DEFECT/accept_20261119/out/04_tummy_espelho_v2.png sha256:d50e9125f03c45d1ad626a0be8c29efae178e370bf71448c0b21c0eb92e6e2f0 | .oc/ativos/recortar.py sha256:0dabcebe6a4e2c07ecfd3bdcffd4ae025a934db8cb4f5c4200fff0e659aef3bc; IMG-SWAP re-cut of the accepted IMG-DEFECT plate, crop, downscale | crop 0,0,1672,941 (1672x941) | none (1:1) from 1672x941 | WebP q82 method 6, Pillow 12.3.0 | sha256:dd18f5fdefa3f837bfb1a9b36a26ec5251684c18f353e311a37aa851eda1c6ff | 26530 B | 1672x941
+m04-heroi-390c-390w.webp | IMG_DEFECT/accept_20261119/out/04_tummy_espelho_v2.png sha256:d50e9125f03c45d1ad626a0be8c29efae178e370bf71448c0b21c0eb92e6e2f0 | .oc/ativos/recortar.py sha256:0dabcebe6a4e2c07ecfd3bdcffd4ae025a934db8cb4f5c4200fff0e659aef3bc; IMG-SWAP re-cut of the accepted IMG-DEFECT plate, crop, downscale | crop 0,40,1360,870 (1360x830) | LANCZOS to 390x238 from 1360x830 | WebP q82 method 6, Pillow 12.3.0 | sha256:7b71caf86305eaa10ce2fb554b64befd89b38951dbe7b8f8410bbebe37ca0b38 | 6380 B | 390x238
+m04-heroi-390c-780w.webp | IMG_DEFECT/accept_20261119/out/04_tummy_espelho_v2.png sha256:d50e9125f03c45d1ad626a0be8c29efae178e370bf71448c0b21c0eb92e6e2f0 | .oc/ativos/recortar.py sha256:0dabcebe6a4e2c07ecfd3bdcffd4ae025a934db8cb4f5c4200fff0e659aef3bc; IMG-SWAP re-cut of the accepted IMG-DEFECT plate, crop, downscale | crop 0,40,1360,870 (1360x830) | LANCZOS to 780x476 from 1360x830 | WebP q82 method 6, Pillow 12.3.0 | sha256:414eed891e6e3e3a22dec1195b91a7d322689d0ec188d716658ef3d3360f279c | 13662 B | 780x476
+m12-familia-390w.webp | DIRECAO_FABLE/6_scenes1/M12_arms_v3.png sha256:e497a06243a56024d79f7c0b9bbe2166b809acb4ba59b12bf2906c94b7fdc265 | .oc/ativos/preparar_placas.py sha256:cd37214997b29d2d0d9331a49c32d5986e0bc1d73f75592ef88d849987d21b6e; snap whole plate to prep.py table, crop, downscale | crop 0,540,585,1172 (585x632) | LANCZOS to 390x421 from 585x632 | WebP q82 method 6, Pillow 12.3.0 | sha256:b6c4da3a888a10b8002325f54608645099b0b4c03f45535223a2b8f9c0c6b9c9 | 12054 B | 390x421
+m12-familia-585w.webp | DIRECAO_FABLE/6_scenes1/M12_arms_v3.png sha256:e497a06243a56024d79f7c0b9bbe2166b809acb4ba59b12bf2906c94b7fdc265 | .oc/ativos/preparar_placas.py sha256:cd37214997b29d2d0d9331a49c32d5986e0bc1d73f75592ef88d849987d21b6e; snap whole plate to prep.py table, crop, downscale | crop 0,540,585,1172 (585x632) | none (1:1) to 585x632 from 585x632 | WebP q82 method 6, Pillow 12.3.0 | sha256:d5b8ad831f46fe02113f1e5195324856c5feb13cbdefb257b5491f26e9e3c6d8 | 17930 B | 585x632
+
+IMG-SWAP (2026-11-19): re-cut from the accepted defect-pass plates; sources and acceptance: IMG_DEFECT/out/PROVENANCE.md (plates 1-2, layers, crops.json) and IMG_DEFECT/accept_20261119/PROVENANCE.md (acceptance, plate 4 fix run).

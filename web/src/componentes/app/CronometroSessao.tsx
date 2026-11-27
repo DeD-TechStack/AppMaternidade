@@ -1,0 +1,321 @@
+import { useEffect, useId, useRef, useState } from 'react'
+import { NotebookPen } from 'lucide-react'
+import { COMUM, SESSAO, SESSOES } from '../../conteudo/rotina.ts'
+import { Botao } from '../base/Botao.tsx'
+import { Cartao, Pilha } from '../base/layout/index.ts'
+import { ALVO_APP } from './alvo.ts'
+import { LIMITE_DA_SESSAO_CURTA_MS } from './PerguntaSessaoCurta.tsx'
+import { recuoOptico } from './recuoOptico.ts'
+import { TextoDoCronometro } from './TextoDoCronometro.tsx'
+import { tamanhoDoCronometro } from '../../prototipo/formatar.ts'
+import { CRONOMETRO_SESSAO } from '../../prototipo/textosSessao.ts'
+
+// `curta`: a pergunta de uma sessão com menos de 1 minuto (QA-10); `origem` diz qual botão a abriu.
+type Painel = 'nota' | 'descartar' | 'curta'
+type Origem = 'encerrar' | 'anotar'
+
+interface Props {
+  /** "mm:ss" ou "h:mm:ss", já formatado. O leitor de tela lê o tempo inteiro. */
+  cronometro: string
+  /** Quanto a sessão já durou, em ms. Abaixo de 1 minuto, "Encerrar" e "Encerrar e anotar" perguntam antes (QA-10). */
+  decorridoMs?: number
+  atividade?: string
+  /** Encerrar a sessão com o texto da nota já cortado nas pontas; `''` encerra sem nota. */
+  aoEncerrar: (nota: string) => void
+  aoDescartar: () => void
+  /** Quais ações a pessoa pode fazer nesta sessão (matriz de papéis); a que não pode não aparece. */
+  acoes?: { encerrar: boolean; descartar: boolean }
+  /** Uma escrita em curso: as ações ficam com `aria-disabled="true"` e o toque não faz nada. */
+  ocupado?: boolean
+  className?: string
+}
+
+// A nota cabe em 500 caracteres depois de cortar as pontas (o limite do banco).
+const LIMITE_DA_NOTA = 500
+
+// O tamanho do número cai com 8 ou mais caracteres ("10:00:00"): os algarismos são tabulares, então a
+// largura só depende de quantos são.
+const TAMANHO = {
+  normal: 'text-[72px] lg:text-[160px]',
+  longo: 'text-[56px] lg:text-[120px]',
+} as const
+
+/**
+ * O cartão do cronômetro da Sessão: o mesmo campo do CartaoSessao do Hoje (mel de dia, cartão da noite na
+ * madrugada), o tempo em Literata grande e as ações: Encerrar (o primário), Encerrar e anotar (contorno) e
+ * Descartar (texto). A nota e a pergunta de descartar abrem no próprio cartão, abaixo das ações: o foco
+ * entra no painel ao abrir e volta ao botão que o abriu ao fechar (também com Esc).
+ */
+export function CronometroSessao({
+  cronometro,
+  decorridoMs,
+  atividade,
+  aoEncerrar,
+  aoDescartar,
+  acoes = { encerrar: true, descartar: true },
+  ocupado = false,
+  className,
+}: Props) {
+  const idRotulo = useId()
+  const idCampo = useId()
+  const idDica = useId()
+  const idErro = useId()
+  const idPergunta = useId()
+  const idCurta = useId()
+  const [painel, setPainel] = useState<Painel | null>(null)
+  const [erroDaNota, setErroDaNota] = useState<string | null>(null)
+  const painelAnterior = useRef<Painel | null>(null)
+  const origemDaCurta = useRef<Origem>('encerrar')
+  const cartao = useRef<HTMLElement>(null)
+  const campoNota = useRef<HTMLTextAreaElement>(null)
+
+  // O foco acompanha o painel: entra nele ao abrir e volta ao botão que o abriu ao fechar.
+  useEffect(() => {
+    const acao = (nome: string) => cartao.current?.querySelector<HTMLElement>(`[data-acao="${nome}"]`)
+    if (painel === 'nota') campoNota.current?.focus()
+    else if (painel === 'descartar') acao('manter')?.focus()
+    else if (painel === 'curta') acao('salvar-curta')?.focus()
+    else if (painelAnterior.current === 'nota') acao('anotar')?.focus()
+    else if (painelAnterior.current === 'descartar') acao('descartar')?.focus()
+    else if (painelAnterior.current === 'curta') acao(origemDaCurta.current)?.focus()
+    painelAnterior.current = painel
+  }, [painel])
+
+  // Menos de 1 minuto: os dois botões de encerrar perguntam antes (QA-10). Com 1 minuto ou mais, nada muda.
+  const sessaoCurta = decorridoMs !== undefined && decorridoMs < LIMITE_DA_SESSAO_CURTA_MS
+
+  function tocarEncerrar() {
+    if (sessaoCurta) {
+      origemDaCurta.current = 'encerrar'
+      setPainel('curta')
+    } else {
+      aoEncerrar('')
+    }
+  }
+
+  function tocarAnotar() {
+    if (sessaoCurta) {
+      origemDaCurta.current = 'anotar'
+      setPainel('curta')
+    } else {
+      setPainel('nota')
+    }
+  }
+
+  // "Salvar" na pergunta segue o caminho normal do botão que a abriu: encerrar de uma vez, ou abrir a nota.
+  function salvarMesmoCurta() {
+    if (ocupado) return
+    if (origemDaCurta.current === 'anotar') setPainel('nota')
+    else aoEncerrar('')
+  }
+
+  // A nota é validada antes da 1ª chamada: acima de 500, a mensagem fica no campo, nada é enviado e a
+  // sessão continua em andamento, com o texto no campo para corrigir.
+  function salvarNota() {
+    if (ocupado) return
+    const texto = (campoNota.current?.value ?? '').trim()
+    if (texto.length > LIMITE_DA_NOTA) {
+      setErroDaNota(SESSOES.notaLonga)
+      campoNota.current?.focus()
+      return
+    }
+    setErroDaNota(null)
+    aoEncerrar(texto)
+  }
+
+  // Esc fecha o painel aberto (a nota ou a pergunta); o efeito acima devolve o foco ao botão que o abriu.
+  useEffect(() => {
+    if (!painel) return
+    function aoTeclar(evento: KeyboardEvent) {
+      if (evento.key === 'Escape') setPainel(null)
+    }
+    document.addEventListener('keydown', aoTeclar)
+    return () => document.removeEventListener('keydown', aoTeclar)
+  }, [painel])
+
+  // A nota cresce com o texto, sem a alça de redimensionar: `field-sizing: content` onde existe e, onde
+  // não existe, a altura acompanha o conteúdo a cada tecla. Só aparência: o texto e o estado não mudam.
+  function ajustarAltura() {
+    const campo = campoNota.current
+    if (!campo || (typeof CSS !== 'undefined' && CSS.supports?.('field-sizing', 'content'))) return
+    campo.style.height = 'auto'
+    campo.style.height = `${campo.scrollHeight}px`
+  }
+
+  return (
+    <Cartao
+      as="section"
+      ref={cartao}
+      aria-labelledby={idRotulo}
+      data-andamento=""
+      className={`flex flex-col gap-esp-grupo bg-(--cor-campo-sessao) text-(--cor-numero-sessao) [border:var(--borda-campo)] ${className ?? ''}`}
+    >
+      <Pilha vao="junto">
+        <p id={idRotulo} className="text-pequeno font-medium">
+          {CRONOMETRO_SESSAO.duracao}
+        </p>
+        {/* `data-cronometro` mora nos dígitos: é por ele que o medidor acha o cronômetro. */}
+        <div
+          role="timer"
+          aria-live="off"
+          aria-labelledby={idRotulo}
+          data-cronometro=""
+          data-tamanho={tamanhoDoCronometro(cronometro)}
+          className={`t-cronometro font-titulo leading-none font-semibold tracking-[-0.02em] whitespace-nowrap tabular-nums ${TAMANHO[tamanhoDoCronometro(cronometro)]} ${recuoOptico(cronometro)}`}
+        >
+          <TextoDoCronometro tempo={cronometro} />
+        </div>
+        {atividade ? <p className="text-corpo">{CRONOMETRO_SESSAO.atividadeSugerida(atividade)}</p> : null}
+      </Pilha>
+
+      {/* Com a nota aberta, o "Salvar" dela é o primário: o Encerrar e o Encerrar e anotar saem e o painel
+          fica logo abaixo do tempo, antes do Descartar (a ordem do Tab segue a da tela). */}
+      {painel === 'nota' ? (
+        <Cartao
+          role="group"
+          aria-label={CRONOMETRO_SESSAO.encerrarEAnotar}
+          data-painel-sessao="nota"
+          className="-mx-2 bg-(--cor-fundo) text-(--cor-texto) sm:mx-0"
+        >
+          <Pilha vao="pilha">
+            <Pilha vao="junto">
+              <label htmlFor={idCampo} className="block font-medium">
+                {CRONOMETRO_SESSAO.nota}
+              </label>
+              <p id={idDica} className="text-pequeno text-(--cor-texto-2)">
+                {CRONOMETRO_SESSAO.dicaDaNota}
+              </p>
+            </Pilha>
+            <textarea
+              ref={campoNota}
+              id={idCampo}
+              rows={3}
+              aria-describedby={erroDaNota ? `${idErro} ${idDica}` : idDica}
+              aria-invalid={erroDaNota ? true : undefined}
+              readOnly={ocupado}
+              onInput={ajustarAltura}
+              data-sem-alca=""
+              className="block min-h-[6rem] w-full resize-none field-sizing-content rounded-campo border-[1.5px] border-(--cor-texto-2) bg-(--cor-cartao) px-4 py-3 text-corpo text-(--cor-texto) hover:border-(--cor-texto) focus-visible:border-(--cor-texto)"
+            />
+            {erroDaNota ? (
+              <p id={idErro} className="text-pequeno font-medium" data-erro-da-nota="">
+                {erroDaNota}
+              </p>
+            ) : null}
+            {/* Salvar, Cancelar e Descartar numa fileira só: Descartar é botão de texto ao lado do Salvar, e
+                não fica mais solto no pé do cartão (a ordem do Tab é a mesma de antes). */}
+            <div className="flex flex-wrap items-center gap-x-1 gap-y-2 sm:gap-x-3" data-acoes-nota="">
+              <Botao tamanho="app" className={`px-5 sm:min-w-[8.5rem] ${ALVO_APP}`} desativado={ocupado} onClick={salvarNota}>
+                {ocupado ? COMUM.salvando : COMUM.salvar}
+              </Botao>
+              <Botao variante="texto" tamanho="app" className={`mx-0 px-2 sm:px-3 ${ALVO_APP}`} onClick={() => setPainel(null)}>
+                {CRONOMETRO_SESSAO.cancelar}
+              </Botao>
+              {acoes.descartar ? (
+                <Botao
+                  variante="texto"
+                  tamanho="app"
+                  className={`mx-0 px-2 sm:px-3 ${ALVO_APP}`}
+                  data-acao="descartar"
+                  onClick={() => setPainel('descartar')}
+                >
+                  {CRONOMETRO_SESSAO.descartar}
+                </Botao>
+              ) : null}
+            </div>
+          </Pilha>
+        </Cartao>
+      ) : null}
+
+      {painel !== 'nota' && painel !== 'curta' ? (
+        <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:gap-3" data-acoes="">
+          {acoes.encerrar ? (
+            <Botao
+              tamanho="app"
+              className={`w-full sm:w-auto sm:min-w-[8.5rem] ${ALVO_APP}`}
+              desativado={ocupado}
+              data-acao="encerrar"
+              onClick={tocarEncerrar}
+            >
+              {CRONOMETRO_SESSAO.encerrar}
+            </Botao>
+          ) : null}
+          {acoes.encerrar ? (
+            <Botao
+              variante="contorno"
+              tamanho="app"
+              className={`w-full sm:w-auto ${ALVO_APP}`}
+              icone={<NotebookPen />}
+              data-acao="anotar"
+              onClick={tocarAnotar}
+            >
+              <span>{CRONOMETRO_SESSAO.encerrarEAnotar}</span>
+            </Botao>
+          ) : null}
+          {painel !== 'descartar' && acoes.descartar ? (
+            <Botao
+              variante="texto"
+              tamanho="app"
+              className={`w-full sm:w-auto ${ALVO_APP}`}
+              data-acao="descartar"
+              onClick={() => setPainel('descartar')}
+            >
+              {CRONOMETRO_SESSAO.descartar}
+            </Botao>
+          ) : null}
+        </div>
+      ) : null}
+
+      {painel === 'curta' ? (
+        <Cartao
+          role="group"
+          aria-labelledby={idCurta}
+          data-painel-sessao="curta"
+          className="bg-(--cor-fundo) text-(--cor-texto)"
+        >
+          <Pilha vao="pilha">
+            <p id={idCurta} className="font-medium">
+              {SESSAO.curtaPergunta}
+            </p>
+            <div className="flex flex-wrap items-center gap-3">
+              <Botao tamanho="app" className={ALVO_APP} desativado={ocupado} data-acao="salvar-curta" onClick={salvarMesmoCurta}>
+                {SESSAO.curtaSalvar}
+              </Botao>
+              {acoes.descartar ? (
+                <Botao variante="contorno" tamanho="app" className={ALVO_APP} desativado={ocupado} onClick={aoDescartar}>
+                  {SESSAO.curtaDescartar}
+                </Botao>
+              ) : null}
+            </div>
+          </Pilha>
+        </Cartao>
+      ) : null}
+
+      {painel === 'descartar' ? (
+        <Cartao
+          role="group"
+          aria-labelledby={idPergunta}
+          data-painel-sessao="descartar"
+          className="bg-(--cor-fundo) text-(--cor-texto)"
+        >
+          <Pilha vao="pilha">
+            <Pilha vao="junto">
+              <p id={idPergunta} className="font-medium">
+                {CRONOMETRO_SESSAO.descartarPergunta}
+              </p>
+              <p className="text-pequeno text-(--cor-texto-2)">{CRONOMETRO_SESSAO.descartarExplicacao}</p>
+            </Pilha>
+            <div className="flex flex-wrap items-center gap-3">
+              <Botao variante="contorno" tamanho="app" className={ALVO_APP} desativado={ocupado} onClick={aoDescartar}>
+                {CRONOMETRO_SESSAO.descartar}
+              </Botao>
+              <Botao variante="texto" tamanho="app" className={ALVO_APP} data-acao="manter" onClick={() => setPainel(null)}>
+                {CRONOMETRO_SESSAO.manter}
+              </Botao>
+            </div>
+          </Pilha>
+        </Cartao>
+      ) : null}
+    </Cartao>
+  )
+}

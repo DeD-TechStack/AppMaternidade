@@ -1,357 +1,204 @@
-import { useEffect } from 'react'
-import { Link } from 'react-router'
-import {
-  APRESENTACAO,
-  CHAMADA,
-  FATOS,
-  LEGENDA_MADRUGADA,
-  MADRUGADA,
-  MINIATURAS,
-  NAVEGACAO,
-  PARA_QUE_SERVE,
-  PILARES,
-  PROMESSA,
-  RODAPE,
-  TELAS,
-} from '../conteudo/textos.ts'
-import { Aparelho } from '../componentes/Aparelho.tsx'
-import { AvisoDemonstracao } from '../componentes/AvisoDemonstracao.tsx'
-import { BotoesRapidos } from '../prototipo/BotoesRapidos.tsx'
-import { CartaoEmAndamento } from '../prototipo/CartaoEmAndamento.tsx'
-import { IlustracaoColo } from '../prototipo/IlustracaoColo.tsx'
-import { IlustracaoMamada } from '../prototipo/IlustracaoMamada.tsx'
-import { IlustracaoPasseio } from '../prototipo/IlustracaoPasseio.tsx'
-import { IlustracaoTapete } from '../prototipo/IlustracaoTapete.tsx'
-import { SessaoInfo } from '../prototipo/SessaoInfo.tsx'
-import { usePrototipo } from '../prototipo/contexto.ts'
+import { Botao } from '../componentes/base/Botao.tsx'
+import { TelefoneDemo } from '../componentes/demo-telefone/TelefoneDemo.tsx'
+import { ID_FAIXA_NOITE, ID_FAIXA_SO, ID_FAIXA_TELA, ID_TITULO } from '../componentes/inicio-casa/ids.ts'
+import { useGanchoDoCabecalho } from '../componentes/inicio-casa/usoDaCasa.ts'
+import { BotaoLargo } from '../componentes/secoes/BotaoLargo.tsx'
+import { PaginaCasa } from '../componentes/secoes/PaginaCasa.tsx'
+import { INI, INI_FATOS, INI_HORAS, INI_PERGUNTAS, INI_REF, INI_ROTAS } from '../conteudo/inicio.ts'
+// The display cut of Literata (optical size axis): the large titles and the hours pick it by themselves.
+import '../componentes/inicio-composicao/composicao.css'
+import { Legenda, Telefone } from '../componentes/inicio-composicao/pecas.tsx'
 
-const semAcao = () => undefined
+/** The wide composition (the room strip): the same query is written literally in composicao.css. */
+const LARGA = '(min-width: 69em) and (min-aspect-ratio: 1/1)'
 
-// As telas em miniatura são os mesmos componentes de Hoje e Sessão, com dados fixos (textos.ts) e
-// o relógio parado: sem navegação inferior, sem efeito na página, nada focável. Cada aparelho que
-// as mostra é inerte e escondido do leitor de tela.
-function RegistroRapido() {
+const RAIZ = import.meta.env.BASE_URL
+
+/** The folder of the cut-outs (palette A, the only one). */
+const ARTE = `${RAIZ}composicao/a`
+
+/** A slot that still waits for art: a dashed outline with its label, so the gap is seen and not papered over. */
+function Vaga({ rotulo, className }: { rotulo: string; className?: string }) {
   return (
-    <BotoesRapidos
-      desativado
-      semIcones
-      aoIniciarSessao={semAcao}
-      aoRegistrarFralda={semAcao}
-      aoRegistrarMais={semAcao}
-    />
-  )
-}
-
-/** O Hoje do celular: o cartão em andamento e os botões de registro, de cima para baixo. */
-function TelaHoje() {
-  const { hoje } = MINIATURAS
-  return (
-    <div>
-      <p className="titulo-linha">{hoje.titulo}</p>
-      <p className="mt-1">{hoje.bebe}</p>
-      <div className="mt-4">
-        <CartaoEmAndamento miniatura sessao={hoje.sessao} />
-      </div>
-      <div className="mt-4">
-        <RegistroRapido />
-      </div>
-    </div>
+    <p className={`co-vaga ${className ?? ''}`} data-aguarda-arte="">
+      {rotulo}
+    </p>
   )
 }
 
 /**
- * O Hoje do computador, mais largo: o cartão em andamento e os botões numa coluna, a nota
- * "Para você saber" e a lista "Últimos" na outra. A coluna da direita é curta de propósito: o
- * celular da frente se apoia no espaço vazio embaixo dela, sem cobrir texto.
+ * The Início, reference composition "a luz, pela hora" (branch fable/home-composicao). Seven scenes on one floor line:
+ * 1 16:00, the day room and the hand-over (M05); 2 17:30, the night room (M06, the lamp) and the Histórico; 3 20:30, the
+ * hour as type and the Hoje screen at night; 4 the lone carer (M04) and the Família screen; 5 the statement on the mat's
+ * colour and the Notas screen; 6 the questions and the door; 7 the street at dusk on the footer line.
+ * Palette A only (the cut-outs live in public/composicao/a). Scenes 1 to 3 are one strip: on a wide landscape window with scroll timelines and no reduced-motion preference the
+ * strip is pinned and the vertical scroll walks it sideways (composicao.css); everywhere else the three scenes stack.
+ * Every string comes from conteudo/inicio.ts.
  */
-function TelaHojeComputador() {
-  const { hoje } = MINIATURAS
-  return (
-    <div className="grid grid-cols-2 items-start gap-8">
-      <TelaHoje />
-      <div>
-        <p className="rotulo">{hoje.nota.rotulo}</p>
-        <p className="nota-italico mt-2">{hoje.nota.texto}</p>
-        <p className="tabular mt-1 text-sm">{hoje.nota.autor}</p>
-        <p className="rotulo mt-6">{hoje.ultimos.rotulo}</p>
-        <ul className="mt-2 divide-y border-y">
-          {hoje.ultimos.itens.map((item) => (
-            <li key={item.rotulo} className="flex items-baseline justify-between gap-4 py-2">
-              <span>{item.rotulo}</span>
-              <span className="tabular text-right">{item.quando}</span>
-            </li>
-          ))}
-        </ul>
-      </div>
-    </div>
-  )
-}
-
-/** As ações da Sessão em miniatura, desativadas e fora da ordem de Tab, como as outras miniaturas. */
-function AcoesDaSessaoEmMiniatura() {
-  const [encerrar, anotar, descartar] = MINIATURAS.sessao.acoes
-  return (
-    <div className="mt-6 flex flex-col gap-3">
-      <button type="button" disabled tabIndex={-1} className="botao botao-principal botao-grande">
-        {encerrar}
-      </button>
-      <div className="flex flex-wrap gap-3">
-        <button type="button" disabled tabIndex={-1} className="botao botao-secundario">
-          {anotar}
-        </button>
-        <button type="button" disabled tabIndex={-1} className="botao botao-secundario">
-          {descartar}
-        </button>
-      </div>
-    </div>
-  )
-}
-
-/** A Sessão do celular: o cronômetro com as informações e as ações, como a tela de verdade. */
-function TelaSessao({ madrugada = false }: { madrugada?: boolean }) {
-  const { sessao } = MINIATURAS
-  return (
-    <div>
-      <p className="titulo-linha mb-4">{sessao.titulo}</p>
-      <SessaoInfo
-        miniatura
-        campo={madrugada ? 'night-paper-deep' : 'accent'}
-        cronometro={sessao.cronometro}
-        hora={sessao.hora}
-        pessoa={sessao.pessoa}
-        atividade={sessao.atividade}
-      />
-      <AcoesDaSessaoEmMiniatura />
-    </div>
-  )
-}
-
 export function Inicio() {
-  const { dispatch } = usePrototipo()
+  useGanchoDoCabecalho(false)
+  const arte = ARTE
 
-  // O Início é sempre claro: sair do modo madrugada ao chegar aqui.
-  useEffect(() => {
-    dispatch({ tipo: 'definirMadrugada', valor: false })
-  }, [dispatch])
-
-  // O raiz é o contêiner da página: as colunas seguem a largura dela em rem da fonte raiz. Uma
-  // media query (md:) mede a janela em rem do navegador (16 px) e ignora a fonte ampliada; com
-  // o texto em 200% as colunas continuariam lado a lado e o texto não caberia. 46 rem é o
-  // conteúdo do raiz em 768 px com fonte 100% (768 − 2 × 2%). O padding lateral, abaixo, é a
-  // única variante de janela da página: um contêiner não consulta o próprio tamanho.
-  //
-  // break-words (overflow-wrap: break-word) é herdado por todo texto da página: com a fonte
-  // ampliada a página tem menos rem, e uma palavra mais larga que a própria caixa quebra em vez de
-  // vazar. Só quebra quando a palavra não cabe, então com a fonte em 100% nenhuma linha muda. É a
-  // única regra de quebra do Início, na raiz: o Hoje e a Sessão não a recebem. Sem anywhere (que
-  // muda a largura mínima de itens de grade e flex), sem hífen automático nos títulos e sem
-  // esconder nada.
-  //
-  // A página alterna campos de cor (data-campo) e faixas de papel, com no máximo dois campos
-  // seguidos. O texto longo fica sempre no papel; sobre os campos só há frases curtas.
   return (
-    <div className="@container/pagina flex min-h-dvh flex-col break-words px-4 md:px-[2%]">
-      <AvisoDemonstracao />
-      <header className="flex flex-col border-b py-3 @min-[46rem]/pagina:h-16 @min-[46rem]/pagina:flex-row @min-[46rem]/pagina:items-center @min-[46rem]/pagina:justify-between @min-[46rem]/pagina:py-0">
-        <p className="marca">AppMaternidade</p>
-        <nav
-          aria-label="Seções da página"
-          className="flex flex-wrap justify-between @min-[46rem]/pagina:gap-4"
-        >
-          {NAVEGACAO.map((link) => (
-            <a
-              key={link.alvo}
-              href={`#${link.alvo}`}
-              className="alvo-toque inline-flex items-center justify-center px-2 text-[0.9375rem] font-semibold no-underline first:pl-0 last:pr-0 hover:underline"
-            >
-              {link.rotulo}
-            </a>
-          ))}
-        </nav>
-      </header>
+    <main>
+      <PaginaCasa>
+        <div className="co">
+          <div className="co-trilho">
+            <div className="co-palco">
+              <div className="co-fita">
+                <section className="co-painel co-p1" data-cena-heroi="" aria-labelledby={ID_TITULO}>
+                  <span className="co-fantasma" aria-hidden="true">
+                    {INI_HORAS[0]}
+                  </span>
+                  <div className="co-texto co-p1-texto">
+                    <h1 id={ID_TITULO} className="co-h1">
+                      <span data-h1-dia="">{INI.h1Dia}</span> <span data-h1-noite="">{INI.h1Noite}</span>
+                    </h1>
+                    <p className="co-lede">{INI.lede}</p>
+                    <div className="co-acoes">
+                      <BotaoLargo rotulo={INI.cta1} para={INI_ROTAS.criarConta} variante="mel" />
+                      <Botao to={INI_ROTAS.comoFunciona} variante="texto" tamanho="site">
+                        {INI.cta2}
+                      </Botao>
+                    </div>
+                  </div>
+                  <div className="co-p1-cena">
+                    <div className="co-placa co-m05">
+                      <picture>
+                        <source media={LARGA} srcSet={`${arte}/m05.webp`} width={1672} height={941} />
+                        <img src={`${arte}/m05m.webp`} width={1170} height={918} alt={INI.altCena1} fetchPriority="high" decoding="async" />
+                      </picture>
+                      <picture>
+                        <source media={LARGA} srcSet={`${RAIZ}cenas/inicio/m05-luz-1672w.png`} width={1672} height={941} />
+                        <img className="co-luz" src={`${RAIZ}cenas/inicio/m05-luz-390c-1170w.png`} width={1170} height={918} alt="" decoding="async" />
+                      </picture>
+                    </div>
+                    <Legenda texto={INI.leg1} className="co-p1-leg" />
+                  </div>
+                </section>
 
-      <main className="flex-1">
-        <section
-          aria-labelledby="promessa"
-          className="entrada grid grid-cols-4 gap-x-6 pb-8 pt-6 @min-[46rem]/pagina:grid-cols-12 @min-[46rem]/pagina:pb-12 @min-[46rem]/pagina:pt-10"
-        >
-          <ul className="col-span-4 mb-6 flex flex-wrap gap-2 @min-[46rem]/pagina:col-span-12">
-            {PILARES.map((pilar) => (
-              <li key={pilar} className="etiqueta rotulo">
-                {pilar}
-              </li>
-            ))}
-          </ul>
-          <h1 id="promessa" className="promessa col-span-4 @min-[46rem]/pagina:col-span-8">
-            {PROMESSA}
-          </h1>
-          <p className="texto-medida col-span-4 mt-6 @min-[46rem]/pagina:col-span-4 @min-[46rem]/pagina:mt-0 @min-[46rem]/pagina:self-end">
-            {APRESENTACAO}
-          </p>
-        </section>
+                <section className="co-painel co-p2" aria-labelledby={ID_FAIXA_NOITE}>
+                  <span className="co-fantasma" aria-hidden="true">
+                    {INI_HORAS[1]}
+                  </span>
+                  <div className="co-texto co-p2-texto">
+                    <h2 id={ID_FAIXA_NOITE} className="co-h2">
+                      {INI.h2Noite}
+                    </h2>
+                    <p className="co-p">{INI.pNoite}</p>
+                  </div>
+                  <div className="co-p2-cena">
+                    <TelefoneDemo fluxo="historico" className="co-p2-fone">
+                      <Telefone arte={arte} nome="historico" alt={INI.altTela1} sizes={`${LARGA} 360px, 64vw`} className="co-p2-fone" />
+                    </TelefoneDemo>
+                    <div className="co-placa co-m06">
+                      <img src={`${arte}/m06.webp`} width={900} height={1470} alt={INI.altCena2} loading="lazy" decoding="async" />
+                      <img className="co-luz" src={`${RAIZ}cenas/inicio/m06-luz-792w.png`} width={792} height={1293} alt="" loading="lazy" decoding="async" />
+                    </div>
+                    <Legenda texto={INI.leg2} className="co-p2-leg" />
+                  </div>
+                </section>
 
-        {/* Campo de urucum: o Hoje de computador no notebook, a Sessão num celular e o Hoje de
-            celular no outro, em toda largura (nada some em página estreita, que só muda a
-            composição). Os celulares se sobrepõem à parte de baixo do notebook, à margem da tela
-            dele e ao espaço vazio sob a coluna da direita, nunca ao que a tela tem de mais
-            importante. As posições e escalas abaixo dão ao conjunto pelo menos 2 rem de folga dos
-            quatro lados do palco, centrado (o palco e a escala estão em .vitrine, no CSS):
-            - abaixo de 46 rem, palco de 54 × 67 rem: notebook a 0,78 no meio e os dois celulares
-              lado a lado, em escala 1, por cima da parte de baixo dele;
-            - a partir de 46 rem, palco de 81 × 56 rem: o notebook entre os dois celulares. */}
-        <section
-          id="secao-telas"
-          aria-labelledby="titulo-telas"
-          data-campo="accent"
-          className="vitrine entrada atraso-1"
-        >
-          <div inert aria-hidden="true" className="vitrine-palco">
-            <Aparelho
-              tipo="notebook"
-              tela="hoje"
-              className="absolute left-[5.2rem] top-[2rem] origin-top-left scale-[0.78] @min-[46rem]/pagina:left-[19rem] @min-[46rem]/pagina:top-[3rem] @min-[46rem]/pagina:scale-[1]"
-            >
-              <TelaHojeComputador />
-            </Aparelho>
-            <Aparelho
-              tipo="celular"
-              tela="sessao"
-              className="absolute left-[2.5rem] top-[24rem] origin-top-left scale-[1] @min-[46rem]/pagina:left-[3rem] @min-[46rem]/pagina:top-[19rem] @min-[46rem]/pagina:scale-[0.9]"
-            >
-              <TelaSessao />
-            </Aparelho>
-            <Aparelho
-              tipo="celular"
-              tela="hoje"
-              className="absolute left-[27.5rem] top-[27rem] origin-top-left scale-[1] @min-[46rem]/pagina:left-[53rem] @min-[46rem]/pagina:top-[23rem] @min-[46rem]/pagina:scale-[0.8]"
-            >
-              <TelaHoje />
-            </Aparelho>
+                <section className="co-painel co-p3" aria-labelledby={ID_FAIXA_TELA}>
+                  <div className="co-texto co-p3-texto">
+                    <h2 id={ID_FAIXA_TELA} className="co-h2 co-h2-hora">
+                      {INI.h2Tela}
+                    </h2>
+                    <p className="co-p">{INI.pTela}</p>
+                  </div>
+                  <div className="co-p3-cena">
+                    <Vaga rotulo={INI_REF.slotBerco} className="co-p3-vaga" />
+                    <TelefoneDemo fluxo="hoje" className="co-p3-fone">
+                      <Telefone arte={arte} nome="hoje-n" alt={INI.altTela2} sizes={`${LARGA} 360px, 78vw`} className="co-p3-fone" />
+                    </TelefoneDemo>
+                  </div>
+                </section>
+              </div>
+              <ol className="co-regua" aria-hidden="true">
+                {INI_HORAS.map((hora) => (
+                  <li key={hora}>{hora}</li>
+                ))}
+              </ol>
+            </div>
           </div>
-        </section>
 
-        <section className="entrada atraso-1 grid grid-cols-4 gap-4 py-8 @min-[46rem]/pagina:grid-cols-12 @min-[46rem]/pagina:gap-6 @min-[46rem]/pagina:py-12">
-          <h2 id="titulo-telas" className="rotulo col-span-4 @min-[46rem]/pagina:col-span-3">
-            {TELAS.titulo}
-          </h2>
-          <p className="texto-medida col-span-4 @min-[46rem]/pagina:col-span-9 @min-[46rem]/pagina:border-l @min-[46rem]/pagina:pl-6">
-            {TELAS.texto}
-          </p>
-        </section>
+          <section className="co-faixa co-so" aria-labelledby={ID_FAIXA_SO}>
+            <div className="co-dentro">
+              <div className="co-texto co-so-texto">
+                <h2 id={ID_FAIXA_SO} className="co-h2">
+                  {INI.h2So}
+                </h2>
+                <p className="co-p">{INI.pSo}</p>
+              </div>
+              <TelefoneDemo fluxo="familia" className="co-so-fone">
+                <Telefone arte={arte} nome="familia" alt={INI.altTela3} sizes={`${LARGA} 290px, 64vw`} className="co-so-fone" />
+              </TelefoneDemo>
+              <figure className="co-placa co-m04">
+                <img src={`${arte}/m04.webp`} width={1200} height={870} alt={INI.altCena3} loading="lazy" decoding="async" />
+              </figure>
+            </div>
+          </section>
 
-        <section
-          id="secao-serve"
-          aria-labelledby="titulo-serve"
-          className="entrada atraso-2 pb-8 @min-[46rem]/pagina:pb-12"
-        >
-          <h2 id="titulo-serve" className="rotulo mb-4">
-            {PARA_QUE_SERVE.titulo}
-          </h2>
-          {PARA_QUE_SERVE.linhas.map((linha) => (
-            <div
-              key={linha.rotulo}
-              className="grid grid-cols-1 border-t last:border-b @min-[46rem]/pagina:grid-cols-12"
-            >
-              <h3 className="titulo-linha pt-5 @min-[46rem]/pagina:col-span-3 @min-[46rem]/pagina:py-6">
-                {linha.rotulo}
-              </h3>
-              <div className="pb-6 pt-2 @min-[46rem]/pagina:col-span-9 @min-[46rem]/pagina:border-l @min-[46rem]/pagina:py-6 @min-[46rem]/pagina:pl-6">
-                <p className="texto-medida">{linha.texto}</p>
+          <section className="co-faixa co-prova" aria-labelledby="co-prova">
+            <div className="co-dentro">
+              <div className="co-texto co-prova-texto">
+                <h2 id="co-prova" className="co-h2">
+                  {INI.h2Prova}
+                </h2>
+                <p className="co-p">{INI.pProva}</p>
+                <ul className="co-fatos">
+                  {INI_FATOS.map((fato) => (
+                    <li key={fato}>{fato}</li>
+                  ))}
+                </ul>
+              </div>
+              <TelefoneDemo fluxo="notas" className="co-prova-fone">
+                <Telefone arte={arte} nome="notas" alt={INI.altNotas} sizes={`${LARGA} 375px, 78vw`} className="co-prova-fone" />
+              </TelefoneDemo>
+            </div>
+          </section>
+
+          <section id="perguntas" className="co-faixa co-perg" aria-labelledby="co-perg">
+            <div className="co-dentro">
+              <div className="co-texto co-perg-texto">
+                <h2 id="co-perg" className="co-h2">
+                  {INI.h2Perg}
+                </h2>
+                <dl className="co-perguntas">
+                  {INI_PERGUNTAS.map(({ pergunta, resposta }) => (
+                    <div key={pergunta}>
+                      <dt>{pergunta}</dt>
+                      <dd>{resposta}</dd>
+                    </div>
+                  ))}
+                </dl>
+              </div>
+              <figure className="co-placa co-porta">
+                <img src={`${arte}/porta.webp`} width={1254} height={1070} alt={INI.altPorta} loading="lazy" decoding="async" />
+                <Vaga rotulo={INI_REF.slotPorta} className="co-porta-vaga" />
+              </figure>
+            </div>
+          </section>
+
+          <section className="co-faixa co-fecho" aria-labelledby="co-fecho">
+            <div className="co-dentro">
+              <div className="co-texto co-fecho-texto">
+                <h2 id="co-fecho" className="co-h2">
+                  {INI.h2Fecho}
+                </h2>
+                <div className="co-acoes">
+                  <BotaoLargo rotulo={INI.cta3} para={INI_ROTAS.criarConta} variante="mel" />
+                </div>
+              </div>
+              {/* Decorative: the heading says it; the street only closes the house. */}
+              <div className="co-placa co-rua">
+                <img src={`${arte}/rua.webp`} width={1672} height={642} alt="" loading="lazy" decoding="async" />
+                <img className="co-luz" src={`${RAIZ}cenas/inicio-faixas/a05-rua-luz-1672w.png`} width={1672} height={642} alt="" loading="lazy" decoding="async" />
               </div>
             </div>
-          ))}
-        </section>
-
-        {/* Campo de barro: uma cena só. Cada desenho tem o viewBox justo (só a figura e o chão,
-            que vai de borda a borda do desenho e termina na base dele), então as figuras lado a
-            lado formam um chão contínuo e nenhuma toca a outra: não há sobreposição nem margem
-            negativa. A largura de cada uma é proporcional à do próprio desenho (14 % = 128, 232 e
-            188 unidades), o que dá às pessoas a mesma escala em toda largura.
-            - Em página estreita: colo e passeio na primeira linha, e o tapete centrado embaixo,
-              a um vão de 16 px, o mesmo de entre as figuras.
-            - A partir de 46 rem: as três na mesma linha, centradas no campo. */}
-        <section
-          data-campo="field-1"
-          className="entrada atraso-2 px-6 pb-6 pt-8 @min-[46rem]/pagina:px-12 @min-[46rem]/pagina:pb-8 @min-[46rem]/pagina:pt-10"
-        >
-          <div className="mx-auto flex max-w-[56rem] flex-wrap items-end gap-y-4 @min-[46rem]/pagina:flex-nowrap">
-            <IlustracaoColo className="block h-auto w-[40.4%] flex-none @min-[46rem]/pagina:w-[23.3%]" />
-            <IlustracaoTapete className="order-3 mx-auto block h-auto w-[73.2%] flex-none @min-[46rem]/pagina:order-none @min-[46rem]/pagina:w-[42.2%]" />
-            <IlustracaoPasseio className="block h-auto w-[59.4%] flex-none @min-[46rem]/pagina:w-[34.2%]" />
-          </div>
-        </section>
-
-        {/* Campo de lavanda: a madrugada, com a miniatura nas cores da noite. */}
-        <section
-          id="secao-madrugada"
-          aria-labelledby="titulo-madrugada"
-          data-campo="field-2"
-          className="madrugada-grade entrada atraso-2 mt-4 px-6 py-8 @min-[46rem]/pagina:px-12 @min-[46rem]/pagina:py-12"
-        >
-          {/* Quatro filhos da grade, nesta ordem em coluna única: título e texto, cena (a
-              ilustração), celular e legenda logo abaixo dele, com a largura dele. Nada fica atrás
-              do celular. Na grade larga, duas colunas: à esquerda o texto no alto e a ilustração
-              embaixo, na largura da coluna e com o chão na base do celular; à direita o celular e a
-              legenda (ver .madrugada-* no CSS). */}
-          <div className="madrugada-texto">
-            <h2 id="titulo-madrugada" className="titulo-secao">
-              {MADRUGADA.titulo}
-            </h2>
-            <p className="texto-medida mt-4">{MADRUGADA.texto}</p>
-          </div>
-          <div className="madrugada-cena">
-            <IlustracaoMamada larga className="block" />
-          </div>
-          <div className="madrugada-celular">
-            <Aparelho
-              tipo="celular"
-              tela="sessao"
-              tema="madrugada"
-              className="absolute left-0 top-0 origin-top-left [scale:var(--celular-escala)]"
-            >
-              <TelaSessao madrugada />
-            </Aparelho>
-          </div>
-          <p className="madrugada-legenda">{LEGENDA_MADRUGADA}</p>
-        </section>
-
-        <section
-          aria-labelledby="titulo-fatos"
-          className="entrada atraso-2 pt-8 @min-[46rem]/pagina:pt-12"
-        >
-          <h2 id="titulo-fatos" className="rotulo mb-6">
-            {FATOS.titulo}
-          </h2>
-          <ul className="faixa-fatos">
-            {FATOS.itens.map((fato) => (
-              <li key={fato.valor}>
-                <p className="numero-fato">{fato.valor}</p>
-                <p className="mt-3">{fato.legenda}</p>
-              </li>
-            ))}
-          </ul>
-        </section>
-
-        <section
-          aria-labelledby="titulo-chamada"
-          className="entrada atraso-2 mt-8 flex flex-col items-center border-t py-12 text-center @min-[46rem]/pagina:mt-12 @min-[46rem]/pagina:py-16"
-        >
-          <h2 id="titulo-chamada" className="titulo-secao [font-size:clamp(2.25rem,5vw,3.5rem)]">
-            {CHAMADA.titulo}
-          </h2>
-          <p className="texto-medida mt-4">{CHAMADA.texto}</p>
-          <Link to="/app/hoje" className="botao botao-principal mt-8">
-            {CHAMADA.link}
-          </Link>
-        </section>
-      </main>
-
-      <footer className="flex flex-wrap items-center justify-between gap-x-6 border-t py-4">
-        <p className="text-sm">{RODAPE}</p>
-        <Link to="/" className="alvo-toque inline-flex items-center">
-          Início
-        </Link>
-      </footer>
-    </div>
+          </section>
+        </div>
+      </PaginaCasa>
+    </main>
   )
 }

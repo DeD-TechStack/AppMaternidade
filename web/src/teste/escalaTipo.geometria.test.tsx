@@ -1,0 +1,588 @@
+import { spawn, spawnSync, type ChildProcess } from 'node:child_process'
+import { closeSync, existsSync, mkdirSync, mkdtempSync, openSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync, writeSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { join, resolve } from 'node:path'
+import { pathToFileURL } from 'node:url'
+import { cleanup } from '@testing-library/react'
+import { describe, expect, it } from 'vitest'
+import { aguardarCarga, renderizarRota } from './renderizarRota.tsx'
+
+// TYPE-1: a escala de tipo medida num Chrome de verdade. O jsdom não tem layout: cada página pública real vira um
+// arquivo html que liga o CSS já construído (web/dist/assets/*.css), e o Chrome sem janela mede o h1, os h2 de seção,
+// os acentos em itálico e a rolagem horizontal. Layout real, nada simulado. Este arquivo NUNCA pula: sem o Chrome ou
+// sem o build (`npm run build`), ele falha com o motivo. O Chrome roda com spawn assíncrono, saída em arquivos e grupo
+// de processos próprio, morto inteiro no fim (a mesma cerca de componentes/casca/geometria.test.tsx).
+
+const CANDIDATOS_DO_CHROME: Record<string, string[]> = {
+  win32: [
+    'C:/Program Files/Google/Chrome/Application/chrome.exe',
+    'C:/Program Files (x86)/Google/Chrome/Application/chrome.exe',
+  ],
+  linux: ['/usr/bin/google-chrome', '/usr/bin/google-chrome-stable', '/usr/bin/chromium', '/usr/bin/chromium-browser'],
+  darwin: ['/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'],
+}
+const CHROME_DO_AMBIENTE = process.env.CHROME_PATH
+// Com CHROME_PATH definido só ele vale: um caminho que não existe falha, em vez de cair noutro Chrome.
+const BUSCADOS = CHROME_DO_AMBIENTE ? [CHROME_DO_AMBIENTE] : (CANDIDATOS_DO_CHROME[process.platform] ?? [])
+const CHROME: string = BUSCADOS.find((caminho) => existsSync(caminho)) ?? BUSCADOS[0] ?? 'chrome'
+const PASTA_DIST = resolve(import.meta.dirname, '..', '..', 'dist')
+const PASTA_CSS = join(PASTA_DIST, 'assets')
+
+const PAGINAS = [
+  '/',
+  '/como-funciona',
+  '/cuidado-compartilhado',
+  '/desenvolvimento',
+  '/privacidade',
+  '/termos',
+  '/regras-da-comunidade',
+  '/exclusao-de-conta',
+  '/sobre',
+  '/contato',
+  '/rota-que-nao-existe',
+]
+const LARGURAS = [390, 768, 1024, 1440]
+const TELA_DE_ACESSO = '/entrar'
+/** As seis páginas de leitura usam os degraus da Casa; Sobre e Contato têm abertura de cena. */
+const PAGINAS_DE_LEITURA = ['/privacidade', '/termos', '/regras-da-comunidade', '/exclusao-de-conta', '/sobre', '/contato']
+const LEITURA_COM_CENA = ['/sobre', '/contato']
+
+interface Acento {
+  tag: string
+  classe: string
+  dentroDoH1: boolean
+  irmaoDoH1: boolean
+}
+/** O menor `left` e o maior `right` das letras de uma linha do h1, em px da janela. */
+interface LimiteDeLinha {
+  esquerda: number
+  direita: number
+}
+interface Medida {
+  erro?: string
+  innerWidth: number
+  fontes: string
+  scrollWidth: number
+  clientWidth: number
+  largos: string[]
+  h1: {
+    fontSize: number
+    classe: string
+    texto: string
+    linhas: string[]
+    colunaEsquerda: number
+    colunaDireita: number
+    limites: LimiteDeLinha[]
+  } | null
+  h2: Array<{ texto: string; classe: string; fontSize: number }>
+  acentos: Acento[]
+}
+
+function arquivosCss(): string[] {
+  return existsSync(PASTA_CSS) ? readdirSync(PASTA_CSS).filter((nome) => nome.endsWith('.css')) : []
+}
+
+/** Sem o Chrome ou sem o build, quem mede falha: nunca pula. */
+function exigirAmbiente(): void {
+  if (!existsSync(CHROME)) {
+    throw new Error(`Chrome não encontrado (buscado em: ${BUSCADOS.join(', ') || 'nenhum caminho para ' + process.platform}; defina CHROME_PATH)`)
+  }
+  if (arquivosCss().length === 0) throw new Error('sem web/dist/assets/*.css: rode `npm --prefix web run build` antes')
+}
+
+// O script de dentro da página: espera as fontes e escreve a medida em JSON num <pre> escondido, que o --dump-dom
+// devolve. Sem crase nem `${` aqui dentro: o texto é um template literal do TypeScript.
+const SCRIPT_DE_MEDIDA = `
+(async () => {
+  const saida = document.getElementById('escala')
+  const gravar = (objeto) => {
+    const texto = JSON.stringify(objeto)
+    saida.textContent = texto
+    if (window.parent !== window) window.parent.postMessage(texto, '*')
+  }
+  try {
+    document.body.offsetWidth
+    await document.fonts.ready
+    await new Promise((r) => setTimeout(r, 100))
+    const visivel = (el) => el.getClientRects().length > 0 && getComputedStyle(el).visibility !== 'hidden'
+    const h1 = document.querySelector('main h1')
+    let infoH1 = null
+    if (h1) {
+      // Cada letra visível vai para a linha do seu topo: o texto de cada linha mostra se alguma tem uma palavra só.
+      const porTopo = new Map()
+      // Por linha também: o menor left e o maior right das letras, para ver se a linha cabe na coluna do h1.
+      const limitesPorTopo = new Map()
+      const fimDaUltimaPorTopo = new Map()
+      let textoDoH1 = ''
+      const caminhante = document.createTreeWalker(h1, NodeFilter.SHOW_TEXT)
+      while (caminhante.nextNode()) {
+        const no = caminhante.currentNode
+        if (no.parentElement.closest('.sr-only')) continue
+        textoDoH1 += no.data + ' '
+        const faixa = document.createRange()
+        for (let i = 0; i < no.length; i++) {
+          faixa.setStart(no, i)
+          faixa.setEnd(no, i + 1)
+          const retangulos = faixa.getClientRects()
+          if (retangulos.length === 0) continue
+          const topo = Math.round(retangulos[0].top)
+          // Two spans side by side (the Início h1: day span and night span, each a flex item) are separated by a visible gap
+          // but not by a rendered space (the whitespace between flex items has no box). A gap of more than 2 px between two
+          // letters of the same line, with no space character on either side, is a word boundary: read it as one.
+          const atual = porTopo.get(topo) || ''
+          const fimAnterior = fimDaUltimaPorTopo.get(topo)
+          const separador = fimAnterior !== undefined && retangulos[0].left - fimAnterior > 2 && atual !== '' && !/\\s$/.test(atual) && !/\\s/.test(no.data[i]) ? ' ' : ''
+          fimDaUltimaPorTopo.set(topo, retangulos[retangulos.length - 1].right)
+          porTopo.set(topo, atual + separador + no.data[i])
+          const limite = limitesPorTopo.get(topo) || { esquerda: Infinity, direita: -Infinity }
+          for (const retangulo of retangulos) {
+            limite.esquerda = Math.min(limite.esquerda, retangulo.left)
+            limite.direita = Math.max(limite.direita, retangulo.right)
+          }
+          limitesPorTopo.set(topo, limite)
+        }
+      }
+      const arredondar = (n) => Math.round(n * 10) / 10
+      const estiloDoH1 = getComputedStyle(h1)
+      const caixaDoH1 = h1.getBoundingClientRect()
+      const ordenados = [...porTopo.entries()].sort((a, b) => a[0] - b[0])
+      infoH1 = {
+        fontSize: parseFloat(estiloDoH1.fontSize),
+        classe: h1.className,
+        texto: textoDoH1,
+        linhas: ordenados.map((par) => par[1]),
+        colunaEsquerda: arredondar(caixaDoH1.left + parseFloat(estiloDoH1.paddingLeft) + parseFloat(estiloDoH1.borderLeftWidth)),
+        colunaDireita: arredondar(caixaDoH1.right - parseFloat(estiloDoH1.paddingRight) - parseFloat(estiloDoH1.borderRightWidth)),
+        limites: ordenados.map((par) => ({
+          esquerda: arredondar(limitesPorTopo.get(par[0]).esquerda),
+          direita: arredondar(limitesPorTopo.get(par[0]).direita),
+        })),
+      }
+    }
+    const principal = document.querySelector('main')
+    const h2 = []
+    for (const el of principal ? principal.querySelectorAll('.cm-h2, h2.pt-h2') : []) {
+      if (!visivel(el)) continue
+      h2.push({ texto: el.textContent.trim().slice(0, 40), classe: el.className, fontSize: parseFloat(getComputedStyle(el).fontSize) })
+    }
+    const eAcento = (el) => {
+      if (!el || el === principal) return false
+      if (el.closest('blockquote, .in-relatos, .cm-depoimento, .sr-only')) return false
+      if (!visivel(el) || !el.textContent.trim()) return false
+      const estilo = getComputedStyle(el)
+      return estilo.fontStyle === 'italic' && /literata/i.test(estilo.fontFamily) && parseFloat(estilo.fontSize) >= 19
+    }
+    const acentos = []
+    for (const el of principal ? principal.querySelectorAll('*') : []) {
+      // Um bloco em itálico com filhos também em itálico conta uma vez só: o mais externo.
+      if (!eAcento(el) || eAcento(el.parentElement)) continue
+      acentos.push({
+        tag: el.tagName.toLowerCase(),
+        classe: String(el.className),
+        dentroDoH1: Boolean(h1 && h1.contains(el)),
+        irmaoDoH1: Boolean(h1 && h1.nextElementSibling === el),
+      })
+    }
+    // Quem passa da largura útil (só para o diagnóstico da rolagem horizontal).
+    const largos = []
+    const util = document.documentElement.clientWidth
+    for (const el of document.body.querySelectorAll('*')) {
+      const direita = el.getBoundingClientRect().right
+      if (direita > util + 1 && visivel(el) && largos.length < 6) {
+        largos.push(el.tagName.toLowerCase() + '.' + String(el.className).slice(0, 60) + ' direita=' + Math.round(direita))
+      }
+    }
+    gravar({
+      largos,
+      innerWidth: window.innerWidth,
+      fontes: document.fonts.status,
+      scrollWidth: document.documentElement.scrollWidth,
+      clientWidth: document.documentElement.clientWidth,
+      h1: infoH1,
+      h2,
+      acentos,
+    })
+  } catch (e) {
+    gravar({ erro: String(e), innerWidth: 0, fontes: '', scrollWidth: 0, clientWidth: 0, largos: [], h1: null, h2: [], acentos: [] })
+  }
+})()
+`
+
+/** O CSS do build aponta as fontes por `/assets/...`: numa página file:// isso vira a raiz do disco, então as URLs absolutas passam a apontar para o dist. */
+// A limpeza da pasta temporária do Chrome nunca decide o resultado do teste: no Windows o Chrome pode segurar o perfil
+// e o `rmSync` lançaria EPERM do `finally`. A falha vira só um aviso (caminho, código e mensagem), sem throw.
+function avisar(texto: string): void {
+  console.warn(texto)
+  try {
+    writeSync(2, `${texto}\n`)
+  } catch (erro) {
+    console.error(`Aviso: não deu para escrever no stderr (${String(erro)}); o aviso era: ${texto}`)
+  }
+}
+
+function limparPasta(pasta: string, comTentativas = true): void {
+  try {
+    rmSync(pasta, comTentativas ? { recursive: true, force: true, maxRetries: 6, retryDelay: 250 } : { recursive: true, force: true })
+  } catch (erro) {
+    const e = erro as NodeJS.ErrnoException
+    avisar(`Aviso: não deu para remover a pasta temporária ${pasta} (${e.code ?? 'sem código'}): ${e.message}`)
+  }
+}
+
+function cssComFontesDoDist(nome: string): string {
+  const base = `${pathToFileURL(PASTA_DIST).href}/`
+  return readFileSync(join(PASTA_CSS, nome), 'utf8').replace(/url\((["']?)\/(?!\/)/g, (_t, aspas: string) => `url(${aspas}${base}`)
+}
+
+/** Mata o Chrome e todos os filhos: o grupo inteiro no POSIX (spawn detached), a árvore no Windows. */
+function matarGrupo(pid: number, filho: ChildProcess): void {
+  if (process.platform === 'win32') {
+    try {
+      filho.kill()
+    } catch {
+      // já terminou
+    }
+    try {
+      spawnSync('taskkill', ['/pid', String(pid), '/T', '/F'], { windowsHide: true, timeout: 5_000 })
+    } catch {
+      // já terminou
+    }
+    return
+  }
+  try {
+    process.kill(-pid, 'SIGKILL')
+  } catch {
+    // grupo já terminou
+  }
+}
+
+async function medirNoChrome(conteudoHtml: string, largura: number): Promise<Medida> {
+  const pasta = mkdtempSync(join(tmpdir(), 'cm-escala-'))
+  try {
+    const perfil = join(pasta, 'perfil')
+    mkdirSync(perfil)
+    const folhas = arquivosCss().map((nome, i) => {
+      const arquivo = join(pasta, `folha-${i}.css`)
+      writeFileSync(arquivo, cssComFontesDoDist(nome), 'utf8')
+      return `<link rel="stylesheet" href="${pathToFileURL(arquivo).href}">`
+    })
+    const pagina = join(pasta, 'pagina.html')
+    writeFileSync(
+      pagina,
+      `<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">${folhas.join('')}</head>` +
+        `<body><div id="root">${conteudoHtml}</div><pre id="escala" hidden></pre><script>${SCRIPT_DE_MEDIDA}</script></body></html>`,
+      'utf8',
+    )
+    // O Chrome sem janela não passa de ~500 px de largura: abaixo disso a página vai num iframe da largura pedida
+    // (as media queries respondem à largura do iframe) e devolve a medida por postMessage.
+    let alvo = pagina
+    if (largura < 500) {
+      alvo = join(pasta, 'envoltorio.html')
+      writeFileSync(
+        alvo,
+        `<!doctype html><html><body style="margin:0"><iframe src="${pathToFileURL(pagina).href}" style="border:0;width:${largura}px;height:900px"></iframe><pre id="escala" hidden></pre>` +
+          `<script>addEventListener('message', (e) => { document.getElementById('escala').textContent = e.data })</script></body></html>`,
+        'utf8',
+      )
+    }
+    const arquivoDeSaida = join(pasta, 'saida.txt')
+    const arquivoDeErro = join(pasta, 'erro.txt')
+    const fdSaida = openSync(arquivoDeSaida, 'w')
+    const fdErro = openSync(arquivoDeErro, 'w')
+    let filho: ChildProcess | null = null
+    let terminou: Promise<{ status: number | null; erro: string | null }> | null = null
+    let expirou = false
+    let final: { status: number | null; erro: string | null } | null = null
+    const inicio = Date.now()
+    try {
+      const alvoDoFilho = spawn(
+        CHROME,
+        [
+          '--headless=new',
+          '--no-sandbox',
+          '--disable-gpu',
+          // No Chrome 157 do Linux esta opção mata o processo (CI-UBUNTU). No Windows ela fica.
+          ...(process.platform === 'win32' ? ['--disable-crashpad-for-testing'] : []),
+          '--no-first-run',
+          '--allow-file-access-from-files',
+          '--disable-dev-shm-usage',
+          '--disable-extensions',
+          '--disable-background-networking',
+          '--disable-component-update',
+          '--disable-sync',
+          '--disable-software-rasterizer',
+          '--mute-audio',
+          '--no-default-browser-check',
+          `--user-data-dir=${perfil}`,
+          '--force-device-scale-factor=1',
+          // A moldura de 16 px é a do headless do Windows: com +16 o innerWidth fica igual à largura pedida.
+          `--window-size=${Math.max(largura, 600) + (process.platform === 'win32' ? 16 : 0)},900`,
+          '--virtual-time-budget=3000',
+          '--dump-dom',
+          pathToFileURL(alvo).href,
+        ],
+        { stdio: ['ignore', fdSaida, fdErro], detached: process.platform !== 'win32', windowsHide: true },
+      )
+      filho = alvoDoFilho
+      terminou = new Promise((resolver) => {
+        alvoDoFilho.once('error', (erro) => {
+          final = { status: null, erro: erro.message }
+          resolver(final)
+        })
+        alvoDoFilho.once('exit', (status) => {
+          final = { status, erro: null }
+          resolver(final)
+        })
+      })
+      let relogio: NodeJS.Timeout | undefined
+      const limite = new Promise<'tempo'>((resolver) => {
+        relogio = setTimeout(() => resolver('tempo'), 60_000)
+      })
+      expirou = (await Promise.race([terminou, limite]).finally(() => clearTimeout(relogio))) === 'tempo'
+    } finally {
+      if (filho?.pid !== undefined) matarGrupo(filho.pid, filho)
+      if (terminou) {
+        let espera: NodeJS.Timeout | undefined
+        await Promise.race([
+          terminou,
+          new Promise((resolver) => {
+            espera = setTimeout(resolver, 3_000)
+          }),
+        ]).finally(() => clearTimeout(espera))
+      }
+      closeSync(fdSaida)
+      closeSync(fdErro)
+    }
+    const resultado = final ?? { status: null, erro: 'o Chrome não encerrou nem depois do kill (sem exit/error em 3 s)' }
+    const situacao = `status ${resultado.status}, erro ${resultado.erro ?? (expirou ? 'tempo esgotado (60000 ms)' : 'nenhum')}`
+    // O Chrome tem de ter terminado sozinho, com status 0, e escrito a saída agora (arquivo novo e não vazio).
+    if (expirou || resultado.status !== 0) {
+      throw new Error(`O Chrome não terminou bem (${situacao}): ${readFileSync(arquivoDeErro, 'utf8')}`)
+    }
+    const dados = statSync(arquivoDeSaida)
+    if (dados.size === 0 || dados.mtimeMs < inicio - 1_000) throw new Error(`O Chrome não escreveu a saída (${situacao})`)
+    const achado = /<pre id="escala"[^>]*>([\s\S]*?)<\/pre>/.exec(readFileSync(arquivoDeSaida, 'utf8'))
+    if (!achado) throw new Error(`O Chrome não devolveu a medida (${situacao}): ${readFileSync(arquivoDeErro, 'utf8')}`)
+    const texto = achado[1].replaceAll('&lt;', '<').replaceAll('&gt;', '>').replaceAll('&amp;', '&')
+    const medida = JSON.parse(texto) as Medida
+    if (medida.erro) throw new Error(`a medida falhou na página: ${medida.erro}`)
+    return medida
+  } finally {
+    limparPasta(pasta)
+  }
+}
+
+type Medidas = Map<string, Medida>
+const chave = (caminho: string, largura: number) => `${caminho}@${largura}`
+let todasAsMedidas: Promise<Medidas> | null = null
+
+/** Renderiza cada rota no jsdom (uma de cada vez, o documento é um só) e mede todas no Chrome, em lotes. Feito uma vez e dividido pelos testes. */
+function medirTudo(): Promise<Medidas> {
+  todasAsMedidas ??= (async () => {
+    exigirAmbiente()
+    const htmls = new Map<string, string>()
+    for (const caminho of [...PAGINAS, TELA_DE_ACESSO]) {
+      const { container } = renderizarRota(caminho)
+      await aguardarCarga()
+      htmls.set(caminho, container.innerHTML)
+      cleanup()
+    }
+    const pedidos: Array<[string, number]> = []
+    for (const caminho of PAGINAS) for (const largura of LARGURAS) pedidos.push([caminho, largura])
+    for (const largura of [390, 1440]) pedidos.push([TELA_DE_ACESSO, largura])
+    const medidas: Medidas = new Map()
+    const LOTE = 4
+    for (let i = 0; i < pedidos.length; i += LOTE) {
+      await Promise.all(
+        pedidos.slice(i, i + LOTE).map(async ([caminho, largura]) => {
+          try {
+            medidas.set(chave(caminho, largura), await medirNoChrome(htmls.get(caminho)!, largura))
+          } catch (erro) {
+            throw new Error(`${caminho} em ${largura}: ${erro instanceof Error ? erro.message : String(erro)}`, { cause: erro })
+          }
+        }),
+      )
+    }
+    return medidas
+  })()
+  return todasAsMedidas
+}
+
+function medida(medidas: Medidas, caminho: string, largura: number): Medida {
+  const achada = medidas.get(chave(caminho, largura))
+  if (!achada) throw new Error(`sem medida de ${caminho} em ${largura}`)
+  expect(achada.innerWidth, `${caminho}: a janela de ${largura}`).toBe(largura)
+  expect(achada.fontes, `${caminho}: as fontes em ${largura}`).toBe('loaded')
+  return achada
+}
+
+const TEMPO = 900_000
+
+// pre-existing at BASE, owner CONTENT-1/page cards: o scroll horizontal destas páginas não é do TYPE-1; só a checagem
+// de rolagem é pulada (e só aqui, por nome). As checagens do h1 seguem valendo para elas.
+const ROLAGEM_ANTERIOR_AO_BASE: ReadonlyArray<{ caminho: string; largura: number }> = [{ caminho: '/como-funciona', largura: 390 }]
+
+/** As palavras de um trecho, em minúsculas, sem espaço (comum ou nbsp) nem pontuação no começo ou no fim. */
+function palavrasDaLinha(trecho: string): string[] {
+  return trecho
+    .split(/\s+/)
+    .map((palavra) => palavra.replace(/^[\p{P}\p{S}]+|[\p{P}\p{S}]+$/gu, '').toLowerCase())
+    .filter(Boolean)
+}
+
+/** Os pedaços das linhas que não são palavra inteira do texto do h1: uma palavra partida no meio por `overflow-wrap: anywhere` aparece aqui. */
+function palavrasPartidas(linhas: readonly string[], textoDoH1: string): string[] {
+  const inteiras = new Set(palavrasDaLinha(textoDoH1))
+  return linhas.flatMap((linha) => palavrasDaLinha(linha)).filter((palavra) => !inteiras.has(palavra))
+}
+
+/** Os índices das linhas cujas letras passam da coluna do h1 (esquerda ou direita) por mais que a tolerância, em px. */
+function linhasForaDaColuna(limites: readonly LimiteDeLinha[], colunaEsquerda: number, colunaDireita: number, tolerancia = 1): number[] {
+  const fora: number[] = []
+  limites.forEach((limite, indice) => {
+    if (limite.esquerda < colunaEsquerda - tolerancia || limite.direita > colunaDireita + tolerancia) fora.push(indice)
+  })
+  return fora
+}
+
+/** O resíduo de linhas com uma palavra só (aceitas) vai para `.oc/medidas/residuo_uma_palavra.json` e para o console. */
+function escreverResiduo(residuo: unknown[]): void {
+  const pasta = resolve(import.meta.dirname, '..', '..', '..', '.oc', 'medidas')
+  mkdirSync(pasta, { recursive: true })
+  writeFileSync(join(pasta, 'residuo_uma_palavra.json'), JSON.stringify(residuo, null, 2) + '\n', 'utf8')
+  console.info(`residuo_uma_palavra (${residuo.length}): ${JSON.stringify(residuo)}`)
+}
+
+describe('TYPE-1: a escala de tipo medida no Chrome', () => {
+  it(
+    'tamanhos',
+    async () => {
+      const medidas = await medirTudo()
+      for (const caminho of PAGINAS) {
+        if (PAGINAS_DE_LEITURA.includes(caminho)) {
+          const cena = LEITURA_COM_CENA.includes(caminho)
+          // Tamanhos renderizados da Casa nas duas âncoras, com e sem a largura da barra de rolagem.
+          const faixas = cena ? [[390, 47, 50], [1440, 76, 79]] : [[390, 32, 34], [1440, 50, 52]]
+          for (const [largura, piso, teto] of faixas) {
+            const m = medida(medidas, caminho, largura)
+            const titulo = `${caminho}: o h1 ${cena ? 'de cena' : 'compacto'} em ${largura}`
+            expect(m.h1, `${caminho}: sem h1 em ${largura}`).not.toBeNull()
+            expect(m.h1!.classe.split(/\s+/), titulo).toContain(cena ? 'co-h1' : 'co-h2')
+            expect(m.h1!.fontSize, titulo).toBeGreaterThanOrEqual(piso)
+            expect(m.h1!.fontSize, titulo).toBeLessThanOrEqual(teto)
+            const secoes = m.h2.filter((h2) => h2.classe.split(/\s+/).includes('pt-h2'))
+            expect(secoes.length, `${caminho}: sem h2 de leitura em ${largura}`).toBeGreaterThan(0)
+            for (const h2 of secoes) {
+              const subtitulo = `${caminho}: o h2 de leitura "${h2.texto}" em ${largura}`
+              if (caminho === '/sobre') {
+                expect(h2.fontSize, subtitulo).toBeGreaterThanOrEqual(largura === 390 ? 31.9 : 40)
+              } else {
+                expect(h2.fontSize, subtitulo).toBeCloseTo(largura === 390 ? 28 : 36, 1)
+              }
+              expect(h2.fontSize, subtitulo).toBeLessThan(m.h1!.fontSize)
+            }
+          }
+        } else {
+          for (const [largura, tamanhoMinimo] of [[1440, 72], [390, 40]]) {
+            const m = medida(medidas, caminho, largura)
+            expect(m.h1, `${caminho}: sem h1 em ${largura}`).not.toBeNull()
+            expect(m.h1!.fontSize, `${caminho}: o h1 em ${largura}`).toBeGreaterThanOrEqual(tamanhoMinimo)
+          }
+        }
+        for (const h2 of medida(medidas, caminho, 1440).h2.filter((h) => h.classe.split(/\s+/).includes('cm-h2'))) {
+          expect(h2.fontSize, `${caminho}: o h2 de seção "${h2.texto}" em 1440`).toBeGreaterThanOrEqual(40)
+        }
+      }
+      // A tela de acesso mantém o h1 de `titulo-1`.
+      expect(medida(medidas, TELA_DE_ACESSO, 1440).h1!.fontSize, `${TELA_DE_ACESSO}: o h1 em 1440`).toBe(48)
+      expect(medida(medidas, TELA_DE_ACESSO, 390).h1!.fontSize, `${TELA_DE_ACESSO}: o h1 em 390`).toBe(34)
+    },
+    TEMPO,
+  )
+
+  it(
+    'italico',
+    async () => {
+      const medidas = await medirTudo()
+      // Junta todos os achados antes de afirmar: uma rodada mostra a lista inteira, não só o primeiro.
+      const achados: string[] = []
+      for (const caminho of PAGINAS) {
+        for (const largura of [1440, 390]) {
+          const { acentos } = medida(medidas, caminho, largura)
+          if (acentos.length > 1) achados.push(`${caminho} em ${largura}: ${acentos.length} acentos em itálico ${JSON.stringify(acentos)}`)
+          if (acentos.length === 1 && !(acentos[0].dentroDoH1 || acentos[0].irmaoDoH1)) {
+            achados.push(`${caminho} em ${largura}: o único acento não está no h1 nem logo depois dele ${JSON.stringify(acentos[0])}`)
+          }
+        }
+      }
+      expect(achados, achados.join('\n')).toEqual([])
+    },
+    TEMPO,
+  )
+
+  it(
+    'quebra',
+    async () => {
+      const medidas = await medirTudo()
+      const achados: string[] = []
+      const umaPalavra: Array<{ caminho: string; largura: number; linha: string; linhas: string[] }> = []
+      for (const caminho of PAGINAS) {
+        for (const largura of LARGURAS) {
+          const m = medida(medidas, caminho, largura)
+          // Sem rolagem horizontal: o conteúdo cabe na largura útil (a barra vertical, quando existe, já está fora de clientWidth).
+          expect(m.clientWidth, `${caminho}: a largura útil em ${largura}`).toBeGreaterThan(0)
+          const anterior = ROLAGEM_ANTERIOR_AO_BASE.some((item) => item.caminho === caminho && item.largura === largura)
+          if (!anterior && m.scrollWidth > m.clientWidth) {
+            achados.push(`${caminho} em ${largura}: rolagem horizontal (${m.scrollWidth} > ${m.clientWidth}): ${JSON.stringify(m.largos)}`)
+          }
+          expect(m.h1, `${caminho}: sem h1 em ${largura}`).not.toBeNull()
+          const { linhas, texto, limites, colunaEsquerda, colunaDireita } = m.h1!
+          expect(linhas.length, `${caminho}: o h1 sem linhas em ${largura}`).toBeGreaterThan(0)
+          // Nenhuma linha passa da coluna do próprio h1, mesmo quando o documento não rola (vale também onde a rolagem é pulada).
+          const foraDaColuna = linhasForaDaColuna(limites, colunaEsquerda, colunaDireita)
+          if (foraDaColuna.length > 0) {
+            const detalhe = foraDaColuna.map((i) => `"${linhas[i].trim()}" [${limites[i].esquerda}, ${limites[i].direita}] (${Math.round((limites[i].direita - limites[i].esquerda) * 10) / 10} px)`)
+            achados.push(`${caminho} em ${largura}: linha(s) do h1 fora da coluna [${colunaEsquerda}, ${colunaDireita}] (${Math.round((colunaDireita - colunaEsquerda) * 10) / 10} px): ${detalhe.join('; ')}`)
+          }
+          // Nenhuma palavra partida dentro dela (overflow-wrap: anywhere): cada pedaço de linha é palavra inteira do h1.
+          for (const fragmento of palavrasPartidas(linhas, texto)) {
+            achados.push(`${caminho} em ${largura}: palavra partida "${fragmento}" (linhas: ${JSON.stringify(linhas)})`)
+          }
+          // Um h1 de uma linha só (uma palavra, como "Contato") não tem linha solta: o teste vale para h1 de várias linhas.
+          if (linhas.length > 1) {
+            for (const linha of linhas) {
+              const palavras = linha.split(/[\s\u00a0]+/).filter(Boolean)
+              // Uma linha com uma palavra só é aceita; vai para o resíduo, para a revisão olhar.
+              if (palavras.length === 1) umaPalavra.push({ caminho, largura, linha: linha.trim(), linhas })
+            }
+          }
+        }
+      }
+      escreverResiduo(umaPalavra)
+      expect(achados, achados.join('\n')).toEqual([])
+    },
+    TEMPO,
+  )
+
+  it('quebra: o controle negativo acusa uma palavra partida dentro dela', () => {
+    // Palavra partida: "Exclus" + "ão" não são palavras do h1.
+    expect(palavrasPartidas(['Exclus', 'ão da conta'], 'Exclusão da conta')).toEqual(['exclus', 'ão'])
+    // Linhas inteiras, com pontuação no fim e uma palavra só numa linha: nada a acusar.
+    expect(palavrasPartidas(['Exclusão ', 'da conta.'], 'Exclusão da conta.')).toEqual([])
+    expect(palavrasPartidas(['A rotina ', 'do bebê,', ' dividida com ', 'carinho.'], 'A rotina do bebê,  dividida com carinho. ')).toEqual([])
+  })
+
+  it('quebra: o controle negativo acusa uma linha que estoura a coluna', () => {
+    // Uma linha de 181,7 px numa coluna de 40 px (0 a 40): é a da revisão, com o documento sem rolar. A linha de dentro e a
+    // que passa só 0,5 px (dentro da tolerância de 1 px) não são acusadas.
+    const limites = [
+      { esquerda: 0, direita: 181.7 },
+      { esquerda: 2, direita: 38 },
+      { esquerda: 0, direita: 40.5 },
+    ]
+    expect(linhasForaDaColuna(limites, 0, 40)).toEqual([0])
+    // Estourar pela esquerda também conta; a tolerância é ajustável.
+    expect(linhasForaDaColuna([{ esquerda: -3, direita: 30 }], 0, 40)).toEqual([0])
+    expect(linhasForaDaColuna([{ esquerda: 0, direita: 40.5 }], 0, 40, 0)).toEqual([0])
+  })
+})

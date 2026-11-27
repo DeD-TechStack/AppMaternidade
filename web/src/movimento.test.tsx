@@ -1,37 +1,39 @@
-import { readFileSync } from 'node:fs'
+import { existsSync, readFileSync } from 'node:fs'
+import { posix } from 'node:path'
+import { parse } from 'postcss'
 import { useState, type ReactElement } from 'react'
 import { describe, expect, it, beforeEach, vi } from 'vitest'
-import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { cn } from './componentes/terceiros/cn.ts'
-import { EntradaSuave } from './componentes/terceiros/EntradaSuave.tsx'
-import { TextoAnimado } from './componentes/terceiros/TextoAnimado.tsx'
+import { INI_FATOS } from './conteudo/inicio.ts'
 import { CamadaHover } from './movimento/CamadaHover.tsx'
-import {
-  type RegistroMovimento,
-  CATALOGO,
-  TETO_ABERTURA_MS,
-  TETO_DESTAQUE,
-  TETO_FORA_DE_DESTAQUE,
-  fimDaAbertura,
-} from './movimento/catalogo.ts'
+import { CATALOGO, fimDaCortina } from './movimento/catalogo.ts'
 import { Cortina } from './movimento/Cortina.tsx'
-import { LinhasEscalonadas } from './movimento/LinhasEscalonadas.tsx'
-import { LinkComSeta } from './movimento/LinkComSeta.tsx'
+import { EntradaCena } from './movimento/EntradaCena.tsx'
 import { RevelaNaRolagem } from './movimento/RevelaNaRolagem.tsx'
 import { RevelacaoPorBaixo } from './movimento/RevelacaoPorBaixo.tsx'
-import { TracoDesenhado } from './movimento/TracoDesenhado.tsx'
 import { usePrefereMovimentoReduzido, useSemHover, useTelaLarga } from './movimento/reduzido.ts'
 import { listarFontes, pastaSrcDe } from './teste/fontes.ts'
+import { renderizarRota } from './teste/renderizarRota.tsx'
 
-// VIS4-20 (MAT-44c-2a): as primitivas de movimento e os dois componentes adaptados do Magic UI.
-// Este arquivo não importa motion/react: testa as peças pela interface (papéis, textos, estilos).
-// Nenhuma página usa as peças ainda.
-
+// Compatibilidade VIS4-20: as peças aposentadas não voltam a ser usadas. As garantias de
+// primeira pintura, ordem, nome acessível e foco são conferidas nas rotas que as entregam.
 const pastaSrc = pastaSrcDe(import.meta.url)
 const lerTexto = (relativo: string) => readFileSync(pastaSrc + relativo, 'utf8')
 const fontesDe = (...prefixos: string[]) =>
   listarFontes(pastaSrc).filter((f) => prefixos.some((p) => f.nome.startsWith(p)))
 const pecasDoMovimento = () => fontesDe('movimento/', 'componentes/terceiros/')
+
+function conferirVisivel(no: Element) {
+  expect(no.isConnected).toBe(true)
+  for (let atual: Element | null = no; atual; atual = atual.parentElement) {
+    expect(atual.matches('[hidden], [aria-hidden="true"]')).toBe(false)
+    const estilo = getComputedStyle(atual)
+    expect(estilo.display).not.toBe('none')
+    expect(estilo.visibility).not.toMatch(/^(hidden|collapse)$/)
+    expect(estilo.opacity === '' || Number(estilo.opacity) > 0).toBe(true)
+  }
+}
 
 // ---------------------------------------------------------------------------
 // Simulações do navegador que o jsdom não traz.
@@ -95,7 +97,11 @@ beforeEach(() => {
 // 1. Catálogo
 
 describe('VIS4-20: catálogo de movimento', () => {
-  const registros: Array<[string, RegistroMovimento]> = Object.entries(CATALOGO)
+  // Projeção estrutural checada, sem importar o tipo privado do catálogo.
+  const registros: Array<[string, (typeof CATALOGO)[keyof typeof CATALOGO]]> = Object.entries(CATALOGO)
+  const destaque = new Set(['M2', 'M3', 'M7', 'M8', 'M16'])
+  const tetoDestaque = { duracaoMs: 1200, deslocamentoPx: 120, deslocamentoPct: 100, escalaMinima: 0.8, escalaMaxima: 1.1, rotacaoGraus: 8 }
+  const tetoComum = { duracaoMs: 300, deslocamentoPx: 16 }
 
   it('todo registro tem id de M1 a M21, igual à chave', () => {
     expect(registros.length).toBeGreaterThan(0)
@@ -108,45 +114,43 @@ describe('VIS4-20: catálogo de movimento', () => {
   })
 
   it('os valores decididos estão no catálogo, nos tipos certos', () => {
-    expect(Object.keys(CATALOGO)).toEqual(['M1', 'M2', 'M3', 'M4', 'M5', 'M6', 'M7', 'M12', 'M13'])
-    for (const id of ['M3', 'M6', 'M7'] as const) {
+    expect(Object.keys(CATALOGO)).toEqual(['M2', 'M3', 'M7', 'M8', 'M13', 'M14', 'M15', 'M16', 'M17', 'M11'])
+    for (const id of ['M3', 'M7', 'M16'] as const) {
       expect(CATALOGO[id].tipo).toBe('rolagem')
       expect(CATALOGO[id].duracaoMs).toBeNull()
     }
     expect(CATALOGO.M3.janelaPx).toBe(360)
-    expect(CATALOGO.M6.deslocamentoPct).toBe(50)
+    expect(CATALOGO.M3.escala).toEqual({ de: 0.9, para: 1 })
+    expect(CATALOGO.M3.mola).toEqual({ stiffness: 120, damping: 30 })
     expect(CATALOGO.M7.deslocamentoPct).toBe(30)
     expect(CATALOGO.M2.colunas).toEqual({ largo: 6, estreito: 4 })
-    expect(CATALOGO.M5).toEqual({ ...CATALOGO.M4, id: 'M5' })
+    expect(CATALOGO.M13.duracaoMs).toBe(100)
+    expect(CATALOGO.M13.duracaoSaidaMs).toBe(110)
   })
 
-  it('os de destaque respeitam os tetos de destaque', () => {
-    const destaques = registros.filter(([, r]) => r.destaque)
-    expect(destaques.length).toBeGreaterThan(0)
+  it('os destaques respeitam os mesmos tetos de movimento', () => {
+    const destaques = registros.filter(([id]) => destaque.has(id))
+    expect(destaques).toHaveLength(destaque.size)
     for (const [id, r] of destaques) {
-      if (r.duracaoMs !== null) expect(r.duracaoMs, id).toBeLessThanOrEqual(TETO_DESTAQUE.duracaoMs)
-      expect(r.deslocamentoPx, id).toBeLessThanOrEqual(TETO_DESTAQUE.deslocamentoPx)
-      expect(r.deslocamentoPct, id).toBeLessThanOrEqual(TETO_DESTAQUE.deslocamentoPct)
-      expect(r.escala.de, id).toBeGreaterThanOrEqual(TETO_DESTAQUE.escalaMinima)
-      expect(r.escala.de, id).toBeLessThanOrEqual(TETO_DESTAQUE.escalaMaxima)
-      expect(r.escala.para, id).toBeGreaterThanOrEqual(TETO_DESTAQUE.escalaMinima)
-      expect(r.escala.para, id).toBeLessThanOrEqual(TETO_DESTAQUE.escalaMaxima)
-      expect(Math.abs(r.rotacaoGraus), id).toBeLessThanOrEqual(TETO_DESTAQUE.rotacaoGraus)
+      expect(r.duracaoMs ?? 0, id).toBeLessThanOrEqual(tetoDestaque.duracaoMs)
+      expect(r.deslocamentoPx, id).toBeLessThanOrEqual(tetoDestaque.deslocamentoPx)
+      expect(r.deslocamentoPct, id).toBeLessThanOrEqual(tetoDestaque.deslocamentoPct)
+      for (const escala of [r.escala.de, r.escala.para]) {
+        expect(escala, id).toBeGreaterThanOrEqual(tetoDestaque.escalaMinima)
+        expect(escala, id).toBeLessThanOrEqual(tetoDestaque.escalaMaxima)
+      }
+      if ('rotacaoGraus' in r) {
+        expect(typeof r.rotacaoGraus, id).toBe('number')
+        if (typeof r.rotacaoGraus === 'number') expect(Math.abs(r.rotacaoGraus), id).toBeLessThanOrEqual(tetoDestaque.rotacaoGraus)
+      }
     }
   })
 
-  it('o deslocamento em % só aparece onde há recipiente que corta (M1, M2, M6 e M7)', () => {
-    const comPorcento = registros.filter(([, r]) => r.deslocamentoPct > 0).map(([id]) => id)
-    expect(comPorcento).toEqual(['M1', 'M2', 'M6', 'M7'])
-  })
-
-  it('M1 declara a revelação por translação: 100% da largura, escala 1 para 1, 400 ms, linear', () => {
-    const { M1 } = CATALOGO
-    expect(M1.deslocamentoPct).toBe(100)
-    expect(M1.escala).toEqual({ de: 1, para: 1 })
-    expect(M1.duracaoMs).toBe(400)
-    expect(M1.curva).toBe('linear')
-    expect(M1.atrasoMs).toBe(0)
+  it('porcentagem só na cortina, no recorte M7 estacionado e no letreiro CSS M14', () => {
+    expect(registros.filter(([, r]) => r.deslocamentoPct > 0).map(([id]) => id)).toEqual(['M2', 'M7', 'M14'])
+    expect(CATALOGO.M2.deslocamentoPct).toBe(100)
+    expect(CATALOGO.M14.deslocamentoPct).toBe(50)
+    expect(CATALOGO.M14.duracaoMs).toBe(60000)
   })
 
   it('em todo o catálogo: escala entre 0,8 e 1,1, deslocamento até 120 px e até 100%', () => {
@@ -161,31 +165,39 @@ describe('VIS4-20: catálogo de movimento', () => {
   })
 
   it('os outros só movem opacidade e até 16 px, em até 300 ms', () => {
-    const comuns = registros.filter(([, r]) => !r.destaque)
-    expect(comuns.length).toBeGreaterThan(0)
+    // M14 é a exceção CSS documentada, e a luz M15 não desloca conteúdo.
+    const comuns = registros.filter(([id]) => !destaque.has(id) && id !== 'M14')
+    expect(comuns.map(([id]) => id)).toEqual(['M13', 'M15', 'M17', 'M11'])
     for (const [id, r] of comuns) {
-      expect(r.duracaoMs ?? 0, id).toBeLessThanOrEqual(TETO_FORA_DE_DESTAQUE.duracaoMs)
-      expect(r.duracaoSaidaMs ?? 0, id).toBeLessThanOrEqual(TETO_FORA_DE_DESTAQUE.duracaoMs)
-      expect(r.deslocamentoPx, id).toBeLessThanOrEqual(TETO_FORA_DE_DESTAQUE.deslocamentoPx)
+      expect(r.duracaoMs ?? 0, id).toBeLessThanOrEqual(tetoComum.duracaoMs)
+      if ('duracaoSaidaMs' in r) expect(r.duracaoSaidaMs, id).toBeLessThanOrEqual(tetoComum.duracaoMs)
+      expect(r.deslocamentoPx, id).toBeLessThanOrEqual(tetoComum.deslocamentoPx)
       expect(r.deslocamentoPct, id).toBe(0)
       expect(r.escala, id).toEqual({ de: 1, para: 1 })
-      expect(r.rotacaoGraus, id).toBe(0)
+      if ('rotacaoGraus' in r) expect(r.rotacaoGraus, id).toBe(0)
     }
   })
 
-  it('a sequência de abertura (M1 + M2) termina em até 1500 ms, com o traço parado 100 ms antes da cortina', () => {
-    const { M1, M2 } = CATALOGO
-    expect(M2.atrasoMs - (M1.atrasoMs + (M1.duracaoMs ?? 0))).toBe(100)
-    expect(fimDaAbertura()).toBe(500 + 5 * 60 + 120 + 500)
-    expect(fimDaAbertura()).toBeLessThanOrEqual(TETO_ABERTURA_MS)
-    const estreita = M2.atrasoMs + (M2.colunas.estreito - 1) * M2.escalonamentoMs + M2.atrasoCamadaMs + M2.duracaoMs
-    expect(estreita).toBeLessThanOrEqual(fimDaAbertura())
+  it('a sobreposição da abertura termina em até 1500 ms nas duas larguras', () => {
+    const { M2, M8 } = CATALOGO
+    expect(M2.atrasoMs).toBe(0) // não há mais espera pelo traço M1
+    expect(M2.duracaoMs).toBe(500)
+    expect(M2.curva).toEqual([0.16, 1, 0.3, 1])
+    expect(M2.escalonamentoMs).toBe(90)
+    expect(M2.atrasoCamadaMs).toBe(120)
+    expect(fimDaCortina()).toBe(5 * 90 + 120 + 500)
+    expect(fimDaCortina()).toBeLessThanOrEqual(1500)
+    const estreita = (M2.colunas.estreito - 1) * M2.escalonamentoMs + M2.atrasoCamadaMs + M2.duracaoMs
+    expect(estreita).toBe(3 * 90 + 120 + 500)
+    expect(estreita).toBeLessThanOrEqual(1500)
+    expect(M8.escala).toEqual({ de: 0.94, para: 1 })
+    expect(M8.duracaoMs).toBe(800) // cena decorativa posterior, não a sobreposição
   })
 
-  it('nenhum registro repete e nenhum é um laço', () => {
+  it('nenhum movimento do catálogo repete além do letreiro CSS M14', () => {
+    expect(registros.filter(([, r]) => r.tipo === 'laco').map(([id]) => id)).toEqual(['M14'])
     for (const [id, r] of registros) {
-      expect(r.repetir, id).toBe(false)
-      expect(r.tipo, id).not.toBe('laco')
+      if ('repetir' in r) expect(r.repetir, id).toBe(false)
     }
   })
 })
@@ -234,16 +246,11 @@ interface Peca {
 }
 
 const comEstilo = (raiz: HTMLElement) => raiz.querySelectorAll('[style]').length > 0
-const { deslocamentoPx, duracaoMs, curva, escalonamentoMs } = CATALOGO.M4
 
 const pecas: Peca[] = [
   {
-    nome: 'TracoDesenhado',
-    ui: () => <TracoDesenhado />,
-    textos: [],
-    animada: comEstilo,
+    nome: 'Cortina', ui: () => <Cortina />, textos: [], animada: (raiz) => raiz.querySelector('[data-cortina]') !== null,
   },
-  { nome: 'Cortina', ui: () => <Cortina comTraco />, textos: [], animada: (raiz) => raiz.firstChild !== null },
   {
     nome: 'RevelaNaRolagem',
     ui: () => (
@@ -255,30 +262,10 @@ const pecas: Peca[] = [
     animada: comEstilo,
   },
   {
-    nome: 'LinhasEscalonadas',
-    ui: () => <LinhasEscalonadas linhas={['Primeira linha', 'Segunda linha']} />,
-    textos: ['Primeira linha', 'Segunda linha'],
-    animada: comEstilo,
-  },
-  {
-    nome: 'RevelacaoPorBaixo',
-    ui: () => (
-      <RevelacaoPorBaixo variante="M6">
-        <p>Seção revelada</p>
-      </RevelacaoPorBaixo>
-    ),
+    nome: 'RevelacaoPorBaixo M7 (estacionada)',
+    ui: () => <RevelacaoPorBaixo variante="M7"><p>Seção revelada</p></RevelacaoPorBaixo>,
     textos: ['Seção revelada'],
     animada: comEstilo,
-  },
-  {
-    nome: 'LinkComSeta',
-    ui: () => (
-      <LinkComSeta href="/destino" icone={<span>↗</span>}>
-        Ver o projeto
-      </LinkComSeta>
-    ),
-    textos: ['Ver o projeto'],
-    animada: null,
   },
   {
     nome: 'CamadaHover',
@@ -293,30 +280,10 @@ const pecas: Peca[] = [
     ignorarEstilo: '[data-aberta]',
   },
   {
-    nome: 'EntradaSuave',
-    ui: () => (
-      <EntradaSuave deslocamentoPx={deslocamentoPx} duracaoMs={duracaoMs} curva={curva}>
-        <p>Bloco que entra</p>
-      </EntradaSuave>
-    ),
-    textos: ['Bloco que entra'],
-    animada: comEstilo,
-  },
-  {
-    nome: 'TextoAnimado',
-    ui: () => (
-      <TextoAnimado
-        as="h2"
-        deslocamentoPx={deslocamentoPx}
-        duracaoMs={duracaoMs}
-        curva={curva}
-        escalonamentoMs={escalonamentoMs}
-      >
-        {'Título de uma linha\nTítulo de outra linha'}
-      </TextoAnimado>
-    ),
-    textos: ['Título de uma linha', 'Título de outra linha'],
-    animada: comEstilo,
+    nome: 'EntradaCena',
+    ui: () => <EntradaCena pronta={false}><p>Cena da abertura</p></EntradaCena>,
+    textos: ['Cena da abertura'],
+    animada: (raiz) => raiz.querySelector('[data-entrada-cena="espera"][style*="opacity: 0"]') !== null,
   },
 ]
 
@@ -326,7 +293,7 @@ const pecas: Peca[] = [
  */
 function desviosDoEstadoFinal(raiz: HTMLElement, ignorar?: string): string[] {
   const desvios: string[] = []
-  for (const no of raiz.querySelectorAll<HTMLElement>('[style]')) {
+  for (const no of [raiz, ...raiz.querySelectorAll<HTMLElement>('[style]')]) {
     if (ignorar && no.matches(ignorar)) continue
     const { opacity, transform } = no.style
     if (opacity !== '' && opacity !== '1') desvios.push(`${no.tagName.toLowerCase()} opacity: ${opacity}`)
@@ -360,30 +327,22 @@ describe('VIS4-20: movimento reduzido', () => {
   it('a Cortina não renderiza nada e avisa que terminou', () => {
     simularMidia({ reduzido: true })
     const aoTerminar = vi.fn()
-    const { container } = render(<Cortina aoTerminar={aoTerminar} comTraco />)
+    const { container } = render(<Cortina aoTerminar={aoTerminar} />)
 
     expect(container.firstChild).toBeNull()
     expect(aoTerminar).toHaveBeenCalledTimes(1)
   })
 
-  it('a linha do traço fica inteira e parada: recipiente com a linha dentro, sem deslocamento', () => {
+  it('no Sistema a cena nasce final e a cortina não existe, sem retirar o título da árvore', () => {
     simularMidia({ reduzido: true })
-    const { container } = render(<TracoDesenhado />)
-
-    const recipiente = container.firstElementChild as HTMLElement
-    expect(container.children).toHaveLength(1)
-    expect(recipiente.tagName.toLowerCase()).toBe('span')
-    expect(recipiente.getAttribute('aria-hidden')).toBe('true')
-    const linha = recipiente.firstElementChild as HTMLElement
-    expect(linha.style.transform).not.toMatch(/-100%/)
-    expect(desviosDoEstadoFinal(container)).toEqual([])
-  })
-
-  it('TextoAnimado em texto comum continua um título com o texto inteiro', () => {
-    simularMidia({ reduzido: true })
-    render(pecas.find((p) => p.nome === 'TextoAnimado')!.ui())
-
-    expect(screen.getByRole('heading', { level: 2, name: 'Título de uma linha Título de outra linha' })).toBeTruthy()
+    const { container } = renderizarRota('/sistema')
+    expect(container.querySelector('[data-cortina]')).toBeNull()
+    const cena = container.querySelector('[data-entrada-cena="final"]')
+    expect(cena).not.toBeNull()
+    conferirVisivel(screen.getByRole('heading', { level: 1, name: 'Campo de mel, a base do site.' }))
+    if (!(cena instanceof HTMLElement)) throw new Error('A cena final precisa estar montada')
+    conferirVisivel(cena)
+    expect(cena.style.transform).toMatch(/^(|none)$/)
   })
 })
 
@@ -443,17 +402,6 @@ describe('VIS4-20: sem matchMedia', () => {
     })
   }
 
-  for (const [nome, ui] of [
-    ['RevelacaoPorBaixo M7', () => <RevelacaoPorBaixo variante="M7"><p>Seção M7</p></RevelacaoPorBaixo>],
-  ] as const) {
-    it(`${nome} monta sem erro, mostra o conteúdo e fica no movimento normal`, () => {
-      vi.stubGlobal('matchMedia', undefined)
-      const { container } = render(ui())
-
-      expect(screen.getByText('Seção M7')).toBeTruthy()
-      expect(comEstilo(container)).toBe(true)
-    })
-  }
 })
 
 type OuvinteAntigo = () => void
@@ -532,9 +480,7 @@ describe('VIS4-20: matchMedia antigo (só addListener e removeListener)', () => 
   it('uma peça montada passa ao estado final quando a preferência liga, pelo ouvinte antigo', async () => {
     const midia = simularMidiaAntiga(false)
     const { container } = render(
-      <EntradaSuave deslocamentoPx={deslocamentoPx} duracaoMs={duracaoMs} curva={curva}>
-        <p>Bloco antigo</p>
-      </EntradaSuave>,
+      <EntradaCena pronta={false}><p>Bloco antigo</p></EntradaCena>,
     )
 
     midia.definir(true)
@@ -570,17 +516,8 @@ function Conteudo() {
 }
 
 const involucros: Array<[string, (conteudo: ReactElement) => ReactElement]> = [
-  [
-    'EntradaSuave',
-    (c) => (
-      <EntradaSuave deslocamentoPx={deslocamentoPx} duracaoMs={duracaoMs} curva={curva}>
-        {c}
-      </EntradaSuave>
-    ),
-  ],
-  ['LinhasEscalonadas', (c) => <LinhasEscalonadas linhas={[c]} />],
+  ['EntradaCena', (c) => <EntradaCena pronta={true}>{c}</EntradaCena>],
   ['RevelaNaRolagem', (c) => <RevelaNaRolagem>{c}</RevelaNaRolagem>],
-  ['RevelacaoPorBaixo M6', (c) => <RevelacaoPorBaixo variante="M6">{c}</RevelacaoPorBaixo>],
   ['RevelacaoPorBaixo M7', (c) => <RevelacaoPorBaixo variante="M7">{c}</RevelacaoPorBaixo>],
   ['CamadaHover (conteúdo na camada)', (c) => <CamadaHover camada={c}><p>Cartão</p></CamadaHover>],
   ['CamadaHover (conteúdo nos children)', (c) => <CamadaHover camada={<p>Resumo</p>}>{c}</CamadaHover>],
@@ -590,7 +527,8 @@ describe('R1: a troca da preferência preserva o estado e o foco do conteúdo', 
   /** Clica o contador, digita no campo e foca o campo; devolve o campo e a conferência. */
   function preparar() {
     fireEvent.click(screen.getByRole('button', { name: 'Contagem 0' }))
-    const campo = screen.getByRole('textbox', { name: 'Anotação' }) as HTMLInputElement
+    const campo = screen.getByRole('textbox', { name: 'Anotação' })
+    if (!(campo instanceof HTMLInputElement)) throw new Error('Anotação não é um campo de entrada')
     fireEvent.change(campo, { target: { value: 'Registro de Heloísa' } })
     act(() => campo.focus())
     return () => {
@@ -628,112 +566,53 @@ describe('R1: a troca da preferência preserva o estado e o foco do conteúdo', 
     })
   }
 
-  it('LinkComSeta: o próprio link mantém o foco nos dois sentidos', () => {
-    const midia = simularMidia({ reduzido: false })
-    render(
-      <LinkComSeta href="#destino" icone={<span>↗</span>}>
-        Destino
-      </LinkComSeta>,
-    )
-    const link = screen.getByRole('link', { name: 'Destino' })
+  it('o CTA real do Início mantém o nó, o foco e o destino nos dois sentidos', () => {
+    const midia = simularMidia()
+    const { container } = renderizarRota('/')
+    const heroi = within(screen.getByRole('main'))
+    const link = heroi.getByRole('link', { name: 'Ver como funciona' })
     act(() => link.focus())
-
-    midia.definir('reduzido', true)
-    expect(screen.getByRole('link', { name: 'Destino' })).toBe(link)
     expect(document.activeElement).toBe(link)
+    for (const reduzido of [true, false]) {
+      midia.definir('reduzido', reduzido)
+      expect(heroi.getByRole('link', { name: 'Ver como funciona' })).toBe(link)
+      expect(document.activeElement).toBe(link)
+      expect(link.getAttribute('href')).toBe('/como-funciona')
+      expect(link.classList.contains('alvo-toque')).toBe(true)
+    }
+    expect(container.querySelector('.co-acoes .cm-botao-texto')).toBe(link)
+    // A seta de hover saiu: o comportamento vigente é só sublinhar, sem mover o alvo.
+    const css = parse(lerTexto('styles/site.css'))
+    const hover: string[] = []
+    css.walkRules((regra) => {
+      if (!regra.selectors.includes('.cm-botao-texto:hover')) return
+      regra.walkDecls((d) => { hover.push(`${d.prop}: ${d.value}`) })
+    })
+    expect(hover).toEqual(['text-decoration-color: currentColor'])
+    const alvos: string[] = []
+    css.walkRules('.cm-botao-texto', (regra) => {
+      regra.walkDecls('min-height', (d) => { alvos.push(d.value) })
+    })
+    expect(alvos).toEqual(['44px'])
+  })
 
+  it('o título e a lista do Início já visíveis não rearmam a entrada ao mudar a preferência', async () => {
+    const midia = simularMidia()
+    const { container } = renderizarRota('/')
+    const titulo = screen.getByRole('heading', { level: 1, name: 'Ela mamou que horas?' })
+    const lista = container.querySelector('.co-fatos')
+    if (!(lista instanceof HTMLElement)) throw new Error('Lista da seção de Notas ausente')
+    const itens = within(lista).getAllByRole('listitem')
+    expect(desviosDoEstadoFinal(titulo.parentElement!)).toEqual([])
+    midia.definir('reduzido', true)
     midia.definir('reduzido', false)
-    expect(screen.getByRole('link', { name: 'Destino' })).toBe(link)
-    expect(document.activeElement).toBe(link)
+    await act(async () => { await new Promise((resolver) => setTimeout(resolver, 120)) })
+    expect(screen.getByRole('heading', { level: 1, name: 'Ela mamou que horas?' })).toBe(titulo)
+    expect(within(lista).getAllByRole('listitem')).toEqual(itens)
+    expect(desviosDoEstadoFinal(titulo.parentElement!)).toEqual([])
+    expect(desviosDoEstadoFinal(lista.parentElement!)).toEqual([])
+    for (const no of [titulo, ...itens]) conferirVisivel(no)
   })
-
-  it('LinkComSeta: com a seta fora do repouso (hover), ligar o reduzido a leva ao repouso e o foco no link continua', async () => {
-    const midia = simularMidia({ reduzido: false })
-    const { container } = render(
-      <LinkComSeta href="#destino" icone={<span>↗</span>}>
-        Destino
-      </LinkComSeta>,
-    )
-    const link = screen.getByRole('link', { name: 'Destino' })
-    const seta = container.querySelector<HTMLElement>('a > span[aria-hidden="true"]')!
-    act(() => link.focus())
-    act(() => {
-      link.dispatchEvent(new PointerEvent('pointerenter', { pointerType: 'mouse' }))
-    })
-    // O hover liga a seta: espera ela sair do repouso (deslocamento de 2 px).
-    await waitFor(() => expect(seta.style.transform).toMatch(/translate/))
-    expect(desviosDoEstadoFinal(container)).not.toEqual([])
-
-    midia.definir('reduzido', true)
-
-    await esperarEstadoFinal(container, [])
-    expect(document.activeElement).toBe(link)
-  })
-
-  for (const [nome, ui] of [
-    [
-      'EntradaSuave',
-      () => (
-        <EntradaSuave deslocamentoPx={deslocamentoPx} duracaoMs={duracaoMs} curva={curva}>
-          <p>Bloco visível</p>
-        </EntradaSuave>
-      ),
-    ],
-    [
-      'TextoAnimado',
-      () => (
-        <TextoAnimado
-          as="h2"
-          deslocamentoPx={deslocamentoPx}
-          duracaoMs={duracaoMs}
-          curva={curva}
-          escalonamentoMs={escalonamentoMs}
-        >
-          {'Título visível'}
-        </TextoAnimado>
-      ),
-    ],
-  ] as const) {
-    it(`${nome}: o que já está na tela não volta a opacidade 0 ao voltar ao normal`, async () => {
-      const observados: Array<{ aviso: IntersectionObserverCallback; alvo: Element }> = []
-      class Controlavel {
-        aviso: IntersectionObserverCallback
-        constructor(aviso: IntersectionObserverCallback) {
-          this.aviso = aviso
-        }
-        observe(alvo: Element) {
-          observados.push({ aviso: this.aviso, alvo })
-        }
-        unobserve() {}
-        disconnect() {}
-        takeRecords() {
-          return []
-        }
-      }
-      vi.stubGlobal('IntersectionObserver', Controlavel)
-      const midia = simularMidia({ reduzido: false })
-      const { container } = render(ui())
-      expect(observados.length).toBeGreaterThan(0)
-      act(() => {
-        for (const { aviso, alvo } of observados) {
-          aviso(
-            [{ target: alvo, isIntersecting: true, intersectionRatio: 1 } as IntersectionObserverEntry],
-            {} as IntersectionObserver,
-          )
-        }
-      })
-
-      midia.definir('reduzido', true)
-      await esperarEstadoFinal(container, [])
-      midia.definir('reduzido', false)
-      // Espera alguns quadros: se a peça reiniciasse a entrada, a opacidade cairia a 0.
-      await act(async () => {
-        await new Promise((resolver) => setTimeout(resolver, 120))
-      })
-
-      expect(desviosDoEstadoFinal(container)).toEqual([])
-    })
-  }
 
   it('controle: o mesmo conteúdo sem invólucro preserva tudo', () => {
     const midia = simularMidia({ reduzido: false })
@@ -757,8 +636,8 @@ describe('VIS4-20: nada em laço, nada de destaque decidido pela peça', () => {
       expect.arrayContaining([
         'movimento/catalogo.ts',
         'movimento/Cortina.tsx',
-        'componentes/terceiros/EntradaSuave.tsx',
-        'componentes/terceiros/TextoAnimado.tsx',
+        'movimento/EntradaCena.tsx',
+        'movimento/RevelaNaRolagem.tsx',
         'componentes/terceiros/cn.ts',
       ]),
     )
@@ -781,27 +660,44 @@ describe('VIS4-20: nada em laço, nada de destaque decidido pela peça', () => {
   })
 
   it('Hoje, Sessão e o protótipo não importam as peças de movimento', () => {
+    const telas = ['paginas/rotina/Hoje.tsx', 'paginas/rotina/Sessao.tsx']
     const consumidores = listarFontes(pastaSrc).filter(
-      (f) => f.nome === 'paginas/Hoje.tsx' || f.nome === 'paginas/Sessao.tsx' || f.nome.startsWith('prototipo/'),
+      (f) => telas.includes(f.nome) || f.nome.startsWith('prototipo/'),
     )
-    expect(consumidores.length).toBeGreaterThan(0)
+    expect(consumidores.map((f) => f.nome)).toEqual(expect.arrayContaining(telas))
+    expect(consumidores.some((f) => f.nome.startsWith('prototipo/'))).toBe(true)
     const achados = consumidores
       .filter((f) => /from\s+['"][^'"]*\/(movimento|terceiros)\//.test(f.texto))
       .map((f) => f.nome)
     expect(achados).toEqual([])
   })
 
+  it('as peças aposentadas não voltam como cópias nem são importadas pelo produto', () => {
+    const aposentadas = ['EntradaSuave', 'TextoAnimado', 'LinhasEscalonadas', 'LinkComSeta', 'TracoDesenhado']
+    for (const nome of aposentadas) {
+      expect(existsSync(`${pastaSrc}movimento/${nome}.tsx`), nome).toBe(false)
+      expect(existsSync(`${pastaSrc}componentes/terceiros/${nome}.tsx`), nome).toBe(false)
+    }
+    const importa = new RegExp(`from\\s+['"][^'"]*/(${aposentadas.join('|')})(?:\\.tsx)?['"]`)
+    expect(listarFontes(pastaSrc).filter(({ texto }) => importa.test(texto)).map(({ nome }) => nome)).toEqual([])
+  })
 })
 
 // ---------------------------------------------------------------------------
 // 6. CSS global
 
 describe('VIS4-20: o CSS global continua zerando animação e transição', () => {
-  it('o bloco prefers-reduced-motion de index.css zera animation e transition', () => {
-    const bloco = /@media\s*\(prefers-reduced-motion:\s*reduce\)\s*\{([\s\S]*)\}\s*$/.exec(lerTexto('index.css'))
-    expect(bloco).not.toBeNull()
-    expect(bloco![1]).toMatch(/animation:\s*none\s*!important/)
-    expect(bloco![1]).toMatch(/transition:\s*none\s*!important/)
+  it('o bloco reduce desliga animation e transition no elemento e nos pseudo-elementos', () => {
+    const css = parse(lerTexto('index.css'))
+    const reducao = css.nodes.find((n) => n.type === 'atrule' && n.name === 'media' && n.params === '(prefers-reduced-motion: reduce)')
+    if (reducao?.type !== 'atrule') throw new Error('Falta @media de movimento reduzido')
+    const universal = reducao.nodes?.find((n) => n.type === 'rule' && n.selectors.includes('*'))
+    if (universal?.type !== 'rule') throw new Error('Falta regra universal no bloco reduce')
+    expect(universal.selectors).toEqual(['*', '*::before', '*::after'])
+    for (const prop of ['animation', 'transition']) {
+      const valor = universal.nodes.filter((n) => n.type === 'decl' && n.prop === prop)
+      expect(valor).toMatchObject([{ value: 'none', important: true }])
+    }
   })
 })
 
@@ -809,20 +705,6 @@ describe('VIS4-20: o CSS global continua zerando animação e transição', () =
 // 7. Interação
 
 describe('VIS4-20: interação', () => {
-  it('LinkComSeta é um link com o texto como nome, e a seta fica fora do nome', () => {
-    simularMidia()
-    render(
-      <LinkComSeta href="/projeto" icone={<span>↗</span>}>
-        Ver o projeto
-      </LinkComSeta>,
-    )
-
-    const link = screen.getByRole('link', { name: 'Ver o projeto' })
-    expect(link.getAttribute('href')).toBe('/projeto')
-    expect(link.classList.contains('alvo-toque')).toBe(true)
-    expect(link.querySelector('[aria-hidden="true"]')!.textContent).toBe('↗')
-  })
-
   for (const reduzido of [false, true]) {
     const modo = reduzido ? 'com movimento reduzido' : 'sem movimento reduzido'
 
@@ -919,57 +801,61 @@ describe('VIS4-20: interação', () => {
       }
     })
 
-    describe(`TextoAnimado ${modo}`, () => {
-      for (const como of ['p', 'h2'] as const) {
-        it(`as="${como}": o texto inteiro está uma vez fora de aria-hidden, sem aria-label`, () => {
-          simularMidia({ reduzido })
-          const { container } = render(
-            <TextoAnimado
-              as={como}
-              deslocamentoPx={deslocamentoPx}
-              duracaoMs={duracaoMs}
-              curva={curva}
-              escalonamentoMs={escalonamentoMs}
-            >
-              {'Primeira linha\nSegunda linha\nTerceira linha'}
-            </TextoAnimado>,
-          )
+    it(`Início ${modo}: título único e lista de Notas inteira, na ordem, sem cópias ocultas`, () => {
+      simularMidia({ reduzido })
+      const { container } = renderizarRota('/')
+      const main = screen.getByRole('main')
+      const titulo = within(main).getByRole('heading', { level: 1, name: 'Ela mamou que horas?' })
+      expect(titulo.textContent).toBe('Ela mamou que horas?')
+      expect(titulo.hasAttribute('aria-label')).toBe(false)
+      expect([...titulo.children].map((n) => n.textContent)).toEqual(['Ela mamou', 'que horas?'])
+      expect(titulo.querySelector('[aria-hidden="true"], .sr-only')).toBeNull()
+      conferirVisivel(titulo)
+      const prova = within(main).getByRole('region', { name: 'Ninguém dá nota para o seu dia.' })
+      const lista = within(prova).getByRole('list')
+      expect(within(lista).getAllByRole('listitem').map((n) => n.textContent)).toEqual(INI_FATOS)
+      for (const item of within(lista).getAllByRole('listitem')) conferirVisivel(item)
+      expect(desviosDoEstadoFinal(prova)).toEqual([])
+      expect(container.querySelector('[data-cortina], [data-revela]')).toBeNull()
+    })
 
-          const inteiro = screen.getAllByText('Primeira linha Segunda linha Terceira linha')
-          expect(inteiro).toHaveLength(1)
-          expect(inteiro[0].closest('[aria-hidden="true"]')).toBeNull()
-          expect(inteiro[0].classList.contains('sr-only')).toBe(true)
-          expect(container.querySelectorAll('[aria-label]')).toHaveLength(0)
-          const escondidas = [...container.querySelectorAll('[aria-hidden="true"]')]
-          expect(escondidas.map((n) => n.textContent)).toEqual(['Primeira linha', 'Segunda linha', 'Terceira linha'])
-          if (como === 'h2') {
-            expect(
-              screen.getByRole('heading', { level: 2, name: 'Primeira linha Segunda linha Terceira linha' }),
-            ).toBeTruthy()
-          }
-        })
+    it(`Início ${modo}: o rodapé e a rua da faixa final não têm a revelação M6/M7`, () => {
+      simularMidia({ reduzido })
+      const { container } = renderizarRota('/')
+      const rodape = screen.getByRole('contentinfo')
+      conferirVisivel(rodape)
+      const rua = container.querySelector('.co-fecho .co-rua')
+      if (!(rua instanceof HTMLElement)) throw new Error('Placa da rua ausente')
+      const imagens = rua.querySelectorAll('img')
+      expect(imagens).toHaveLength(2)
+      for (const img of imagens) {
+        expect(img.getAttribute('alt')).toBe('')
+        conferirVisivel(img)
       }
+      expect(desviosDoEstadoFinal(rua.parentElement!)).toEqual([])
+      expect(desviosDoEstadoFinal(rodape)).toEqual([])
     })
   }
 
-  it('o traço é um recipiente com corte e uma linha que, no primeiro quadro, está em translateX(-100%), sem escala', () => {
-    simularMidia({ reduzido: false })
-    const { container } = render(<TracoDesenhado />)
-
-    const recipiente = container.firstElementChild as HTMLElement
-    expect(container.children).toHaveLength(1)
-    expect(recipiente.tagName.toLowerCase()).toBe('span')
-    expect(recipiente.getAttribute('aria-hidden')).toBe('true')
-    expect(recipiente.classList.contains('block')).toBe(true)
-    expect(recipiente.classList.contains('overflow-hidden')).toBe(true)
-    expect(recipiente.classList.contains('h-0.5')).toBe(true)
-    expect(recipiente.classList.contains('rounded-full')).toBe(true)
-    const linha = recipiente.firstElementChild as HTMLElement
-    expect(linha.tagName.toLowerCase()).toBe('span')
-    expect(linha.classList.contains('bg-current')).toBe(true)
-    expect(linha.style.transform).toContain('translateX(-100%)')
-    expect(linha.style.transform).not.toMatch(/scale/)
-    expect(container.querySelector('svg')).toBeNull()
+  it('a luz decorativa da rua anima só com suporte à linha do tempo e sem redução', () => {
+    const css = parse(lerTexto('componentes/inicio-composicao/composicao.css'))
+    const animacoes: string[] = []
+    css.walkRules((regra) => {
+      if (!regra.selectors.includes('.co-rua .co-luz')) return
+      regra.walkDecls(/^animation(?:-|$)/, (d) => {
+        const suporte = regra.parent
+        const midia = suporte?.parent
+        expect(suporte?.type === 'atrule' && suporte.name === 'supports' && suporte.params)
+          .toBe('((animation-timeline: view()) and (animation-range: entry))')
+        expect(midia?.type === 'atrule' && midia.name === 'media' && midia.params)
+          .toBe('(prefers-reduced-motion: no-preference)')
+        animacoes.push(`${d.prop}: ${d.value}`)
+      })
+    })
+    expect(animacoes).toEqual([
+      'animation: co-acende linear both', 'animation-timeline: view()',
+      'animation-range: entry 45% cover 42%', 'animation-range: entry 70% entry 130%',
+    ])
   })
 
   it('em todas as peças sem movimento reduzido, nenhum style traz escala fora de 0,8 a 1,1', () => {
@@ -988,31 +874,6 @@ describe('VIS4-20: interação', () => {
     }
   })
 
-  describe('a largura do traço é de quem usa a peça', () => {
-    const larguras = (no: Element) => [...no.classList].filter((c) => /(^|:)w-/.test(c))
-
-    for (const reduzido of [false, true]) {
-      it(`${reduzido ? 'com' : 'sem'} movimento reduzido: sem className não há classe de largura; com w-48 há só ela`, () => {
-        simularMidia({ reduzido })
-        const sem = render(<TracoDesenhado />)
-        expect(larguras(sem.container.firstElementChild!)).toEqual([])
-        sem.unmount()
-
-        const com = render(<TracoDesenhado className="w-48" />)
-        expect(larguras(com.container.firstElementChild!)).toEqual(['w-48'])
-      })
-    }
-
-    it('o traço da Cortina tem só w-48, centrado', () => {
-      simularMidia()
-      const { container } = render(<Cortina comTraco />)
-
-      const traco = container.querySelector('span[aria-hidden="true"].overflow-hidden')!
-      expect(larguras(traco)).toEqual(['w-48'])
-      expect(traco.parentElement!.className).toMatch(/\bplace-items-center\b/)
-    })
-  })
-
   it('nenhum arquivo de movimento/ nem de componentes/terceiros/ cria SVG, de nenhuma forma', () => {
     const formas: Array<[string, RegExp]> = [
       ['<svg', /<svg\b/i],
@@ -1026,20 +887,9 @@ describe('VIS4-20: interação', () => {
     }
   })
 
-  it('LinhasEscalonadas renderiza cada linha na ordem', () => {
-    simularMidia()
-    render(
-      <LinhasEscalonadas
-        linhas={[<p key="1">Linha um</p>, <p key="2">Linha dois</p>, <p key="3">Linha três</p>]}
-      />,
-    )
-
-    expect(screen.getAllByText(/^Linha /).map((n) => n.textContent)).toEqual(['Linha um', 'Linha dois', 'Linha três'])
-  })
-
   it('a Cortina é uma sobreposição fixa, escondida do leitor de tela, que não pega clique', () => {
     simularMidia()
-    const { container } = render(<Cortina comTraco />)
+    const { container } = render(<Cortina />)
 
     const cortina = container.firstElementChild!
     expect(cortina.getAttribute('aria-hidden')).toBe('true')
@@ -1047,9 +897,14 @@ describe('VIS4-20: interação', () => {
     expect(cortina.className).toMatch(/\binset-0\b/)
     expect(cortina.className).toMatch(/\bpointer-events-none\b/)
     expect(cortina.className).toMatch(/\boverflow-hidden\b/)
-    // Largo: 6 colunas de duas camadas, mais a camada do traço.
-    expect(cortina.querySelectorAll(':scope > .relative')).toHaveLength(CATALOGO.M2.colunas.largo)
-    expect(cortina.querySelector('span[aria-hidden="true"].overflow-hidden')).not.toBeNull()
+    // Largo: exatamente as 6 colunas de 2 camadas. Nenhum traço ou camada extra.
+    expect(cortina.children).toHaveLength(6)
+    for (const coluna of cortina.children) {
+      expect(coluna.classList.contains('relative')).toBe(true)
+      expect(coluna.children).toHaveLength(2)
+      expect(coluna.children[0].classList.contains('bg-mel')).toBe(true)
+      expect(coluna.children[1].classList.contains('bg-cacau')).toBe(true)
+    }
     expect(cortina.querySelector('svg')).toBeNull()
   })
 
@@ -1101,17 +956,18 @@ describe('VIS4-20: interação', () => {
 // 8. Exportações
 
 describe('VIS4-20: exportações', () => {
-  it('toda exportação de movimento/ e componentes/terceiros/ é importada por este teste', () => {
+  it('toda exportação de movimento/ e componentes/terceiros/ tem consumidor ou teste real na árvore', () => {
     const exportacao = /^export\s+(?:async\s+)?(?:const|let|function|class|interface|type)\s+([A-Za-z0-9_]+)/gm
     const importacao = /import\s+(?:type\s+)?\{([^}]*)\}\s+from\s+'(\.[^']+)'/g
-    const meu = lerTexto('movimento.test.tsx')
 
     const importados = new Set<string>()
-    for (const [, lista, origem] of meu.matchAll(importacao)) {
-      const arquivo = origem.replace(/^\.\//, '')
-      for (const item of lista.split(',')) {
-        const limpo = item.trim().replace(/^type\s+/, '').split(/\s+as\s+/)[0]
-        if (limpo) importados.add(`${arquivo}::${limpo}`)
+    for (const { nome, texto } of listarFontes(pastaSrc, true)) {
+      for (const [, lista, origem] of texto.matchAll(importacao)) {
+        const caminho = posix.join(posix.dirname(nome), origem)
+        for (const item of lista.split(',')) {
+          const limpo = item.trim().replace(/^type\s+/, '').split(/\s+as\s+/)[0]
+          if (limpo) importados.add(`${caminho}::${limpo}`)
+        }
       }
     }
 

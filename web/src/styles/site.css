@@ -1,0 +1,1142 @@
+/* Site "Campo de mel" (DESIGN.md 2 a 4): tipo, área, botões, cabeçalho, menu do celular e rodapé.
+   As medidas entre 390 e 1440 crescem em linha reta (clamp) e batem com as duas escalas do contrato
+   nas duas pontas. Classes `cm-*`. */
+@layer components {
+  :root {
+    /* Margem da área de conteúdo: 20 em 390, 64 em 1440. */
+    --cm-margem: clamp(20px, 3.619vw + 5.886px, 64px);
+    /* Recuo do painel de campo até a borda da janela: 12 em 390, 32 em 1440. */
+    --cm-recuo-painel: clamp(12px, 1.905vw + 4.571px, 32px);
+    /* Respiro interno do painel: 24 em 390, 64 em 1440. */
+    --cm-respiro-painel: clamp(24px, 3.81vw + 9.143px, 64px);
+    /* Respiro de papel entre dois painéis: 64 em 390, 128 em 1440. */
+    --cm-entre-secoes: clamp(64px, 6.095vw + 40.229px, 128px);
+    --cm-cabecalho: 72px;
+    /* Reservas do campo para o ícone, derivadas do tamanho dele (não são ritmo de espaço): seta 16 + 20 + 12 e
+       botão do olho 6 + 44 + 6. */
+    --cm-reserva-seta: 48px;
+    --cm-reserva-olho: 56px;
+    --cor-primario-fundo: var(--color-cacau);
+    --cor-primario-texto: var(--color-papel);
+  }
+
+  :root[data-tema='madrugada'] {
+    --cor-primario-fundo: var(--color-mel);
+    --cor-primario-texto: var(--color-cacau);
+  }
+
+  @media (min-width: 1100px) {
+    :root {
+      --cm-cabecalho: 88px;
+    }
+  }
+
+  /* Área de conteúdo: 12 colunas na grade de 1440 (margem 64, máximo 1312). */
+  .cm-area {
+    width: min(100% - 2 * var(--cm-margem), 1312px);
+    margin-inline: auto;
+  }
+
+  /* Nenhuma `<source>` de `<picture>` entra no layout: com a `<picture>` em `display: contents` ela viraria item do flex/grid. */
+  picture > source {
+    display: none;
+  }
+
+  /* Nas cenas da casa, a `<picture>` some do layout e a `<img>` fica filha direta do contêiner. */
+  [data-casa] .ic-m06 > picture,
+  [data-casa] .ic-so-cena > picture {
+    display: contents;
+  }
+
+  /* Tipo ------------------------------------------------------------------------------------ */
+  .cm-h1,
+  .cm-h2,
+  .cm-h3,
+  .cm-h4,
+  .cm-marca {
+    margin: 0;
+    font-family: var(--fonte-titulo);
+    font-weight: var(--peso-titulo);
+    text-wrap: balance;
+  }
+
+  /* No site público e na /sistema (`data-titulos="site"`, posto pelo Layout) todo h1 a h4 sem família própria desenha
+     na face de exibição (DS1:RF-05), sem mexer em tamanho, peso nem cor. Os dois `:where()` zeram a especificidade: a
+     classe de qualquer título (os títulos do rodapé, por exemplo) continua valendo. A área logada e a moderação não
+     têm o marcador e ficam como estão. */
+  :where(.cm-casca[data-titulos='site']) :where(h1, h2, h3, h4) {
+    font-family: var(--fonte-exibicao);
+  }
+
+  /* O tamanho dos títulos é em rem (cresce com a raiz): uma palavra longa quebra em vez de alargar a página. */
+  .cm-h1,
+  .cm-h2,
+  .cm-h3,
+  .cm-h4 {
+    overflow-wrap: anywhere;
+  }
+
+  /* Tamanho e entrelinha de toda classe de tipo vêm do MESMO nível da tabela do DESIGN.md (H3:RF-03):
+     h1 = titulo-1, h2 = titulo-1, h3 = titulo-3, h4 = titulo-4. O h1 de toda página de conteúdo (`cm-exibicao`)
+     e a /sistema usam `exibicao`; as telas de acesso e as logadas ficam no h1 de `titulo-1`. */
+  .cm-h1 {
+    font-size: var(--texto-titulo-1-tamanho);
+    line-height: var(--texto-titulo-1-entrelinha);
+    letter-spacing: -0.02em;
+  }
+
+  .cm-h1.cm-exibicao {
+    font-size: var(--texto-exibicao-tamanho);
+    line-height: var(--texto-exibicao-entrelinha);
+    font-weight: var(--peso-exibicao);
+  }
+
+  /* Fora da escala, só para o h1 da 404 (REP-T4): 112/112 em 1440 e 56/58 em 390, em linha reta entre os dois. */
+  :root {
+    --texto-exibicao-404-tamanho: clamp(3.5rem, calc(3.5rem + (100vw - 390px) * 56 / 1050), 7rem);
+    --texto-exibicao-404-entrelinha: clamp(3.625rem, calc(3.625rem + (100vw - 390px) * 54 / 1050), 7rem);
+  }
+
+  .cm-exibicao-404 {
+    margin: 0;
+    font-family: var(--fonte-exibicao);
+    font-weight: var(--peso-exibicao);
+    font-size: var(--texto-exibicao-404-tamanho);
+    line-height: var(--texto-exibicao-404-entrelinha);
+    letter-spacing: -0.02em;
+    text-wrap: balance;
+    overflow-wrap: anywhere;
+  }
+
+  .cm-h2 {
+    font-size: var(--texto-titulo-1-tamanho);
+    line-height: var(--texto-titulo-1-entrelinha);
+    letter-spacing: -0.015em;
+  }
+
+  .cm-h3 {
+    font-size: var(--texto-titulo-3-tamanho);
+    line-height: var(--texto-titulo-3-entrelinha);
+    letter-spacing: -0.01em;
+  }
+
+  .cm-h4 {
+    font-size: var(--texto-titulo-4-tamanho);
+    line-height: var(--texto-titulo-4-entrelinha);
+  }
+
+  /* A segunda linha de um título é um bloco em prumo: nenhum itálico nas páginas públicas (DESIGN.md 3). */
+  .cm-segunda-linha {
+    display: block;
+  }
+
+  .cm-corpo {
+    font-family: var(--fonte-texto);
+    font-size: var(--texto-corpo-tamanho);
+    line-height: var(--texto-corpo-entrelinha);
+    text-wrap: pretty;
+  }
+
+  /* Texto de abertura, logo abaixo do h1: nível `abertura`. */
+  .cm-lide {
+    margin: 0;
+    font-family: var(--fonte-texto);
+    font-size: var(--texto-abertura-tamanho);
+    line-height: var(--texto-abertura-entrelinha);
+    text-wrap: pretty;
+  }
+
+  .cm-pequeno {
+    font-family: var(--fonte-texto);
+    font-size: var(--texto-pequeno-tamanho);
+    line-height: var(--texto-pequeno-entrelinha);
+  }
+
+  /* Rótulo curto em caixa normal (nunca caixa alta): nível `sobretitulo`. */
+  .cm-rotulo {
+    margin: 0;
+    font-family: var(--fonte-texto);
+    font-size: var(--texto-sobretitulo-tamanho);
+    line-height: var(--texto-sobretitulo-entrelinha);
+    font-weight: 500;
+  }
+
+  .cm-texto-2 {
+    color: var(--cor-texto-2);
+  }
+
+  .cm-tabular {
+    font-variant-numeric: tabular-nums;
+  }
+
+  .cm-medida {
+    max-width: 38rem;
+  }
+
+  /* /sistema: o h1 é `exibicao` (as globais acima dão `titulo-1`); as demais repetem o nível global. Família,
+     peso e tracking seguem os de `.cm-*`. */
+  .cm-sistema .cm-h1 {
+    font-size: var(--texto-exibicao-tamanho);
+    line-height: var(--texto-exibicao-entrelinha);
+  }
+
+  .cm-sistema .cm-h2 {
+    font-size: var(--texto-titulo-2-tamanho);
+    line-height: var(--texto-titulo-2-entrelinha);
+  }
+
+  .cm-sistema .cm-lide {
+    font-size: var(--texto-abertura-tamanho);
+    line-height: var(--texto-abertura-entrelinha);
+  }
+
+  .cm-sistema .cm-rotulo {
+    font-size: var(--texto-sobretitulo-tamanho);
+    line-height: var(--texto-sobretitulo-entrelinha);
+  }
+
+  .cm-sistema .cm-corpo {
+    font-size: var(--texto-corpo-tamanho);
+    line-height: var(--texto-corpo-entrelinha);
+  }
+
+  /* Botões (DESIGN.md 4) ---------------------------------------------------------------------- */
+  .cm-botao {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    box-sizing: border-box;
+    min-width: 44px;
+    min-height: 56px;
+    padding: 0 28px;
+    border: 1.5px solid transparent;
+    border-radius: var(--radius-pilula);
+    background-color: transparent;
+    color: inherit;
+    font-family: var(--fonte-texto);
+    font-size: var(--texto-corpo-tamanho);
+    font-weight: 500;
+    line-height: var(--texto-corpo-entrelinha);
+    text-align: center;
+    text-decoration: none;
+    white-space: nowrap;
+    cursor: pointer;
+    /* Só a escala do toque anima; a troca de cor do hover é instantânea (DESIGN.md 5). */
+    transition-property: scale;
+    transition-duration: 120ms;
+    transition-timing-function: ease-out;
+  }
+
+  .cm-botao:active:not([aria-disabled='true']) {
+    scale: 0.96;
+  }
+
+  .cm-botao[data-tamanho='app'] {
+    min-height: 48px;
+    padding: 0 22px;
+  }
+
+  .cm-botao:focus-visible,
+  .cm-botao[data-forcar='foco'] {
+    outline: 2px solid var(--cor-foco);
+    outline-offset: 3px;
+  }
+
+  /* Primário: pílula de cacau. No hover inverte na hora para papel com o contorno de 1,5 px. */
+  .cm-botao-primario {
+    border-color: var(--cor-primario-fundo);
+    background-color: var(--cor-primario-fundo);
+    color: var(--cor-primario-texto);
+  }
+
+  .cm-botao-primario:hover,
+  .cm-botao-primario[data-forcar='hover'] {
+    background-color: var(--cor-primario-texto);
+    color: var(--cor-primario-fundo);
+  }
+
+  /* No primário de mel, o anel interno contrasta com o próprio preenchimento. No hover escuro,
+     o anel de mel do tema volta ao lado de fora. */
+  :root[data-tema='madrugada'] .cm-botao-primario:focus-visible:where(:not(:hover, [data-forcar='hover'], [aria-disabled='true'])) {
+    outline-color: var(--color-cacau);
+    outline-offset: -4px;
+  }
+
+  /* Mel: o primário sobre o cacau. No hover vira o contorno de mel. */
+  .cm-botao-mel {
+    border-color: var(--color-mel);
+    background-color: var(--color-mel);
+    color: var(--color-cacau);
+  }
+
+  .cm-botao-mel:hover,
+  .cm-botao-mel[data-forcar='hover'] {
+    background-color: var(--color-cacau);
+    color: var(--color-mel);
+  }
+
+  /* Contorno: 1,5 px na cor do texto; no hover se enche. */
+  .cm-botao-contorno {
+    border-color: currentColor;
+  }
+
+  .cm-botao-contorno:hover,
+  .cm-botao-contorno[data-forcar='hover'] {
+    border-color: var(--cor-texto);
+    background-color: var(--cor-texto);
+    color: var(--cor-fundo);
+  }
+
+  .cm-botao-contorno[aria-pressed='true'] {
+    border-color: var(--cor-texto);
+    background-color: var(--cor-texto);
+    color: var(--cor-fundo);
+  }
+
+  /* Texto: sem caixa; o sublinhado aparece no hover. */
+  /* Os 4 px de respiro são do anel de foco; a margem negativa devolve o texto à borda da coluna
+     (no celular ele quebra para baixo do primário e ficava 4 px para dentro). */
+  .cm-botao-texto {
+    min-height: 44px;
+    margin-inline: -4px;
+    padding: 0 4px;
+    border: 0;
+    border-radius: 6px;
+    text-decoration-line: underline;
+    text-decoration-color: transparent;
+    text-decoration-thickness: 1.5px;
+    text-underline-offset: 6px;
+  }
+
+  .cm-botao-texto:hover,
+  .cm-botao-texto[data-forcar='hover'] {
+    text-decoration-color: currentColor;
+  }
+
+  /* Desativado: areia com o texto apagado, e nada muda no hover. */
+  .cm-botao[aria-disabled='true'],
+  .cm-botao[aria-disabled='true']:hover {
+    border-color: var(--cor-desativado-fundo);
+    background-color: var(--cor-desativado-fundo);
+    color: var(--cor-desativado-texto);
+    text-decoration-color: transparent;
+    cursor: not-allowed;
+  }
+
+  .cm-botao-texto[aria-disabled='true'],
+  .cm-botao-texto[aria-disabled='true']:hover {
+    background-color: transparent;
+  }
+
+  .cm-botao-icone {
+    flex: none;
+    width: 20px;
+    height: 20px;
+  }
+
+  /* Campo (raio 14) ---------------------------------------------------------------------------- */
+  .cm-campo {
+    display: grid;
+    gap: 8px;
+    max-width: 28rem;
+  }
+
+  .cm-campo-rotulo {
+    font-weight: 500;
+  }
+
+  .cm-campo-controle {
+    position: relative;
+    display: flex;
+    align-items: center;
+  }
+
+  .cm-campo-entrada {
+    box-sizing: border-box;
+    width: 100%;
+    min-height: 56px;
+    padding: 0 18px;
+    border: 1.5px solid var(--cor-texto-2);
+    border-radius: var(--radius-campo);
+    background-color: var(--cor-cartao);
+    color: var(--cor-texto);
+    font-size: var(--texto-corpo-tamanho);
+    line-height: var(--texto-corpo-entrelinha);
+    appearance: none;
+  }
+
+  .cm-campo-entrada:hover {
+    border-color: var(--cor-texto);
+  }
+
+  .cm-campo-entrada:focus-visible {
+    border-color: var(--cor-texto);
+    outline-offset: 2px;
+  }
+
+  /* A-11Y-002: o campo de data (Histórico "Escolher o dia", Família "Validade do acesso") mostrava
+     `outline: none` ao receber foco no teclado; o anel é o mesmo dos outros controles, na cor de foco do tema. */
+  input[type='date']:focus-visible {
+    outline: 3px solid var(--cor-foco);
+    outline-offset: 2px;
+  }
+
+  .cm-campo-entrada[aria-invalid='true'] {
+    border-width: 2px;
+    border-color: var(--cor-texto);
+  }
+
+  /* Reserva à direita para o ícone do campo: seta de 20 px a 16 px da borda (select) ou botão de 44 px (senha). */
+  .cm-campo-controle[data-select] .cm-campo-entrada {
+    padding-right: var(--cm-reserva-seta);
+    cursor: pointer;
+  }
+
+  .cm-campo-seta {
+    position: absolute;
+    right: 16px;
+    width: 20px;
+    height: 20px;
+    pointer-events: none;
+  }
+
+  .cm-campo-olho {
+    position: absolute;
+    right: 6px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    border: 0;
+    border-radius: 10px;
+    background: none;
+    color: inherit;
+  }
+
+  .cm-campo-controle[data-senha] .cm-campo-entrada {
+    padding-right: var(--cm-reserva-olho);
+  }
+
+  .cm-campo-mensagem {
+    margin: 0;
+  }
+
+  .cm-campo-erro {
+    font-weight: 500;
+  }
+
+  /* Link de pular para o conteúdo (WCAG 2.4.1): o primeiro Tab da página. Fixo no topo e fora da janela até o
+     foco; com foco, papel sobre cacau (as cores do texto e do fundo trocam na madrugada) acima do cabeçalho. */
+  .cm-pular {
+    position: fixed;
+    top: 8px;
+    left: 8px;
+    display: inline-flex;
+    align-items: center;
+    box-sizing: border-box;
+    min-height: var(--alvo-toque);
+    padding: 0 24px;
+    border-radius: var(--radius-pilula);
+    background-color: var(--cor-texto);
+    color: var(--cor-fundo);
+    font-size: var(--texto-corpo-tamanho);
+    line-height: var(--texto-corpo-entrelinha);
+    font-weight: 500;
+    text-decoration: none;
+    transform: translateY(calc(-100% - 16px));
+  }
+
+  .cm-pular:focus {
+    z-index: 60;
+    transform: none;
+    outline: 2px solid var(--cor-foco);
+    outline-offset: 3px;
+  }
+
+  /* O <main> recebe o foco por programa (tabindex="-1") ao pular: não é um controle, sem anel. */
+  main[tabindex='-1']:focus {
+    outline: none;
+  }
+
+  /* Cabeçalho ------------------------------------------------------------------------------- */
+  .cm-cabecalho {
+    position: sticky;
+    top: 0;
+    z-index: 40;
+    min-height: var(--cm-cabecalho);
+    /* Nunca passa da janela (fonte a 200 %): o que sobrar na horizontal é cortado aqui, e não rola a página. */
+    max-width: 100%;
+    overflow-x: clip;
+    background-color: var(--cor-fundo);
+    color: var(--cor-texto);
+  }
+
+  .cm-cab-miolo {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    min-height: var(--cm-cabecalho);
+    min-width: 0;
+  }
+
+  /* A marca acompanha a janela: 24 px (a base, DS1:RN-02: a área logada guarda o desenho dela); com a raiz a 200 %
+     (1,5 rem = 48 px) fica em ~25 px em vez de 380 px de largura, que empurravam a lua e o menu para fora
+     (DEF-62b-7). */
+  .cm-marca {
+    flex: none;
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    color: inherit;
+    font-size: min(1.5rem, 6.4vw);
+    line-height: 1.5rem;
+    letter-spacing: -0.01em;
+    text-decoration: none;
+    white-space: nowrap;
+  }
+
+  /* Só o cabeçalho público: 20 px abaixo de 640 (fora da escala, DESIGN.md "Marca do cabeçalho": com a pílula
+     "Criar conta" na linha de 390 a marca, a pílula e o menu só cabem a 20 px) e 24 px de 640 em diante (bloco de
+     640 abaixo). Com a raiz a 200 % (1,25 rem = 40 px) fica em ~21 px. */
+  .cm-cabecalho[data-contexto='publico'] .cm-marca {
+    font-size: min(1.25rem, 5.3vw);
+  }
+
+  .cm-cab-links {
+    display: none;
+  }
+
+  .cm-cab-acoes {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+    margin-left: auto;
+  }
+
+  /* Alvo de 44 x 44 também nos links curtos ("Hoje" media 42,7 px); os longos não mudam. */
+  .cm-cab-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 44px;
+    min-height: 44px;
+    padding: 0 4px;
+    border-radius: 6px;
+    color: inherit;
+    font-size: 1.0625rem;
+    text-decoration-line: underline;
+    text-decoration-color: transparent;
+    text-decoration-thickness: 1.5px;
+    text-underline-offset: 8px;
+    white-space: nowrap;
+  }
+
+  .cm-cab-link:hover,
+  .cm-cab-link[aria-current='page'] {
+    text-decoration-color: currentColor;
+  }
+
+  /* "Entrar" fica no menu abaixo de 1100. A pílula "Criar conta" fica na linha em toda largura (DS1:RF-09):
+     44 px de altura abaixo de 640 (as medidas da pílula do app, padding 22), 48 px daí em diante. */
+  .cm-cab-entrar {
+    display: none;
+  }
+
+  .cm-cab-criar {
+    min-height: 44px;
+    padding: 0 22px;
+  }
+
+  /* O estado de noite do cabeçalho (`useCabecalhoNoite()`): cacau, marca e links de papel, a pílula em contorno
+     de papel e fundo transparente (nenhum botão de mel no cabeçalho; o de mel é o da página). O menu do celular
+     continua de papel, com o texto de cacau. */
+  .cm-cabecalho[data-tom='noite'] {
+    background-color: var(--color-cacau);
+    color: var(--color-papel);
+  }
+
+  .cm-cabecalho[data-tom='noite'] .cm-cab-criar {
+    border-color: var(--color-papel);
+    background-color: transparent;
+    color: var(--color-papel);
+  }
+
+  .cm-cabecalho[data-tom='noite'] .cm-cab-criar:hover {
+    background-color: var(--color-papel);
+    color: var(--color-cacau);
+  }
+
+  /* O anel de foco do cacau é de cacau: sobre o cacau ele passa a ser de papel. */
+  .cm-cabecalho[data-tom='noite'] .cm-cab-miolo :focus-visible,
+  .cm-cabecalho[data-tom='noite'] .cm-pular:focus {
+    outline-color: var(--color-papel);
+  }
+
+  .cm-cabecalho[data-tom='noite'] .cm-pular:focus {
+    background-color: var(--color-papel);
+    color: var(--color-cacau);
+  }
+
+  .sb-cab-menu {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    height: 48px;
+    /* A caixa do ícone (26 px) fica 11 px para dentro do botão de 48, e o traço do Menu do Lucide (viewBox 24,
+       pontas redondas) termina 3,25 px antes da borda da caixa: -(11 + 3,25) leva o TRAÇO à borda do conteúdo. */
+    margin-right: -14.25px;
+    padding: 0;
+    border: 0;
+    border-radius: var(--radius-pilula);
+    background: none;
+    color: inherit;
+  }
+
+  .sb-cab-menu:hover {
+    background-color: color-mix(in srgb, currentColor 8%, transparent);
+  }
+
+  :root[data-tema='madrugada'] .cm-cab-madrugada[aria-pressed='true'] {
+    border: 2px solid var(--cor-destaque);
+    background-color: var(--cor-papel-fundo);
+    color: var(--cor-texto);
+  }
+
+  :root[data-tema='madrugada'] .cm-cab-madrugada[aria-pressed='true']:focus-visible {
+    outline-color: var(--cor-foco);
+  }
+
+  .cm-cab-madrugada .cm-rotulo-longo {
+    display: none;
+  }
+
+  /* HEADER-375: abaixo de 390 a linha aperta os vãos (16 -> 8 entre a marca e as ações, 8 -> 4 entre os botões) e a
+     pílula "Criar conta" perde 10 px de recuo de cada lado: com a marca no token (5,3 vw) a marca, a pílula e o
+     menu de 48 px cabem de 360 a 389. De 320 a 359 a pílula fica na linha numa forma compacta (bloco de 359 abaixo).
+     390 para cima não muda. */
+  @media (max-width: 389px) {
+    .cm-cab-miolo {
+      gap: 8px;
+    }
+
+    .cm-cab-acoes {
+      gap: 4px;
+    }
+
+    /* Os três alvos de toque (menu de 48 px, lua e pílula) não encolhem mais: quem cede é o vão entre os itens e,
+       abaixo de 360, a pílula. De 390 em diante nada disto vale, e o desenho é o de antes. */
+    .sb-cab-menu,
+    .cm-cab-madrugada {
+      flex: none;
+    }
+
+    .cm-cab-criar {
+      flex: none;
+      padding: 0 12px;
+    }
+  }
+
+  /* De 320 a 359 a marca no token (5,3 vw), o menu de 48 px e a pílula "Criar conta" só cabem com a pílula compacta: o
+     mesmo rótulo e o mesmo alvo de 44 px de altura, com recuo de 8 px (e não 12) e a letra do nível `pequeno` (15 px,
+     o piso do DESIGN.md). O Início e as outras páginas não têm convite ao cadastro na primeira dobra de 320: a
+     pílula é o convite e fica à vista.
+     Uma página que traz o próprio convite ali põe um gancho `data-pagina-*` no <html> (como paginaCuidado e
+     paginaDesenvolvimento já fazem para a cor): só com o gancho, e só abaixo de 360, a pílula sai da linha (o menu
+     do celular continua listando "Criar conta" e "Entrar"). Hoje o gancho que esconde é o de /como-funciona. */
+  @media (max-width: 359px) {
+    .cm-cab-criar {
+      padding: 0 8px;
+      font-size: var(--texto-pequeno-tamanho);
+      white-space: nowrap;
+    }
+
+    [data-pagina-como-funciona] .cm-cab-criar {
+      display: none;
+    }
+  }
+
+  /* Abaixo de 480 o botão da madrugada fica só com a lua (o nome acessível continua "Modo madrugada"),
+     para o nome do site, a lua e o menu caberem na linha de 390. */
+  @media (max-width: 479px) {
+    .cm-cab-madrugada {
+      width: 48px;
+      padding: 0;
+    }
+
+    .cm-cab-madrugada .cm-rotulo-curto {
+      display: none;
+    }
+  }
+
+  @media (min-width: 640px) {
+    .cm-cab-criar {
+      min-height: 48px;
+    }
+
+    .cm-cab-madrugada .cm-rotulo-longo {
+      display: inline;
+    }
+
+    .cm-cab-madrugada .cm-rotulo-curto {
+      display: none;
+    }
+
+    /* De 640 para cima a marca e o rótulo longo da lua também acompanham a janela com a raiz a 200 %: a 100 %
+       valem 24 e 17 px (4,4 vw >= 28 px, 2,7 vw >= 17,3 px em 640). */
+    .cm-marca {
+      font-size: min(1.5rem, 4.4vw);
+    }
+
+    .cm-cabecalho[data-contexto='publico'] .cm-marca {
+      font-size: min(1.5rem, 4.4vw);
+    }
+
+    .cm-cab-madrugada[data-tamanho='app'] {
+      font-size: min(1.0625rem, 2.7vw);
+    }
+  }
+
+  /* HEADER-200: a faixa que envolve só a linha do cabeçalho é um container de largura (a largura do cabeçalho, a da
+     janela). As consultas de container em `rem` seguem o tamanho da letra da raiz, que as de mídia (px) não seguem:
+     a 100 % nada muda; a 200 % os links saem da linha e voltam ao menu. A contenção faz da faixa o bloco de contenção
+     de filhos fixed/absolute: por isso o menu do celular e o alerta da saída ficam FORA dela, irmãos da faixa. */
+  .cm-cab-faixa {
+    container: cm-cab / inline-size;
+  }
+
+  /* A linha de links só vale de 1100 px de janela (mídia) E de 67 rem de faixa (container). A 100 % 67 rem são 1072 px:
+     abaixo do ponto de 1100, ainda com a barra de rolagem de 15 px (faixa de 1085), então o par não muda nada. A 200 %
+     67 rem são 2144 px e o cabeçalho cai para a linha com o botão Menu, mesmo numa janela de 1440. */
+  @media (min-width: 1100px) {
+    @container cm-cab (min-width: 67rem) {
+      .cm-cab-miolo {
+        gap: 24px;
+      }
+
+      .cm-cab-links {
+        display: flex;
+        align-items: center;
+        gap: var(--espaco-pilha);
+        margin-left: auto;
+      }
+
+      .cm-cab-acoes {
+        gap: 20px;
+        margin-left: var(--espaco-pilha);
+      }
+
+      .cm-cab-entrar {
+        display: inline-flex;
+      }
+
+      .sb-cab-menu {
+        display: none;
+      }
+
+      /* C-2 (P-50): na área logada o cabeçalho tem seis links e o botão "Modo madrugada" na mesma linha, de 1100 px
+         para cima (o ponto onde ele já troca hoje; nenhum ponto novo). Os vãos viram o token `junto` (12 px em 1440)
+         para a linha única caber em 1100 sem cortar item: a altura da navegação é uma linha. */
+      .cm-cabecalho[data-contexto='logado'] .cm-cab-links {
+        flex-wrap: nowrap;
+        gap: var(--espaco-junto);
+      }
+
+      .cm-cabecalho[data-contexto='logado'] .cm-cab-miolo {
+        gap: var(--espaco-junto);
+      }
+
+      .cm-cabecalho[data-contexto='logado'] .cm-cab-acoes {
+        flex: none;
+        gap: var(--espaco-junto);
+        margin-left: var(--espaco-junto);
+      }
+
+      /* R2-01: com marca, seis links, Conta e Sair a 1100 o rótulo longo da lua não cabe na janela. No cabeçalho
+         logado, de 1100 para cima, a lua fica só com o ícone (o nome acessível continua "Modo madrugada"), como
+         abaixo de 480; o 1440 mantém a mesma linha. */
+      .cm-cabecalho[data-contexto='logado'] .cm-cab-madrugada {
+        width: 48px;
+        padding: 0;
+      }
+
+      .cm-cabecalho[data-contexto='logado'] .cm-cab-madrugada .cm-rotulo-longo,
+      .cm-cabecalho[data-contexto='logado'] .cm-cab-madrugada .cm-rotulo-curto {
+        display: none;
+      }
+    }
+  }
+
+  /* HEADER-200: 16 rem não alcançam as janelas de 320 px ou mais com texto normal. Com a raiz ampliada, a
+     linha pode quebrar e ganhar altura, sem limitar a fonte da pílula. Marca, ações e Menu conservam a ordem
+     do DOM; não há corte nem redução da letra para fazê-los caber. */
+  @container cm-cab (max-width: 16rem) {
+    .cm-cab-miolo {
+      flex-wrap: wrap;
+      gap: var(--espaco-junto);
+      padding-block: var(--espaco-junto);
+    }
+
+    .cm-cab-acoes {
+      flex-wrap: wrap;
+    }
+
+    .cm-cab-criar,
+    .sb-cab-menu {
+      flex: none;
+    }
+  }
+
+  /* O painel começa depois da altura real do cabeçalho, inclusive quando o texto ampliado cria outra linha.
+     O cabeçalho sticky é o bloco de referência; o painel termina na borda visível da janela. */
+  .cm-menu-celular {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    left: 0;
+    height: calc(100dvh - 100%);
+    overflow-y: auto;
+    background-color: var(--cor-fundo);
+    color: var(--cor-texto);
+  }
+
+  .cm-menu-celular[hidden] {
+    display: none;
+  }
+
+  /* O painel rola: o anel de foco fica para dentro do item, onde não é cortado. */
+  .cm-menu-celular :focus-visible {
+    outline-offset: -4px;
+  }
+
+  .cm-menu-lista {
+    margin: 0;
+    padding: 16px 0;
+    list-style: none;
+  }
+
+  .cm-menu-lista > li + li {
+    border-top: 1px solid var(--cor-fio-suave);
+  }
+
+  .cm-menu-link {
+    display: flex;
+    align-items: center;
+    min-height: 72px;
+    color: inherit;
+    text-decoration: none;
+  }
+
+  .cm-menu-link[aria-current='page'] {
+    text-decoration: underline;
+    text-underline-offset: 8px;
+  }
+
+  .cm-menu-acoes {
+    display: grid;
+    gap: 12px;
+    padding: 16px 0 var(--espaco-bloco);
+  }
+
+  .cm-menu-acoes .cm-botao {
+    width: 100%;
+  }
+
+  /* Rodapé (RodapeMapa, DS1:RF-04): uma faixa de cacau de borda a borda, de links agrupados ------------------- */
+  /* O rodapé do site é cacau (papel nos links, noite-2 nos títulos, no aviso e no ©), sem sombra, sem gradiente e
+     sem movimento. O rodapé compacto de /app/* não herda o cacau (`:not`). Enquanto uma página não termina numa
+     Secao, o respiro do fim dela continua sendo esta margem; quando termina, a última seção já cobre. */
+  .cm-rodape {
+    margin-top: var(--cm-entre-secoes);
+  }
+
+  .cm-rodape:not(.cm-rodape-compacto) {
+    background-color: var(--color-cacau);
+    color: var(--color-papel);
+  }
+
+  /* O anel de foco do site é de cacau: sobre o cacau do rodapé ele passa a ser de papel. */
+  .cm-rodape:not(.cm-rodape-compacto) :focus-visible {
+    outline-color: var(--color-papel);
+  }
+
+  main:has(> [data-h~='secao']:last-child) ~ .cm-rodape:not(.cm-rodape-compacto) {
+    margin-top: 0;
+  }
+
+  /* FOOTER-2. Página curta (a rota inexistente, por exemplo): o main chega à base da janela e o rodapé começa nela,
+     sem uma faixa de papel embaixo dele. O cabeçalho (sticky) está no fluxo e tira a altura dele da conta. */
+  main:has(~ .cm-rodape:not(.cm-rodape-compacto)) {
+    min-height: calc(100svh - var(--cm-cabecalho));
+  }
+
+  /* FOOTER-2. Quando a última faixa do main é de cacau (o Fechamento da noite), o rodapé, também de cacau, começa na
+     base dela: sem margem, sem fio e sem faixa de papel entre as duas. A regra é daqui, do lado do rodapé. Uma última
+     faixa de papel segue com a junção de hoje (as regras acima). */
+  main:has([data-casa] > [data-faixa][data-faixa-fundo='cacau']:last-child) ~ .cm-rodape:not(.cm-rodape-compacto) {
+    margin-top: 0;
+  }
+
+  /* A largura é a do quadro da página (a mesma do cabeçalho e das seções, `--quadro-largura`), para o nome e os links
+     ficarem na borda esquerda do resto da página; abaixo de 1224 px dá a mesma margem lateral da `.cm-area`. */
+  /* O respiro de cima e de baixo do rodapé de cacau é de 64 px em toda largura (FOOTER-2): `pilha` (16, fixo) vezes 4.
+     O rodapé tem de caber em 440 px de 768 em diante e em 640 abaixo disso (duas colunas, seis fileiras), também na
+     madrugada (links de 56 px): o nome encosta nos links (a caixa de cada link já traz folga em volta do texto) e o ©
+     segue o aviso na mesma linha corrida (a segunda linha do aviso é curta); de 1100 em diante os dois blocos de baixo
+     voltam a ser blocos. */
+  .cm-rodape-quadro {
+    width: min(var(--quadro-largura), 100vw - 2 * var(--quadro-calha));
+    padding-block: calc(var(--espaco-pilha) * 4);
+  }
+
+  .cm-rodape-topo {
+    margin-bottom: 0;
+  }
+
+  /* O nome é texto comum no nível `titulo-3` (nunca maior que o h1 da página). A marca e as colunas de links vão
+     uma sobre a outra abaixo de 768 e na mesma fileira daí em diante. */
+  .cm-rodape-nome {
+    margin: 0;
+    font-family: var(--fonte-titulo);
+    font-size: var(--texto-titulo-3-tamanho);
+    line-height: var(--texto-titulo-3-entrelinha);
+    font-weight: var(--peso-titulo);
+    letter-spacing: -0.01em;
+    overflow-wrap: anywhere;
+  }
+
+  /* Abaixo de 768 os 11 links são uma lista só, em DUAS colunas iguais e calmas (FOOTER-3), em seis fileiras de 44 px
+     (ceil(11 / 2)), lidas coluna a coluna na ordem dos grupos (Produto, Conta, Ajuda, Legal). Os títulos dos grupos
+     ficam só para o leitor de tela (sr-only). Os grupos e as listas viram `contents` para os 11 links serem as células
+     de uma grade só, e o início de cada coluna é o mesmo em toda fileira. O vão entre as colunas é o `bloco` (24 em
+     390, em linha reta até 48 em 1440): a palavra mais larga, "Desenvolvimento" (~115 px a 15 px), cabe inteira em
+     320 (colunas de 128 px) e o texto de um link nunca encosta no do vizinho. Um rótulo mais largo que a coluna
+     ("Cuidado compartilhado") quebra entre as palavras, em duas linhas dentro da caixa de 44 px, e nunca passa da
+     coluna (também com a fonte a 200 %: `fr` com mínimo 0 encolhe junto com a janela, sem alargar o rodapé). */
+  .cm-rodape-colunas {
+    position: relative;
+    display: grid;
+    grid-auto-flow: column;
+    grid-template-rows: repeat(6, auto);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: var(--espaco-bloco);
+  }
+
+  @media (max-width: 767.98px) {
+    .cm-rodape-grupo,
+    .cm-rodape-lista {
+      display: contents;
+    }
+  }
+
+  .cm-rodape-titulo {
+    margin: 0;
+    font-family: var(--fonte-texto);
+    font-size: var(--texto-pequeno-tamanho);
+    line-height: var(--texto-pequeno-entrelinha);
+    font-weight: 500;
+    color: var(--color-noite-2);
+    /* Abaixo de 768 o título fica no DOM, só para o leitor de tela (a mesma técnica do sr-only). */
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    border: 0;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  .cm-rodape-lista {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  /* `min-width: 0`: a célula da grade (abaixo de 768) pode ficar mais estreita que o texto e deixa o link quebrar. */
+  .cm-rodape-lista > li {
+    min-width: 0;
+    break-inside: avoid;
+  }
+
+  .cm-rodape-link {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    min-width: var(--alvo-toque);
+    /* Sem hífen e sem quebra no meio da palavra a 100 %: o rótulo de várias palavras quebra só entre elas. Só uma
+       palavra mais larga que a própria coluna (texto a 200 %) quebra, em vez de passar da janela. `anywhere` (e não
+       `break-word`) também baixa o `min-content` do link, que é um flex: com `break-word` a palavra mais longa seguia
+       sendo o mínimo do texto e passava da coluna. A largura da coluna (`fr` com mínimo 0) é que decide a quebra. */
+    overflow-wrap: anywhere;
+    word-break: normal;
+    hyphens: manual;
+    color: inherit;
+    text-decoration-line: underline;
+    text-decoration-color: transparent;
+    text-decoration-thickness: 1.5px;
+    text-underline-offset: 6px;
+  }
+
+  .cm-rodape-link:hover {
+    text-decoration-color: currentColor;
+  }
+
+  /* Na lista do rodapé do site o link é um bloco do tamanho do texto: uma linha por link, sem folga de linha em
+     volta (a caixa tem 44 px, 56 na madrugada), e duas caixas nunca se tocam. O recuo do foco fica livre: nada corta. */
+  .cm-rodape-lista .cm-rodape-link {
+    display: flex;
+    width: fit-content;
+    max-width: 100%;
+    font-size: var(--texto-pequeno-tamanho);
+    line-height: var(--texto-pequeno-entrelinha);
+  }
+
+  /* O aviso e, depois dele, a linha do ©: cada um em um parágrafo de `pequeno`, em noite-2, embaixo dos links. O tom
+     do aviso é posto aqui (o componente AvisoDemonstracao só traz o marcador): papel e noite-2 são os dois únicos
+     tons de texto do rodapé. */
+  .cm-rodape-base,
+  .cm-rodape-base > p,
+  .cm-rodape-base .aviso-demonstracao {
+    color: var(--color-noite-2);
+  }
+
+  .cm-rodape-base > p {
+    display: inline;
+    margin: 0;
+  }
+
+  .cm-rodape-base > p + p {
+    margin-inline-start: var(--espaco-junto);
+  }
+
+  /* FOOTER-3. Abaixo de 768 o aviso e a linha do © são duas linhas de bloco, uma sobre a outra, com 4 px entre elas
+     (o mesmo vão do bloco de baixo de 1100 em diante). De 768 em diante vale o que está acima. */
+  @media (max-width: 767.98px) {
+    .cm-rodape-base {
+      display: grid;
+      gap: 4px;
+    }
+
+    .cm-rodape-base > p,
+    .cm-rodape-base > p + p {
+      display: block;
+      margin: 0;
+    }
+  }
+
+  /* Rodapé das rotas /app/*: uma linha de links que quebra, sobre uma régua fina; sem painel de mel. */
+  .cm-rodape-compacto {
+    margin-top: 32px;
+    padding-bottom: 24px;
+  }
+
+  .cm-rodape-compacto-nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0 24px;
+    padding-top: 8px;
+    border-top: 1px solid var(--cor-fio-suave);
+  }
+
+  /* De 768 em diante os quatro grupos (com os títulos à vista) ficam numa fileira só, numa grade de quatro colunas
+     iguais (`minmax(0, 1fr)`) com um vão só entre elas, o `espaco-bloco` (48 em 1440): as bordas esquerdas dos
+     grupos andam de um degrau constante. O nome (~185 px) e os grupos só cabem lado a lado, com cada rótulo numa
+     linha ("Cuidado compartilhado" pede ~160 px de coluna), de 1100 em diante: até 1099 o nome fica sobre a grade,
+     que toma a largura toda do quadro; de 1100 em diante o nome vai à esquerda e a grade ocupa o resto da fileira.
+     Só em ~768 a coluna (155 px) é menor que esse rótulo, que então quebra em duas linhas dentro da caixa de 44 px.
+     Com o nome numa fileira própria e os links de 56 px na madrugada, o © segue na linha corrida do aviso (como
+     abaixo de 768); de 1100 em diante os dois blocos de baixo voltam. */
+  @media (min-width: 768px) {
+    .cm-rodape-topo {
+      display: grid;
+      row-gap: var(--espaco-junto);
+      margin-bottom: 0;
+    }
+
+    .cm-rodape-colunas {
+      grid-auto-flow: row;
+      grid-template-rows: none;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      column-gap: var(--espaco-bloco);
+    }
+
+    /* Os títulos dos grupos voltam ao fluxo normal, à vista. */
+    .cm-rodape-titulo {
+      position: static;
+      width: auto;
+      height: auto;
+      margin: 0;
+      overflow: visible;
+      clip: auto;
+      clip-path: none;
+      white-space: normal;
+    }
+  }
+
+  @media (min-width: 1100px) {
+    .cm-rodape-topo {
+      display: flex;
+      align-items: flex-start;
+      column-gap: var(--espaco-grupo);
+      margin-bottom: var(--espaco-pilha);
+    }
+
+    /* A grade toma o resto da fileira ao lado do nome; `min-width: 0` deixa as colunas encolherem com a janela. */
+    .cm-rodape-nome {
+      flex: none;
+    }
+
+    .cm-rodape-colunas {
+      flex: 1 1 0;
+      min-width: 0;
+    }
+
+    .cm-rodape-base {
+      display: grid;
+      gap: 4px;
+    }
+
+    .cm-rodape-base > p,
+    .cm-rodape-base > p + p {
+      display: block;
+      margin: 0;
+    }
+  }
+
+  /* Páginas simples (as públicas que ainda não têm conteúdo e a rota inexistente). ------------ */
+  .cm-pagina-simples {
+    padding-top: var(--espaco-secao-ampla);
+  }
+
+  .cm-pagina-simples > * + * {
+    margin-top: 24px;
+  }
+
+  .cm-pagina-simples .cm-botao {
+    margin-top: var(--espaco-grupo);
+  }
+
+  /* The build label of the preview (`<div data-previa role="note">`, injected by scripts/montar-pages.mjs with an inline
+     style: fixed, padded, on a dark ground). It stays in the DOM for assistive technology but leaves the picture, so it
+     never covers the page. Only the labelled note: the form wrappers carry `data-previa="topico|resposta"` without the
+     role. The flags are needed because the element's own style is inline; an important declaration beats a normal
+     inline one. */
+  [data-previa][role='note'] {
+    position: absolute !important;
+    width: 1px !important;
+    height: 1px !important;
+    margin: -1px !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+    border: 0 !important;
+    clip: rect(0 0 0 0) !important;
+    clip-path: inset(50%) !important;
+    white-space: nowrap !important;
+  }
+}

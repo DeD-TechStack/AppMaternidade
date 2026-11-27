@@ -6,8 +6,9 @@ Cada recurso de terceiros que vai no site tem uma linha aqui: pacote, versão ex
 
 | Família | Pacote | Versão | Licença | Cópia da licença | sha256 da licença |
 |---|---|---|---|---|---|
-| Fraunces | `@fontsource/fraunces` | 5.3.0 | SIL Open Font License 1.1 (`OFL-1.1`) | `web/licencas/fontsource-fraunces.txt` | `cd3384cafac6f2bddc3955273958a2e029f97027c8037ac539ef5744a77b579e` |
-| Instrument Sans | `@fontsource/instrument-sans` | 5.3.0 | SIL Open Font License 1.1 (`OFL-1.1`) | `web/licencas/fontsource-instrument-sans.txt` | `c27a3c53c3beed7f5c26853afa15991478ff7145d3754a36b0382f84e10c0d03` |
+| Literata | `@fontsource-variable/literata` | 5.3.0 | SIL Open Font License 1.1 (`OFL-1.1`) | `web/licencas/fontsource-variable-literata.txt` | `9895ebc015226accf416b758ac1ca02a2fb4f83a89d316791ef697c3dc0852aa` |
+| Outfit | `@fontsource-variable/outfit` | 5.3.0 | SIL Open Font License 1.1 (`OFL-1.1`) | `web/licencas/fontsource-variable-outfit.txt` | `0e5fcef5d93bfcae273c11c00f0bb453d3b5491860e1ac8b658767b7577c938f` |
+| M PLUS Rounded 1c (variante B de exibição, temporária até a FG-2b; só os arquivos latin 700 e 800) | `@fontsource/m-plus-rounded-1c` | 5.3.0 | SIL Open Font License 1.1 (`OFL-1.1`) | `web/licencas/fontsource-m-plus-rounded-1c.txt` | `64a7bd79d7e69545e66d003153e7e4999910cbb15249a19ae2a49c472637c7e0` |
 
 A cópia da licença é o arquivo `LICENSE` do próprio pacote, sem alteração (mesmo sha256).
 
@@ -19,6 +20,28 @@ A cópia da licença é o arquivo `LICENSE` do próprio pacote, sem alteração 
 
 A cópia da licença é o arquivo `LICENSE` do pacote instalado do `registry.npmjs.org`, sem alteração (mesmo sha256).
 
+## Cliente do banco
+
+| Pacote | Versão | Licença | Cópia da licença | sha256 da licença | Uso |
+|---|---|---|---|---|---|
+| `@supabase/supabase-js` | 2.119.0 | MIT | `web/licencas/supabase-js-LICENSE.txt` | `334dd6820e2eaeab2064e7c59001b810566728a28a41a7c1dbf69bbee17d0936` | Cliente do Supabase (Auth e banco). Só `web/src/dados/cliente.ts` cria o cliente, e só quando `VITE_SUPABASE_URL` e `VITE_SUPABASE_ANON_KEY` têm valor no build; sem elas o site usa a cópia em memória. Entrou na MAT-37. |
+| `vite-imagetools` | 12.0.2 | MIT | `web/licencas/vite-imagetools.txt` | `703314288373001b9e92792a00796dd9c4e06e2668d55b2bf0b1ad77155e82b6` | Plugin do Vite (só no build, `devDependencies`): gera as larguras AVIF e WebP das cenas a partir de um arquivo mestre por vaga, em `web/src/assets/cenas`, com nome de arquivo por conteúdo. Entrou no LIB-IMG. |
+
+A cópia da licença é o arquivo `LICENSE` do pacote instalado do `registry.npmjs.org`, sem alteração (mesmo sha256).
+
+Pacotes que vieram com ele, fixados no `web/package-lock.json`:
+
+| Pacote | Versão | Licença |
+|---|---|---|
+| `@supabase/auth-js` | 2.119.0 | MIT |
+| `@supabase/functions-js` | 2.119.0 | MIT |
+| `@supabase/postgrest-js` | 2.119.0 | MIT |
+| `@supabase/realtime-js` | 2.119.0 | MIT |
+| `@supabase/storage-js` | 2.119.0 | MIT |
+| `@supabase/phoenix` | 0.4.5 | MIT |
+| `iceberg-js` | 0.8.1 | MIT |
+| `tslib` | 2.8.1 | 0BSD |
+
 ## Ferramentas de desenvolvimento
 
 | Ferramenta | Pacote | Versão | Licença | Uso |
@@ -27,26 +50,52 @@ A cópia da licença é o arquivo `LICENSE` do pacote instalado do `registry.npm
 
 ## Ilustrações
 
-As ilustrações do site são SVG desenhados para o projeto, sem acervo de terceiros.
+As ilustrações e as cenas do site são imagens geradas pelo Codex CLI 0.167.0 (`image_gen` embutido, plano ChatGPT de Daniel, sem chave de API, sem imagem de referência), curadas pelo `lider-appmaternidade`, em 11/11/2026. Origem, sha256 dos brutos, modelo, data e id do prompt de cada arquivo estão em `_staging/appmaternidade/DIRECOES_20261111/FINAL/ativos/PROVENANCE.md` (cópia do mesmo registro ao lado dos arquivos). Nenhum rosto de pessoa real; nada vem dos sites de referência.
+
+| Arquivo | Registro |
+|---|---|
+| `web/public/ilustracoes/avo-carrinho@1x.webp`, `@2x.webp` | `FINAL/ativos/PROVENANCE.md`, `I_traco subject 1`; cópia em `web/public/ilustracoes/PROVENANCE.md` |
+| `web/public/ilustracoes/pai-colo@1x.webp`, `@2x.webp` | `FINAL/ativos/PROVENANCE.md`, `I_traco subject 2`; idem |
+| `web/public/ilustracoes/tummy-time@1x.webp`, `@2x.webp` | `FINAL/ativos/PROVENANCE.md`, `I_traco subject 3`; idem |
+| `web/public/ilustracoes/maos-celular@1x.webp`, `@2x.webp` | `FINAL/ativos/PROVENANCE.md`, `I_traco subject 4`; idem |
+| `web/public/ilustracoes/baba-tapete@1x.webp`, `@2x.webp` | `FINAL/ativos/PROVENANCE.md`, `I_traco subject 5`; idem |
+| `web/public/ilustracoes/mae-noite@1x.webp`, `@2x.webp` | `FINAL/ativos/PROVENANCE.md`, `I_traco subject 6`; idem |
+| `web/public/cenas/sistema/trio-mel@1x.webp`, `@2x.webp` | `FINAL/ativos/PROVENANCE.md`, cena `S1_trio_mel` composta com `compor.py` sobre três capturas reais do site; cópia em `web/public/cenas/sistema/PROVENANCE.md` |
+| `web/public/cenas/acesso/entrar@1x.webp`, `@2x.webp` | cena `S2_unico_mel` (um celular sobre um pedestal de oliva), composição provisória das telas de acesso (MAT-37r); será recomposta com os mesmos nomes, com uma captura real do site |
+
+## Capturas de tela do Início
+
+### IMG-RES native-resolution exports (2026-11-19)
+
+No new art or upscaling. Larger scene files use genuine pixels inside the same approved crop. New phone tiers are exports of real 390 CSS px DPR3 demo captures, with the original route, theme, content and viewport crop; their per-file hashes and source PNG dimensions are in `public/telas/{casa,t1i}/PROVENANCE.md` and `MANIFESTO.json`. The small files remain unchanged. Frames are re-rasterized from the original analytic rounded rectangles; see `public/molduras/PROVENANCE.md`.
+
+The Início records of IMG-RES (M05 phone ladder 390/780/1170 AVIF + WebP, M06 900w plate, the 3x/2x light layers) live in `src/assets/cenas/inicio/PROVENANCE.md`, where the asset test reads them; the other scenes' rows are in `src/assets/cenas/{como-funciona,cuidado,desenvolvimento}/PROVENANCE.md`, the 780w and 1170w captures in `public/telas/{casa,t1i}/PROVENANCE.md` and the 1356w frames in `public/molduras/PROVENANCE.md`. The wiring (import queries, `srcSet`, `sizes`) is in `componentes/inicio-casa/midia.ts` and `conteudo/casa/*.ts`; no raster was created or edited by it. The M05 1672w and mobile 780w light layers of HOME-SEAMS are unchanged.
+
+As telas dos celulares do Início são capturas reais do próprio site, não imagens geradas. O registro de cada arquivo (sha256, bytes, tamanho, PNG de origem e linha `CAPTURA_OK`) está em `web/public/telas/casa/PROVENANCE.md`, e o das capturas em `web/public/telas/casa/MANIFESTO.json`.
+
+| Arquivo | Registro |
+|---|---|
+| `web/public/telas/casa/historico-y-alta-{280,320,560,640,780,1170}w.webp` | Os de 780 e 1170 são as camadas DPR 3 da IMG-RES (registro em `web/public/telas/casa/PROVENANCE.md`). Recapturado em 19/11/2026 (HOME-PHONE-B2, cartão t_53d1da83): `.oc/capturar.mjs` com o extra `janela` (fail-closed: `CAPTURA_FIM_EM=17:30`, `CAPTURA_LINHA_ANTES=16:00`, `CAPTURA_ESPERA_ULTIMA=17:30`), entrada pela conta de demonstração, DPR 2, caminho `/app/historico` conferido, relógio fixo em 2026-11-18T21:42:04-03:00. Dia anterior, janela de 390 × 1234 em scrollY 1099 de um documento de 2609 px; o rodapé do site `[data-rodape]` e o aviso de demonstração `[data-aviso-tela]` ficaram ocultos por uma regra `display:none` injetada só na captura, e a ferramenta confere que os dois estão ausentes. Última linha em repouso: 17:30 Ícaro (nenhuma linha 18:00, 19:30 ou 20:30, sem faixa em branco). PNG `historico_ontem_claro_390_janela.png` (780 × 2468, sha256 `ad36fd18162070ed1e442e7e5e09c6f517cfce68f13096d7385808312d56e121`), reduzido por `.oc/gerar.py` (PIL LANCZOS, WebP método 6, qualidade 40 no 640w, 54 no 560w, 60 no 320w e 72 no 280w; as qualidades estão em `.oc/rec/servidos.json`). |
+| `web/public/telas/casa/hoje-n-{280,320,560,640,780,1170}w.webp` | Os de 780 e 1170 são as camadas DPR 3 da IMG-RES (registro em `web/public/telas/casa/PROVENANCE.md`). Recapturado em 19/11/2026 (HOME-FINAL), com as mesmas condições, caminho `/app/hoje` no tema madrugada: janela de 390 × 880 rolada 78 px, para o título sair de baixo do cabeçalho e a barra de baixo não cortar nenhuma linha. PNG `hoje_app_madrugada_390_janela.png` (780 × 1760, sha256 `f7228c3e02d01ef7b7edd9650cfb5b5a43b896144c6d9c683bf2743ec7e503cc`), reduzido por `.oc/gerar.py` (PIL LANCZOS, WebP método 6, qualidade 72 no 320w e no 640w, 82 no 280w e no 560w). |
 
 ## Movimento
 
 | Pacote | Versão | Licença | Cópia da licença | sha256 da licença | Uso |
 |---|---|---|---|---|---|
-| `motion` | 12.43.0 | MIT | `web/licencas/motion-LICENSE.md` | `1bf0dc3f7727723e5a032ed12164a47cf92c05204cb1a3485f123c24e2833ed1` | Animações do Início (MAT-44c-2), importadas só de `motion/react` e só em `web/src/movimento/`, `web/src/componentes/terceiros/`, `web/src/componentes/vitrine/` e `web/src/paginas/Inicio.tsx`. Traz o `framer-motion` 12.43.0 como dependência dele, não do site. |
+| `motion` | 12.43.0 | MIT | `web/licencas/motion-LICENSE.md` | `1bf0dc3f7727723e5a032ed12164a47cf92c05204cb1a3485f123c24e2833ed1` | Animações do Início (MAT-44c-2), importadas só de `motion/react` e só em `web/src/movimento/` (desde a MOTION-1, que removeu `web/src/componentes/terceiros/EntradaSuave.tsx` e `TextoAnimado.tsx`, nenhum outro diretório a importa). Traz o `framer-motion` 12.43.0 como dependência dele, não do site. |
 
 Escolha da versão (MAT-44c-2a, 06/11/2026): `npm view motion@12 version --json` listou até `12.43.0`, a maior da major 12 (D-2 da MAT-44c). Instalado com `npm --prefix web i --save-exact motion@12.43.0`. A cópia da licença é o `LICENSE.md` do pacote instalado, sem alteração (mesmo sha256).
 
 ## Componentes
 
-Os componentes do site são próprios, feitos com Tailwind. Os de movimento ficam em `web/src/movimento/`, também próprios. Os únicos de terceiros estão em `web/src/componentes/terceiros/`:
+Os componentes do site são próprios, feitos com Tailwind. Os de movimento ficam em `web/src/movimento/`, também próprios. Os dois de terceiros, adaptados do Magic UI, foram removidos na MOTION-1 (as linhas abaixo ficam como registro do que houve):
 
 | Componente | Origem (arquivo no commit) | sha256 do original | Licença | Linha do MOVIMENTO | Adaptação |
 |---|---|---|---|---|---|
-| `EntradaSuave.tsx` | Magic UI, `magicuidesign/magicui@efe76fc5755eca1142dd4f74c1d6f0ace2887e3c`, `apps/www/registry/magicui/blur-fade.tsx` | `99a8e83aa8817f48e26d921e959ff9abefb5c2f1f0b72b166ed95e88e015949f` | MIT, `web/licencas/magicui-LICENSE.md` | M4 (linhas que sobem com opacidade, uma depois da outra), usada por `movimento/LinhasEscalonadas.tsx` | sem filtro de desfoque (só opacidade e deslocamento); parâmetros do catálogo `movimento/catalogo.ts`; `useInView` com `once: false`; sem `AnimatePresence`; estático com movimento reduzido |
-| `TextoAnimado.tsx` | Magic UI, mesmo commit, `apps/www/registry/magicui/text-animate.tsx` | `0ebece79c412661f57bc0489416b55a376e9f006e0f558162bb6e91f814a99a6` | MIT, `web/licencas/magicui-LICENSE.md` | M5 (título dividido por linha) | só a divisão por linha e a subida com opacidade; saíram as variantes que desfocam ou escalam e as divisões por palavra e letra; texto inteiro num `sr-only` e linhas com `aria-hidden`; parâmetros do catálogo; estático com movimento reduzido |
+| `EntradaSuave.tsx` (removido na MOTION-1) | Magic UI, `magicuidesign/magicui@efe76fc5755eca1142dd4f74c1d6f0ace2887e3c`, `apps/www/registry/magicui/blur-fade.tsx` | `99a8e83aa8817f48e26d921e959ff9abefb5c2f1f0b72b166ed95e88e015949f` | MIT, `web/licencas/magicui-LICENSE.md` | M4 (linhas que sobem com opacidade, uma depois da outra), usada por `movimento/LinhasEscalonadas.tsx` | sem filtro de desfoque (só opacidade e deslocamento); parâmetros do catálogo `movimento/catalogo.ts`; `useInView` com `once: false`; sem `AnimatePresence`; estático com movimento reduzido |
+| `TextoAnimado.tsx` (removido na MOTION-1) | Magic UI, mesmo commit, `apps/www/registry/magicui/text-animate.tsx` | `0ebece79c412661f57bc0489416b55a376e9f006e0f558162bb6e91f814a99a6` | MIT, `web/licencas/magicui-LICENSE.md` | M5 (título dividido por linha) | só a divisão por linha e a subida com opacidade; saíram as variantes que desfocam ou escalam e as divisões por palavra e letra; texto inteiro num `sr-only` e linhas com `aria-hidden`; parâmetros do catálogo; estático com movimento reduzido |
 | `cn.ts` | próprio | — | — | — | junta classes, no lugar do `cn` do Magic UI (`clsx` e `tailwind-merge` não entram) |
 
-A licença do Magic UI é o `LICENSE.md` da raiz do repositório no mesmo commit, sem alteração (sha256 `0147b84235ed916b8b4e89c1f80655351c5afe7d211b629be61f553a227b34ba`). Desvio do `shadcn add`: os dois arquivos foram baixados de `raw.githubusercontent.com` no commit examinado e adaptados à mão, sem `shadcn init` nem `shadcn add`, então não há `components.json`, alias `@/` nem dependência nova além do `motion`.
+Removidos na MOTION-1: os dois arquivos acima e a cópia da licença do Magic UI (`web/licencas/magicui-LICENSE.md`) saíram do repositório junto com eles, porque nenhum código do Magic UI ficou no site. O que segue é o registro de como entraram. A licença do Magic UI era o `LICENSE.md` da raiz do repositório no mesmo commit, sem alteração (sha256 `0147b84235ed916b8b4e89c1f80655351c5afe7d211b629be61f553a227b34ba`). Desvio do `shadcn add`: os dois arquivos foram baixados de `raw.githubusercontent.com` no commit examinado e adaptados à mão, sem `shadcn init` nem `shadcn add`, então não há `components.json`, alias `@/` nem dependência nova além do `motion`.
 
 Histórico (MAT-44, antes desta frente): a lista aprovada (shadcn/ui em `shadcn-ui/ui@ba1503c644` e Magic UI em `magicuidesign/magicui@efe76fc575`) (commit completo `efe76fc5755eca1142dd4f74c1d6f0ace2887e3c`, lido em `apps/www/registry/magicui/`) foi examinada para o salto visual, e nenhum item entrou. Motivo, item a item do que serviria às telas: o `blur-fade` anima `filter: blur(...)` com 400 ms por padrão, acima do limite de movimento do projeto (só opacidade e até 16 px, até 300 ms) e contra a proibição de desfoque; o `marquee` é movimento contínuo (40 s em laço) e o `number-ticker` é um contador animado; as molduras `iphone`, `safari` e `android` mostram a tela por uma imagem (`<img>` ou `<image href>`), e aqui a moldura leva as miniaturas vivas dos componentes de Hoje e Sessão, sem imagem raster, então ela é desenhada à mão em CSS; as primitivas do shadcn/ui (dialog, select, tabs) não têm uso nestas três telas. Por isso não houve download de arquivo-fonte, nem `motion`, nem cópia de licença dessas bibliotecas. Se um cartão futuro adotar um item, o caminho é a cópia do arquivo no commit examinado (sem `shadcn init` nem `shadcn add`, para não criar `components.json` nem alias fora do escopo), com a adaptação registrada aqui.

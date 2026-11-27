@@ -1,26 +1,27 @@
 @import 'tailwindcss';
 @import './styles/tokens.css';
+@import './styles/harmonia.gerado.css';
 @import './styles/tema.css';
-@import '@fontsource/fraunces/latin-600.css';
-@import '@fontsource/fraunces/latin-800.css';
-@import '@fontsource/fraunces/latin-400-italic.css';
-@import '@fontsource/instrument-sans/latin-400.css';
-@import '@fontsource/instrument-sans/latin-500.css';
-@import '@fontsource/instrument-sans/latin-600.css';
+@import './styles/literata-latin-opsz.css';
+@import './styles/literata-latin-wght-italic.css';
+@import './styles/outfit-latin-wght.css';
+@import './styles/site.css';
+@import './styles/campo.css';
+@import './styles/foco.css';
+@import './styles/abrir-fechar.css';
 
 @layer base {
-  /* Toda borda usa a tinta do tema; as linhas de 1 px são a estrutura (DESIGN.md, Layout). */
-  *,
-  ::before,
-  ::after {
-    border-color: var(--cor-linha);
-  }
-
   html {
     -webkit-text-size-adjust: 100%;
     text-size-adjust: 100%;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    /* A linha de âncora: onde o título de uma seção para depois de um link, do Voltar ou de um `#...` na carga, e onde
+       o índice das páginas de leitura gruda (`publicasTexto.css`). Declarada aqui, uma vez. */
+    --ancora-leitura: 104px;
+
+    /* Os links-âncora não deixam o título sob o cabeçalho fixo. */
+    scroll-padding-top: var(--ancora-leitura);
   }
 
   body {
@@ -28,9 +29,16 @@
     background-color: var(--cor-fundo);
     color: var(--cor-texto);
     font-family: var(--fonte-texto);
-    font-size: 1.0625rem;
+    /* Corpo do site: nível `corpo` (DESIGN.md). */
+    font-size: var(--texto-corpo-tamanho);
     font-weight: 400;
-    line-height: 1.55;
+    line-height: var(--texto-corpo-entrelinha);
+    letter-spacing: 0;
+  }
+
+  /* O h1 recebe foco por programa (tabIndex=-1) e não mostra contorno. */
+  h1:focus {
+    outline: none;
   }
 
   a {
@@ -40,6 +48,8 @@
   }
 
   button,
+  input,
+  select,
   textarea {
     font: inherit;
     color: inherit;
@@ -49,264 +59,44 @@
     cursor: pointer;
   }
 
-  /* Foco visível em todo elemento focável (VIS-08) */
+  /* Foco visível em todo elemento focável: anel de 2 px na cor de foco do tema (cacau no papel, 14:1). */
   :focus-visible {
     outline: 2px solid var(--cor-foco);
     outline-offset: 2px;
   }
 }
 
+/* =============================================================================================
+   Telas do app (Hoje, Sessão, barra Registrar): as peças antigas que elas ainda usam. São redesenhadas
+   noutro cartão; aqui só leem os apelidos da paleta nova (tema.css) e as duas famílias.
+   ============================================================================================= */
 @layer components {
-  /* Tipografia */
-  .rotulo {
-    font-family: var(--fonte-texto);
-    font-size: 0.875rem;
-    font-weight: 600;
-    line-height: 1.3;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
-  }
-
-  /* A voz de exibição (Fraunces) e o espaçamento dos títulos, uma vez só. */
-  .marca,
-  .promessa,
-  .titulo-secao,
-  .titulo-tela,
-  .titulo-linha,
-  .numero-fato,
-  .nota-italico {
-    font-family: var(--fonte-exibicao);
-  }
-
-  .marca,
-  .titulo-secao,
-  .titulo-tela,
-  .titulo-linha {
-    letter-spacing: -0.01em;
-  }
-
-  .promessa,
-  .numero-fato {
-    letter-spacing: -0.02em;
-  }
-
-  /* Títulos sem linha viúva; o corpo corrido sem última linha de uma palavra só. */
-  .promessa,
-  .titulo-secao,
-  .titulo-tela,
-  .titulo-linha {
-    text-wrap: balance;
-  }
-
-  .texto-medida {
-    text-wrap: pretty;
-  }
-
-  .marca {
-    font-size: 1.25rem;
-    font-weight: 800;
-  }
-
-  .promessa {
-    font-size: clamp(2.75rem, 7.2vw, 4.5rem);
-    font-weight: 800;
-    line-height: 1;
-    overflow-wrap: break-word;
-  }
-
-  .titulo-secao {
-    font-size: clamp(1.75rem, 3.2vw, 2.25rem);
-    font-weight: 600;
-    line-height: 1.1;
-  }
-
-  .titulo-tela {
-    font-size: 2.25rem;
-    font-weight: 600;
-    line-height: 1.1;
-  }
-
-  .titulo-linha {
-    font-size: 1.75rem;
-    font-weight: 600;
-    line-height: 1.15;
-  }
-
-  .numero-fato {
-    font-size: clamp(2.25rem, 4.2vw, 3.5rem);
-    font-weight: 800;
-    line-height: 1;
-    overflow-wrap: anywhere;
-  }
-
-  .numero-grande {
-    font-family: var(--fonte-texto);
-    font-size: clamp(2.5rem, 12vw, 3.5rem);
-    font-weight: 600;
-    line-height: 1;
-    font-variant-numeric: tabular-nums;
-  }
-
-  .nota-italico {
-    font-size: 1.5rem;
-    font-style: italic;
-    font-weight: 400;
-    line-height: 1.25;
-  }
-
   .tabular {
     font-variant-numeric: tabular-nums;
   }
 
-  .texto-medida {
-    max-width: 65ch;
-  }
-
-  .texto-info {
-    color: var(--cor-info);
-  }
-
-  /* Superfícies */
-  .cartao {
-    border: 1px solid var(--cor-linha);
-    border-radius: var(--radius-card, 8px);
-    background-color: var(--cor-fundo);
-    padding: 1rem;
-  }
-
-  /* A etiqueta é só o fundo, o canto e o respiro; a tipografia vem de .rotulo. */
-  .etiqueta {
-    display: inline-block;
-    /* Nunca passa da largura da linha: com a fonte ampliada uma palavra só ("Desenvolvimento")
-       é mais larga que a página; ela quebra dentro da etiqueta (hífen automático, com o idioma
-       pt-BR do html) sem mudar o texto. */
-    max-width: 100%;
-    hyphens: auto;
-    overflow-wrap: anywhere;
-    border-radius: var(--radius-tag, 3px);
-    background-color: var(--cor-papel-fundo);
-    padding: 0.375rem 0.5rem;
-  }
-
-  /* Campos de cor do Início (data-campo). O valor é o nome do token; a cor vem das variáveis de
-     uso, que na madrugada apontam para os tons da noite. Sobre o barro e a lavanda, a tinta. */
-  [data-campo] {
-    border-radius: var(--radius-card, 8px);
-  }
-
-  [data-campo='accent'] {
-    background-color: var(--cor-destaque);
-    color: var(--cor-sobre-destaque);
-  }
-
-  [data-campo='field-1'],
-  [data-campo='night-field-1'] {
-    background-color: var(--cor-campo-1);
-    color: var(--cor-texto);
-  }
-
-  [data-campo='field-2'],
-  [data-campo='night-field-2'] {
-    background-color: var(--cor-campo-2);
-    color: var(--cor-texto);
-  }
-
-  /* Coluna única das telas logadas: faixa, conteúdo, barra e navegação alinhados nela. */
-  .coluna-app {
-    width: 100%;
-    max-width: 40rem;
-    margin-inline: auto;
-  }
-
-  @media (min-width: 48rem) {
-    .coluna-app {
-      border-inline: 1px solid var(--cor-linha);
-    }
-  }
-
-  /* O cronômetro da Sessão e o cartão Em andamento do Hoje ficam num campo de cor. De dia é o
-     urucum; na madrugada, o papel fundo escuro com contorno, sem ponto claro. */
-  .campo-sessao,
-  .campo-andamento {
-    border-radius: var(--radius-media, 8px);
-    border-block: var(--borda-campo);
-    background-color: var(--cor-campo-sessao);
-    color: var(--cor-numero-sessao);
-    padding: 1.5rem 1rem;
-  }
-
-  /* No Hoje o cartão sangra até as bordas da coluna (a margem da tela é de 1 rem). */
-  .cartao.campo-andamento {
-    margin-inline: -1rem;
-    border: 0;
-    border-block: var(--borda-campo);
-    border-radius: 0;
-  }
-
-  /* Com o campo a rente da tela, o contorno de foco vai para dentro dele, onde não é cortado. */
-  .cartao.campo-andamento:focus-visible {
-    outline-offset: -4px;
-  }
-
-  .campo-andamento .botao-principal {
-    border-color: var(--cor-botao-campo);
-    background-color: var(--cor-botao-campo);
-    color: var(--cor-texto-botao-campo);
-  }
-
-  .campo-andamento .botao-secundario {
-    border-color: currentColor;
-    background-color: transparent;
-    color: inherit;
-  }
-
-  .cronometro {
-    font-family: var(--fonte-texto);
-    font-size: clamp(4.5rem, 21vw, 8rem);
-    font-weight: 600;
-    line-height: 1;
-    font-variant-numeric: tabular-nums;
-    overflow-wrap: anywhere;
-  }
-
-  /* A miniatura do Início usa o mesmo cronômetro, em tamanho menor. */
-  .cronometro-mini {
-    font-size: clamp(2.75rem, 13vw, 4.5rem);
-  }
-
   /* Alvo de toque: todo botão e link fora de parágrafo tem pelo menos 44 × 44 px. */
-  .alvo-toque,
-  .botao,
-  .nav-item {
+  /* Piso de especificidade zero: não vence o min-height de 56 px do .cm-botao nem do .cm-campo-entrada. */
+  :where(.alvo-toque),
+  .botao {
     min-width: 44px;
     min-height: 44px;
   }
 
-  /* Botões. A resposta ao toque é cor e um deslocamento de 1 px, em 120 ms: nada de escala,
-     giro ou inclinação (VIS-08). */
   .botao {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: 0.5rem;
+    gap: 8px;
     min-height: 48px;
     border: 1px solid transparent;
-    border-radius: var(--radius-control, 6px);
-    padding: 0.75rem 1rem;
-    font-size: 1rem;
+    border-radius: var(--radius-campo);
+    padding: 12px 16px;
+    font-size: var(--texto-pequeno-tamanho);
     font-weight: 600;
-    line-height: 1.3;
-    letter-spacing: 0.02em;
+    line-height: var(--texto-pequeno-entrelinha);
     text-align: center;
     text-decoration: none;
-    transition-property: transform, opacity, background-color, border-color;
-    transition-duration: 120ms;
-    transition-timing-function: ease-out;
-  }
-
-  .botao:active:not(:disabled) {
-    opacity: 0.85;
-    transform: translateY(1px);
   }
 
   .botao-principal {
@@ -321,43 +111,26 @@
     color: var(--cor-texto);
   }
 
-  /* Ligado: papel fundo e contorno de destaque. Nunca a cor do texto como fundo, que na
-     madrugada seria o ponto mais claro da tela. O padding compensa o contorno de 2 px. */
   .botao-secundario[aria-pressed='true'] {
     border: 2px solid var(--cor-destaque);
     background-color: var(--cor-papel-fundo);
     color: var(--cor-texto);
-    padding: calc(0.75rem - 1px) calc(1rem - 1px);
-  }
-
-  .botao-grande {
-    min-height: 56px;
-    width: 100%;
+    padding: 11px 15px;
   }
 
   .acao-rapida {
     min-height: var(--alvo-rapido);
-    gap: 0.375rem;
-    /* 15 px: com o ícone, o rótulo mais longo (Tummy time) cabe numa linha nas cinco colunas da
-       coluna de 40 rem, sem espremer o ícone. */
-    font-size: 0.9375rem;
+    gap: 6px;
+    font-size: var(--texto-pequeno-tamanho);
+    line-height: var(--texto-pequeno-entrelinha);
     border-color: var(--cor-papel-fundo);
     background-color: var(--cor-papel-fundo);
-    padding-inline: 0.5rem;
+    padding-inline: 8px;
     color: var(--cor-texto);
   }
 
   .acao-rapida[aria-expanded='true'] {
     border-color: var(--cor-linha);
-  }
-
-  /* Barra de baixo da tela: botões rápidos e navegação, opacas. Fica colada à janela
-     (.barra-fixa) quando a janela tem pelo menos 40rem de altura (ver barraFixa.ts); com
-     fonte ou zoom altos, fica no fluxo. */
-  .barra-inferior {
-    background-color: var(--cor-fundo);
-    /* Contêiner de largura: a navegação decide o layout pela largura da barra, em rem. */
-    container-type: inline-size;
   }
 
   .barra-fixa {
@@ -367,645 +140,483 @@
 
   .registro-rapido {
     border-top: 1px solid var(--cor-linha);
-    padding: 0.75rem 1rem 0.5rem;
+    padding: 12px 16px 8px;
   }
 
-  /* Navegação inferior */
-  .nav-inferior {
-    display: grid;
-    grid-template-columns: repeat(5, minmax(0, 1fr));
-    border-top: 1px solid var(--cor-linha);
-    background-color: var(--cor-fundo);
-    padding-inline: 0.25rem;
-    padding-bottom: max(6px, env(safe-area-inset-bottom));
-  }
-
-  /* "Em breve" marca, como um colchete, as colunas 2 a 5 (Histórico a Família). No DOM ela vem
-     logo depois de Hoje, a mesma ordem da coluna única; na grade de 5 a posição é explícita. */
-  .nav-legenda {
-    grid-column: 2 / span 4;
-    grid-row: 1;
-    position: relative;
-    margin-top: 0.25rem;
-    padding-bottom: 0.25rem;
-    border-bottom: 1px solid var(--cor-linha);
-    text-align: left;
-    font-size: 0.75rem;
-    line-height: 1.3;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
-  }
-
-  .nav-legenda::before,
-  .nav-legenda::after {
-    content: '';
-    position: absolute;
-    bottom: calc(-0.375rem - 1px);
-    width: 1px;
-    height: 0.375rem;
-    background-color: var(--cor-linha);
-  }
-
-  .nav-legenda::before {
-    left: 0;
-  }
-
-  .nav-legenda::after {
-    right: 0;
-  }
-
-  /* O ícone fica em cima do rótulo, alinhado pelo topo; o rótulo continua sendo o nome acessível
-     do item. */
-  .nav-item {
-    grid-row: 2;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: flex-start;
-    gap: 0.25rem;
-    /* Rede de segurança: o rótulo nunca vaza da coluna, mesmo sem dicionário de hifenização. */
-    min-width: 0;
-    min-height: 48px;
-    overflow-wrap: anywhere;
-    border: 0;
-    border-top: 3px solid transparent;
-    background-color: transparent;
-    padding: 0.5rem 0 0.25rem;
-    color: var(--cor-texto);
-    font-size: 0.75rem;
-    font-weight: 500;
-    line-height: 1.2;
-    text-align: center;
-    text-decoration: none;
-    /* Hifens manuais: nenhum item quebra palavra sozinho. Só "Desenvolvimento" opta pela
-       quebra automática, com o modificador abaixo. */
-    hyphens: manual;
-  }
-
-  /* Só "Desenvolvimento" quebra em 390 px (o <html lang="pt-BR"> dá o dicionário). O texto
-     visível não leva caractere invisível, então o nome acessível é o próprio texto. */
-  .nav-item-hifeniza {
-    hyphens: auto;
-  }
-
-  /* Abaixo de 22 rem de largura da barra (celular em fonte ampliada, zoom, coluna estreita) os
-     5 rótulos não cabem lado a lado: a navegação vira uma coluna, um item por linha, com
-     "Em breve" como título do grupo dos 4. A rem acompanha a fonte raiz. */
-  @container (max-width: 22rem) {
-    .nav-inferior {
-      grid-template-columns: minmax(0, 1fr);
-      padding-inline: 0;
-    }
-
-    .nav-legenda,
-    .nav-item {
-      grid-column: auto;
-      grid-row: auto;
-    }
-
-    .nav-legenda {
-      margin-inline: 0.75rem;
-    }
-
-    .nav-legenda::before,
-    .nav-legenda::after {
-      display: none;
-    }
-
-    .nav-item {
-      flex-direction: row;
-      align-items: center;
-      gap: 0.75rem;
-      padding-block: 0.25rem;
-      padding-inline: 0.75rem;
-      text-align: left;
-    }
-  }
-
-  /* Alvo de foco por programa (cartão e títulos com tabindex="-1"): o contorno aparece para
-     quem chega pelo teclado; com mouse ou toque, o foco por programa não desenha caixa. */
+  /* Alvo de foco por programa (cartão e títulos com tabindex="-1"). */
   .alvo-foco:focus-visible {
     outline: 2px solid var(--cor-foco);
     outline-offset: 2px;
   }
 
-  .nav-item[aria-current='page'] {
-    border-top-color: var(--cor-destaque);
-    font-weight: 600;
+  /* Grade e ritmo vertical das telas do app ------------------------------------------------ */
+  :root {
+    --margem: 32px;
+    --area-util: 1600px;
+    --e-cabecalho: 88px;
+    --e-cab-h1: 64px;
+    --e-h1-sub: 8px;
+    --e-fio-bloco: 32px;
+    --e-midia-titulo: 128px;
+    --e-par-numeros: 96px;
+    --e-numeros-midia: 128px;
+    --e-midia-linhas: 160px;
+    --e-linhas: 32px;
+    /* Altura da barra Registrar fixa: o fim do Hoje e o rodapé guardam esta folga para ela não cobrir nada. */
+    --ha-barra-altura: 64px;
   }
 
-  /* Vitrine do Início: o palco tem tamanho natural fixo e encolhe por escala. O tamanho natural e
-     a escala são variáveis do .vitrine; as regras do .vitrine-palco só leem as variáveis, então
-     nenhuma declaração dele pode desfazer, pela ordem da cascata, a medida de um bloco
-     @container. A escala depende da largura da página em rem (contêiner pagina), nunca da
-     janela, e cresce em degraus de modo que o palco inteiro caiba na largura em qualquer largura
-     (inclusive com a fonte raiz em 200%): palco × escala nunca passa da largura. As margens dos
-     aparelhos dentro do palco (pelo menos 2 rem dos quatro lados, o conjunto centrado) são
-     calculadas nas posições de cada aparelho em Inicio.tsx.
-     Abaixo de 46 rem: notebook e dois celulares, grandes e empilhados (54 × 67 rem). A partir de
-     46 rem: notebook entre os dois celulares (81 × 56 rem). */
-  .vitrine {
-    --escala: 0.11;
-    --palco-largura: 54rem;
-    --palco-altura: 67rem;
-    position: relative;
-    overflow: hidden;
-    height: calc(var(--palco-altura) * var(--escala));
-  }
-
-  .vitrine-palco {
-    position: absolute;
-    top: 0;
-    left: 50%;
-    width: var(--palco-largura);
-    height: var(--palco-altura);
-    margin-left: calc(var(--palco-largura) / -2);
-    transform: scale(var(--escala));
-    transform-origin: top center;
-  }
-
-  @container pagina (min-width: 8rem) {
-    .vitrine {
-      --escala: 0.14;
+  @media (max-width: 991px) {
+    :root {
+      --margem: 24px;
     }
   }
 
-  @container pagina (min-width: 10rem) {
-    .vitrine {
-      --escala: 0.18;
+  @media (max-width: 767px) {
+    :root {
+      --margem: 16px;
+      --area-util: 640px;
+      --e-cabecalho: 72px;
+      --e-cab-h1: 32px;
+      --e-fio-bloco: 16px;
+      --e-midia-titulo: 48px;
+      --e-par-numeros: 48px;
+      --e-numeros-midia: 48px;
+      --e-midia-linhas: 48px;
+      --e-linhas: 48px;
     }
   }
 
-  @container pagina (min-width: 12rem) {
-    .vitrine {
-      --escala: 0.22;
-    }
-  }
-
-  @container pagina (min-width: 14rem) {
-    .vitrine {
-      --escala: 0.25;
-    }
-  }
-
-  @container pagina (min-width: 16rem) {
-    .vitrine {
-      --escala: 0.29;
-    }
-  }
-
-  @container pagina (min-width: 18rem) {
-    .vitrine {
-      --escala: 0.33;
-    }
-  }
-
-  @container pagina (min-width: 20rem) {
-    .vitrine {
-      --escala: 0.37;
-    }
-  }
-
-  @container pagina (min-width: 22rem) {
-    .vitrine {
-      --escala: 0.4;
-    }
-  }
-
-  @container pagina (min-width: 24rem) {
-    .vitrine {
-      --escala: 0.44;
-    }
-  }
-
-  @container pagina (min-width: 27rem) {
-    .vitrine {
-      --escala: 0.5;
-    }
-  }
-
-  @container pagina (min-width: 30rem) {
-    .vitrine {
-      --escala: 0.55;
-    }
-  }
-
-  @container pagina (min-width: 33rem) {
-    .vitrine {
-      --escala: 0.6;
-    }
-  }
-
-  @container pagina (min-width: 46rem) {
-    .vitrine {
-      --escala: 0.55;
-      --palco-largura: 81rem;
-      --palco-altura: 56rem;
-    }
-  }
-
-  @container pagina (min-width: 49rem) {
-    .vitrine {
-      --escala: 0.6;
-    }
-  }
-
-  @container pagina (min-width: 53rem) {
-    .vitrine {
-      --escala: 0.65;
-    }
-  }
-
-  @container pagina (min-width: 57rem) {
-    .vitrine {
-      --escala: 0.7;
-    }
-  }
-
-  @container pagina (min-width: 61rem) {
-    .vitrine {
-      --escala: 0.75;
-    }
-  }
-
-  @container pagina (min-width: 65rem) {
-    .vitrine {
-      --escala: 0.8;
-    }
-  }
-
-  @container pagina (min-width: 69rem) {
-    .vitrine {
-      --escala: 0.85;
-    }
-  }
-
-  @container pagina (min-width: 73rem) {
-    .vitrine {
-      --escala: 0.9;
-    }
-  }
-
-  @container pagina (min-width: 77rem) {
-    .vitrine {
-      --escala: 0.95;
-    }
-  }
-
-  /* Madrugada: quatro filhos da grade, sem nada sobreposto. Em coluna única (página estreita) a
-     ordem é título e texto, cena (a ilustração), celular e legenda. A cena mostra só o meio do
-     desenho largo (o svg tem o dobro da largura da caixa e recua metade para a esquerda), que é
-     onde está a cena, com o chão de borda a borda da caixa. A partir de 64 rem, duas colunas: à
-     esquerda o texto no alto e a ilustração embaixo, na largura da coluna e com o chão na base do
-     celular; à direita o celular e a legenda logo abaixo dele, com a largura dele (a legenda tem
-     largura 0 e mínimo de 100%, para a coluna ser a do celular e não a do texto da legenda). */
-  .madrugada-grade {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr);
-    row-gap: 1.5rem;
-  }
-
-  .madrugada-cena {
-    width: 100%;
-    max-width: 26rem;
+  .sb-area {
+    width: min(100% - 2 * var(--margem), var(--area-util));
     margin-inline: auto;
-    overflow: hidden;
   }
 
-  .madrugada-cena > svg {
-    position: relative;
-    left: -50%;
-    display: block;
-    width: 200%;
-    max-width: none;
-    height: auto;
+  .grade-10 {
+    display: grid;
+    grid-template-columns: repeat(10, minmax(0, 1fr));
   }
 
-  /* O celular da madrugada escala com a largura da página em rem, como a vitrine: a caixa é o
-     tamanho natural do aparelho (24 rem de largura, na proporção 9 por 14) vezes uma escala que
-     é variável, trocada em degraus de @container pagina. As regras sem condição só leem a
-     variável, então a cascata não desfaz nenhum degrau. A caixa mais o padding lateral da seção
-     (3 rem abaixo de 46 rem, 6 rem a partir dela) cabe na página em qualquer largura, inclusive
-     com a fonte raiz ampliada (a página tem menos rem). Onde já cabia o tamanho é o de antes:
-     0,75 (18 rem) abaixo de 46 rem e 0,85 (20,4 rem) a partir de 46 rem. A legenda lê a mesma
-     escala, para ter sempre a largura do celular. */
-  .madrugada-celular,
-  .madrugada-legenda {
-    --celular-escala: 0.08;
+  .col-c1-c8 {
+    grid-column: 1 / 9;
   }
 
-  .madrugada-celular {
-    position: relative;
-    flex: none;
-    justify-self: center;
-    width: calc(24rem * var(--celular-escala));
-    height: calc(37.3333rem * var(--celular-escala));
+  .col-c2-c8 {
+    grid-column: 2 / 9;
   }
 
-  .madrugada-legenda {
-    max-width: calc(24rem * var(--celular-escala));
-    justify-self: center;
+  .col-c9-c10 {
+    grid-column: 9 / 11;
   }
 
-  @container pagina (min-width: 8rem) {
-    .madrugada-celular,
-    .madrugada-legenda {
-      --celular-escala: 0.2;
+  @media (max-width: 767px) {
+    .grade-10 {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .col-c1-c8,
+    .col-c2-c8,
+    .col-c9-c10 {
+      grid-column: 1 / -1;
     }
   }
 
-  @container pagina (min-width: 10rem) {
-    .madrugada-celular,
-    .madrugada-legenda {
-      --celular-escala: 0.29;
+  .sb-mt-fio-bloco {
+    margin-top: var(--e-fio-bloco);
+  }
+
+  .sb-mt-midia-titulo {
+    margin-top: var(--e-midia-titulo);
+  }
+
+  .sb-mt-par-numeros {
+    margin-top: var(--e-par-numeros);
+  }
+
+  .sb-mt-numeros-midia {
+    margin-top: var(--e-numeros-midia);
+  }
+
+  .sb-mt-midia-linhas {
+    margin-top: var(--e-midia-linhas);
+  }
+
+  /* Escala de tipo das telas do app. Literata nos títulos e números, Outfit no resto. Cada classe usa tamanho e
+     entrelinha do MESMO nível da tabela do DESIGN.md, que já é fluido entre 390 e 1440 (sem ponto de quebra aqui):
+     display-xl = exibicao; citacao, secao e subtitulo = titulo-1; rotulo = titulo-2; corpo-g = titulo-3;
+     corpo e corpo-p = corpo; ui = pequeno; botao = titulo-4. `numero` e `cronometro` ficam fora da escala. ---- */
+  .t-display-xl {
+    font-family: var(--fonte-sb-titulo);
+    font-size: var(--texto-exibicao-tamanho);
+    line-height: var(--texto-exibicao-entrelinha);
+    font-weight: 600;
+    letter-spacing: 0;
+  }
+
+  .t-citacao {
+    font-family: var(--fonte-sb-titulo);
+    font-size: var(--texto-titulo-1-tamanho);
+    line-height: var(--texto-titulo-1-entrelinha);
+    font-weight: 400;
+    font-style: normal;
+    letter-spacing: 0;
+  }
+
+  .t-secao {
+    font-family: var(--fonte-sb-serifa);
+    font-size: var(--texto-titulo-1-tamanho);
+    line-height: var(--texto-titulo-1-entrelinha);
+    font-weight: 400;
+    letter-spacing: 0;
+  }
+
+  .t-subtitulo {
+    font-family: var(--fonte-sb-serifa);
+    font-size: var(--texto-titulo-1-tamanho);
+    line-height: var(--texto-titulo-1-entrelinha);
+    font-weight: 400;
+    letter-spacing: 0;
+  }
+
+  .t-rotulo {
+    font-family: var(--fonte-sb-serifa);
+    font-size: var(--texto-titulo-2-tamanho);
+    line-height: var(--texto-titulo-2-entrelinha);
+    font-weight: 400;
+    letter-spacing: 0;
+  }
+
+  .t-corpo-g {
+    font-family: var(--fonte-sb-corpo);
+    font-size: var(--texto-titulo-3-tamanho);
+    line-height: var(--texto-titulo-3-entrelinha);
+    font-weight: 400;
+    letter-spacing: 0;
+  }
+
+  .t-corpo {
+    font-family: var(--fonte-sb-corpo);
+    font-size: var(--texto-corpo-tamanho);
+    line-height: var(--texto-corpo-entrelinha);
+    font-weight: 400;
+    letter-spacing: 0;
+  }
+
+  .t-corpo-p {
+    font-family: var(--fonte-sb-corpo);
+    font-size: var(--texto-corpo-tamanho);
+    line-height: var(--texto-corpo-entrelinha);
+    font-weight: 400;
+    letter-spacing: 0;
+  }
+
+  .t-ui {
+    font-family: var(--fonte-sb-corpo);
+    font-size: var(--texto-pequeno-tamanho);
+    line-height: var(--texto-pequeno-entrelinha);
+    font-weight: 400;
+    letter-spacing: 0;
+  }
+
+  .t-numero {
+    font-family: var(--fonte-sb-slab);
+    font-size: 7rem;
+    line-height: 5.625rem;
+    font-weight: 700;
+    letter-spacing: 0;
+    font-variant-numeric: tabular-nums lining-nums;
+  }
+
+  .t-cronometro {
+    font-family: var(--fonte-sb-slab);
+    font-size: 14rem;
+    line-height: 11.25rem;
+    font-weight: 700;
+    letter-spacing: 0;
+    font-variant-numeric: tabular-nums lining-nums;
+  }
+
+  .t-botao {
+    font-family: var(--fonte-sb-corpo);
+    font-size: var(--texto-titulo-4-tamanho);
+    line-height: var(--texto-titulo-4-entrelinha);
+    font-weight: 600;
+    letter-spacing: 0;
+  }
+
+  @media (max-width: 767px) {
+    .t-cronometro {
+      font-size: 6rem;
+      line-height: 4.8125rem;
     }
   }
 
-  @container pagina (min-width: 12rem) {
-    .madrugada-celular,
-    .madrugada-legenda {
-      --celular-escala: 0.37;
-    }
+  .t-secundario {
+    color: var(--cor-secundario);
   }
 
-  @container pagina (min-width: 14rem) {
-    .madrugada-celular,
-    .madrugada-legenda {
-      --celular-escala: 0.45;
-    }
+  /* Etiqueta: pílula de areia, Outfit 15. Sem caixa alta. ------------------------------------- */
+  .sb-etiqueta {
+    display: inline-flex;
+    align-items: center;
+    box-sizing: border-box;
+    min-height: 28px;
+    padding: 2px 12px;
+    border-radius: var(--radius-pilula);
+    background-color: var(--cor-papel-fundo);
+    color: var(--cor-texto);
+    white-space: nowrap;
   }
 
-  @container pagina (min-width: 16rem) {
-    .madrugada-celular,
-    .madrugada-legenda {
-      --celular-escala: 0.54;
-    }
+  /* Botões antigos das telas do app (o primário novo é o .cm-botao, em styles/site.css). ------- */
+  .sb-botao {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+    height: 80px;
+    padding: 0 32px;
+    border: 0;
+    border-radius: var(--radius-pilula);
+    background-color: var(--cor-destaque);
+    color: var(--cor-sobre-destaque);
+    text-decoration: none;
+    cursor: pointer;
   }
 
-  @container pagina (min-width: 18rem) {
-    .madrugada-celular,
-    .madrugada-legenda {
-      --celular-escala: 0.62;
-    }
+  .sb-botao[aria-disabled='true'],
+  .sb-botao[aria-disabled='true']:hover {
+    background-color: var(--cor-desativado-fundo);
+    color: var(--cor-desativado-texto);
+    cursor: not-allowed;
   }
 
-  @container pagina (min-width: 20rem) {
-    .madrugada-celular,
-    .madrugada-legenda {
-      --celular-escala: 0.7;
-    }
+  /* Botão de contorno do app: uma pílula de 1 px na cor do texto. O miolo continua no DOM. */
+  .sb-moldura {
+    display: inline-flex;
+    box-sizing: border-box;
+    min-height: max(48px, var(--alvo-toque));
+    padding: 0;
+    border: 1px solid var(--cor-texto);
+    border-radius: var(--radius-pilula);
+    background: none;
+    color: var(--cor-texto);
+    text-decoration: none;
+    cursor: pointer;
   }
 
-  @container pagina (min-width: 21rem) {
-    .madrugada-celular,
-    .madrugada-legenda {
-      --celular-escala: 0.75;
-    }
+  .sb-moldura[data-alto] {
+    min-height: 64px;
   }
 
-  @container pagina (min-width: 46rem) {
-    .madrugada-celular,
-    .madrugada-legenda {
-      --celular-escala: 0.85;
-    }
+  .sb-moldura-miolo {
+    display: inline-flex;
+    flex: 1;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+    padding: 0 24px;
+    border-radius: var(--radius-pilula);
+    white-space: nowrap;
   }
 
-  @container pagina (min-width: 64rem) {
-    .madrugada-grade {
-      grid-template-columns: minmax(0, 1fr) auto;
-      grid-template-areas: "texto celular" "cena celular" ". legenda";
-      grid-template-rows: auto 1fr auto;
-      column-gap: 4rem;
-      row-gap: 0;
-    }
-
-    .madrugada-texto {
-      grid-area: texto;
-    }
-
-    /* O chão do desenho (sua base) cai na base do celular. */
-    .madrugada-cena {
-      grid-area: cena;
-      align-self: end;
-      max-width: none;
-      margin-inline: 0;
-      margin-top: 2rem;
-    }
-
-    .madrugada-cena > svg {
-      left: 0;
-      width: 100%;
-    }
-
-    .madrugada-celular {
-      grid-area: celular;
-      align-self: end;
-      justify-self: start;
-    }
-
-    .madrugada-legenda {
-      grid-area: legenda;
-      width: 0;
-      min-width: 100%;
-      max-width: none;
-      margin-top: 1.5rem;
-      justify-self: start;
-    }
+  .sb-moldura:hover .sb-moldura-miolo {
+    background-color: var(--cor-texto);
+    color: var(--cor-fundo);
   }
 
-  /* Aparelhos desenhados em CSS, sem sombra. A profundidade vem de sobrepor e mudar a escala.
-     Por dentro vão as miniaturas de verdade, em tamanho natural: os componentes decidem o
-     layout pela largura que têm, e a escala só encolhe o conjunto. Cantos concêntricos: o raio
-     de fora é o de dentro mais o respiro entre os dois. */
-  .aparelho {
-    flex: none;
+  .sb-moldura[data-ligado] {
+    border-color: var(--cor-texto);
+    background-color: var(--cor-texto);
+    color: var(--cor-fundo);
   }
 
-  .aparelho-tela {
+  .sb-moldura[data-ligado] .sb-moldura-miolo {
+    background-color: transparent;
+  }
+
+  .sb-moldura[data-ligado]:hover .sb-moldura-miolo {
     background-color: var(--cor-fundo);
     color: var(--cor-texto);
-    overflow: hidden;
-    font-size: 1rem;
   }
 
-  .aparelho-celular {
+  .sb-botao-grupo {
+    display: inline-flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  @media (max-width: 767px) {
+    .sb-botao {
+      height: 64px;
+    }
+  }
+
+  /* Abertura das telas do app: título, subtítulo, coluna lateral e o fio de baixo. ------------ */
+  .sb-abertura {
+    padding-top: var(--e-cab-h1);
+  }
+
+  .sb-abertura-subtitulo {
+    margin: var(--e-h1-sub) 0 0;
+  }
+
+  .sb-abertura-base {
     position: relative;
-    width: 24rem;
-    aspect-ratio: 9 / 14;
-    border: 2px solid var(--cor-linha);
-    border-radius: 2.5rem;
-    background-color: var(--cor-linha);
-    padding: 0.5rem;
+    margin-top: 32px;
+    border-bottom: 1px solid var(--cor-fio-suave);
   }
 
-  .aparelho-celular .aparelho-tela {
-    height: 100%;
-    border-radius: 2rem;
-    padding: 2.75rem 1rem 1rem;
-  }
-
-  /* O furo da câmera, um traço de tinta no alto da tela. */
-  .aparelho-celular::after {
+  .sb-abertura-base::before {
     content: '';
     position: absolute;
-    top: 1.1rem;
-    left: 50%;
-    width: 4.5rem;
-    height: 1.1rem;
-    margin-left: -2.25rem;
-    border-radius: 999px;
-    background-color: var(--cor-linha);
+    left: 80%;
+    bottom: 0;
+    width: 1px;
+    height: 80px;
+    background-color: var(--cor-fio-suave);
   }
 
-  .aparelho-notebook {
-    width: 56rem;
+  .sb-abertura-lateral {
+    display: flex;
+    flex-direction: column;
+    align-self: start;
+    margin: 0;
+    padding: 0;
+    padding-left: 32px;
+    list-style: none;
   }
 
-  .aparelho-tampa {
-    aspect-ratio: 16 / 10;
-    border: 2px solid var(--cor-linha);
-    border-radius: 1rem 1rem 0 0;
-    background-color: var(--cor-linha);
-    padding: 0.625rem;
+  .sb-abertura-lateral > li {
+    display: flex;
+    align-items: center;
+    min-height: 32px;
   }
 
-  .aparelho-notebook .aparelho-tela {
-    height: 100%;
-    border-radius: 0.375rem;
-    /* Margens largas dos lados, como uma janela de navegador: é sobre elas e sobre a moldura
-       que os celulares se sobrepõem, nunca sobre o texto. */
-    padding: 1.5rem 6.5rem;
+  .sb-abertura-link {
+    display: flex;
+    align-items: center;
+    min-height: var(--alvo-toque);
   }
 
-  .aparelho-base {
-    height: 1.25rem;
-    margin-inline: -2.5rem;
-    border: 2px solid var(--cor-linha);
-    border-radius: 0 0 1.25rem 1.25rem;
-    background-color: var(--cor-papel-fundo);
+  @media (max-width: 991px) {
+    .sb-abertura-lateral {
+      padding-left: 16px;
+    }
   }
 
-  /* Faixa de fatos: uma coluna, duas e quatro, conforme a largura da página em rem. Cada fato
-     leva uma linha de tinta no topo; a faixa fecha com uma linha embaixo. */
-  .faixa-fatos {
+  @media (max-width: 767px) {
+    .sb-abertura-base {
+      margin-top: 16px;
+    }
+
+    .sb-abertura-base::before {
+      display: none;
+    }
+
+    .sb-abertura-lateral {
+      margin-top: 32px;
+      padding-left: 0;
+    }
+  }
+
+  /* Faixa de números das telas do app: 3 colunas, fio no topo e 2 verticais. ----------------- */
+  .sb-numeros {
     display: grid;
-    grid-template-columns: minmax(0, 1fr);
-    column-gap: 1.5rem;
-    border-bottom: 1px solid var(--cor-linha);
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    border-top: 1px solid var(--cor-fio-suave);
   }
 
-  .faixa-fatos > li {
-    border-top: 1px solid var(--cor-linha);
-    padding-block: 1.5rem;
+  .sb-numeros-item {
+    min-width: 0;
+    padding: 32px 32px 32px 0;
   }
 
-  @container pagina (min-width: 46rem) {
-    .faixa-fatos {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
+  .sb-numeros-item + .sb-numeros-item {
+    padding-left: 32px;
+    border-left: 1px solid var(--cor-fio-suave);
+  }
+
+  .sb-abertura + * > .sb-numeros:first-child {
+    border-top-color: transparent;
+  }
+
+  .sb-numeros-valor {
+    margin: 0;
+    white-space: nowrap;
+  }
+
+  .sb-numeros-legenda {
+    margin: 16px 0 0;
+  }
+
+  @media (max-width: 767px) {
+    .sb-numeros {
+      grid-template-columns: minmax(0, 1fr);
+      row-gap: 24px;
+      border-top: 0;
+    }
+
+    .sb-numeros-item {
+      padding: 16px 0 0;
+      border-top: 1px solid var(--cor-fio-suave);
+    }
+
+    .sb-numeros-item + .sb-numeros-item {
+      padding-left: 0;
+      border-left: 0;
+    }
+
+    .sb-abertura + * > .sb-numeros:first-child > .sb-numeros-item:first-child {
+      border-top-color: transparent;
     }
   }
 
-  @container pagina (min-width: 64rem) {
-    .faixa-fatos {
-      grid-template-columns: repeat(4, minmax(0, 1fr));
+  /* Linha rótulo + texto das telas do app. -------------------------------------------------- */
+  .sb-linha {
+    display: grid;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    border-bottom: 1px solid var(--cor-fio-suave);
+  }
+
+  .sb-linha-rotulo {
+    grid-column: 1 / 3;
+    margin: 0;
+    padding-block: var(--e-linhas);
+  }
+
+  .sb-linha-texto {
+    grid-column: 3 / 8;
+    box-sizing: border-box;
+    max-width: 592px;
+    margin-top: var(--e-linhas);
+    padding: 0 0 var(--e-linhas) 32px;
+    border-left: 1px solid var(--cor-fio-suave);
+  }
+
+  .sb-linha-texto > p {
+    margin: 0;
+  }
+
+  @media (max-width: 767px) {
+    .sb-linha {
+      display: block;
     }
-  }
 
-  /* Ilustração: traço contínuo de tinta de uma espessura só, preenchimento chapado nas cores
-     dos tokens (papel, urucum, barro, lavanda, papel fundo e a própria tinta). */
-  .ilu {
-    fill: none;
-    stroke: var(--cor-texto);
-    stroke-width: 3;
-    stroke-linecap: round;
-    stroke-linejoin: round;
-  }
+    .sb-linha-rotulo {
+      padding-bottom: 8px;
+    }
 
-  .ilu-papel {
-    fill: var(--cor-fundo);
-  }
+    .sb-mt-midia-linhas > .grade-10:first-child .sb-linha-rotulo {
+      padding-top: 0;
+    }
 
-  .ilu-tinta {
-    fill: var(--cor-texto);
-  }
-
-  .ilu-urucum {
-    fill: var(--cor-destaque);
-  }
-
-  .ilu-barro {
-    fill: var(--cor-campo-1);
-  }
-
-  .ilu-lavanda {
-    fill: var(--cor-campo-2);
-  }
-
-  .ilu-fundo {
-    fill: var(--cor-papel-fundo);
-  }
-
-  .ilu-sem-traco {
-    stroke: none;
-  }
-
-  /* Braço ou perna: um traço grosso de tinta com outro mais fino da cor por cima, o que deixa
-     o membro com o mesmo contorno de 3 unidades das outras formas. */
-  .ilu-membro {
-    stroke-width: 16;
-  }
-
-  .ilu-membro-dentro {
-    stroke-width: 10;
-  }
-
-  .ilu-dentro-papel {
-    stroke: var(--cor-fundo);
-  }
-
-  .ilu-dentro-tinta {
-    stroke: var(--cor-texto);
-  }
-
-  .ilu-dentro-urucum {
-    stroke: var(--cor-destaque);
-  }
-
-  .ilu-dentro-barro {
-    stroke: var(--cor-campo-1);
-  }
-
-  .ilu-dentro-lavanda {
-    stroke: var(--cor-campo-2);
-  }
-
-  /* Entrada dos blocos: só opacidade e deslocamento curto (VIS-08) */
-  .entrada {
-    animation: entrada 240ms ease-out both;
-  }
-
-  .atraso-1 {
-    animation-delay: 60ms;
-  }
-
-  .atraso-2 {
-    animation-delay: 120ms;
-  }
-
-  :root[data-tema='madrugada'] .entrada {
-    animation: none;
-  }
-}
-
-@keyframes entrada {
-  from {
-    opacity: 0;
-    transform: translateY(12px);
-  }
-
-  to {
-    opacity: 1;
-    transform: none;
+    .sb-linha-texto {
+      max-width: none;
+      margin-top: 0;
+      padding: 0 0 var(--e-linhas);
+      border-left: 0;
+    }
   }
 }
 
@@ -1016,4 +627,696 @@
     animation: none !important;
     transition: none !important;
   }
+
+  ::view-transition,
+  ::view-transition-group(*),
+  ::view-transition-image-pair(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
+  }
+
+  /* Abrir e fechar (styles/abrir-fechar.css) sem duração: o menu, as caixas e o acordeão trocam de uma vez. */
+  :root {
+    --mov-abrir: 0ms;
+    --mov-fechar: 0ms;
+  }
+}
+
+/* 44d-2 */
+/* A área logada sobre o sistema-base. Parte 1: o Hoje e a barra Registrar. As cores vêm só das
+   variáveis de uso (tema.css). Sem sombra e sem movimento. */
+
+/* Só a barra presa ao viewport; a prévia embutida mantém seu espaçamento. */
+.registro-rapido.barra-fixa {
+  /* stylelint-disable-next-line harmonia/valores-soltos -- O piso de 6 px e a area segura sao limites do viewport. */
+  padding-bottom: max(6px, env(safe-area-inset-bottom, 0px));
+}
+
+/* O fim do conteúdo do Hoje: a altura da barra Registrar fixa de folga, para ela não cobrir nada. */
+.ha-hoje {
+  padding-bottom: var(--ha-barra-altura);
+}
+
+body:has([data-barra-registrar]) [data-rodape] {
+  margin-top: var(--espaco-secao-ampla);
+  padding-bottom: var(--ha-barra-altura);
+}
+
+/* Em andamento: o bloco de cor do Hoje (mel de dia; o cartão da noite na madrugada). */
+.ha-andamento {
+  padding: var(--espaco-midia);
+  border-radius: 8px;
+  background-color: var(--cor-campo-sessao);
+  color: var(--cor-numero-sessao);
+}
+
+.ha-andamento-rotulo {
+  margin: 0;
+}
+
+.ha-andamento-nome {
+  margin: 8px 0 0;
+}
+
+.ha-andamento-numero {
+  margin: 8px 0 0;
+  white-space: nowrap;
+}
+
+.ha-andamento-pessoa {
+  margin: 8px 0 0;
+}
+
+.ha-andamento-acoes {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 16px;
+  margin-top: 16px;
+}
+
+/* O primário do bloco é a pílula de cacau sobre o mel (na madrugada, a de mel com o texto cacau). */
+.ha-andamento .ha-encerrar {
+  border-color: var(--cor-botao-campo);
+  background-color: var(--cor-botao-campo);
+  color: var(--cor-texto-botao-campo);
+}
+
+.ha-andamento .ha-encerrar:hover {
+  border-color: var(--cor-texto-botao-campo);
+  background-color: var(--cor-texto-botao-campo);
+  color: var(--cor-botao-campo);
+}
+
+/* O contorno do bloco tem as linhas na cor do texto do bloco. */
+.ha-andamento .sb-moldura {
+  border-color: currentColor;
+  color: inherit;
+}
+
+.ha-andamento .sb-moldura:hover .sb-moldura-miolo {
+  background-color: var(--cor-botao-campo);
+  color: var(--cor-texto-botao-campo);
+}
+
+/* A barra Registrar: 4 botões iguais numa barra de 64 px. De dia, cacau com texto de papel; na
+   madrugada, o cartão da noite com o texto claro. */
+.barra-registrar {
+  --ha-barra-fundo: var(--cor-texto);
+  --ha-barra-texto: var(--cor-fundo);
+  --ha-barra-fio: transparent;
+  box-sizing: border-box;
+  position: relative;
+  width: min(100% - 2 * var(--margem), var(--area-util));
+  height: 64px;
+  margin-inline: auto;
+  border: 0;
+  border-top: 1px solid var(--ha-barra-fio);
+  padding: 0;
+  border-radius: 8px 8px 0 0;
+  background-color: var(--ha-barra-fundo);
+  color: var(--ha-barra-texto);
+}
+
+:root[data-tema='madrugada'] .barra-registrar {
+  --ha-barra-fundo: var(--cor-campo-sessao);
+  --ha-barra-texto: var(--cor-texto);
+  --ha-barra-fio: var(--cor-fio-suave);
+}
+
+.barra-registrar.barra-fixa {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 30;
+  width: min(100% - 2 * var(--margem), var(--area-util));
+  margin-inline: auto;
+}
+
+.ha-barra-fileira {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  position: relative;
+  top: -1px;
+  height: 64px;
+  border-radius: 8px 8px 0 0;
+  overflow: hidden;
+}
+
+.ha-barra-fileira > button {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 64px;
+  margin: 0;
+  padding: 0 8px;
+  border: 0;
+  border-radius: 0;
+  background-color: transparent;
+  color: inherit;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.ha-barra-fileira > button + button {
+  border-left: 1px solid color-mix(in srgb, var(--ha-barra-texto) 20%, transparent);
+}
+
+.ha-barra-fileira > button:hover {
+  background-color: color-mix(in srgb, var(--ha-barra-texto) 12%, transparent);
+}
+
+.ha-barra-fileira > button[aria-expanded='true'] {
+  background-color: color-mix(in srgb, var(--ha-barra-texto) 20%, transparent);
+  text-decoration: underline;
+  text-underline-offset: 6px;
+}
+
+/* O anel de foco (2 px, na cor do texto da barra) contorna o botão inteiro, por dentro. */
+.ha-barra-fileira > button:focus-visible {
+  outline: none;
+}
+
+.ha-barra-fileira > button:focus-visible::after {
+  content: '';
+  position: absolute;
+  inset: 6px;
+  outline: 2px solid var(--ha-barra-texto);
+  outline-offset: 0;
+  pointer-events: none;
+}
+
+/* O painel logo acima da barra: a confirmação, a escolha de fralda e a lista do Mais. */
+.ha-painel {
+  position: absolute;
+  bottom: calc(100% + 1px);
+  left: 0;
+  right: 0;
+  border-radius: 8px 8px 0 0;
+  background-color: var(--cor-fundo);
+  color: var(--cor-texto);
+}
+
+.ha-painel[data-aberto] {
+  max-height: calc(100dvh - 128px);
+  padding: 24px;
+  overflow-y: auto;
+  border-top: 1px solid var(--cor-fio-suave);
+}
+
+.ha-confirmacao {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.ha-confirmacao-texto {
+  flex: 1 1 auto;
+  margin: 0;
+}
+
+.ha-confirmacao-acoes {
+  display: flex;
+  gap: 16px;
+}
+
+.ha-painel-grupo {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+@media (min-width: 1200px) {
+  .ha-painel-grupo {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+.ha-confirmacao ~ .ha-painel-grupo {
+  margin-top: 16px;
+}
+
+.ha-tela .sb-abertura-link {
+  min-height: 56px;
+}
+
+.ha-tela .ha-li-link {
+  height: 44px;
+  min-height: 0;
+}
+
+/* Sessão: o bloco do cronômetro é o bloco de cor da tela. */
+.ha-cronometro {
+  padding: 0;
+}
+
+.ha-cron-grade {
+  display: grid;
+  grid-template-columns: repeat(10, minmax(0, 1fr));
+}
+
+.ha-cron-tempo {
+  grid-column: 1 / 8;
+  min-width: 0;
+  padding: var(--espaco-midia);
+}
+
+.ha-cron-rotulo {
+  margin: 0;
+}
+
+.ha-cron-valor {
+  display: block;
+  width: fit-content;
+  margin: 8px 0 0;
+  white-space: nowrap;
+}
+
+.ha-cron-valor[data-tamanho='longo'] {
+  font-size: 10rem;
+  line-height: 8rem;
+}
+
+@media (min-width: 768px) {
+  .ha-cron-valor {
+    text-indent: -0.077em;
+    padding-right: 0.077em;
+  }
+}
+
+.ha-cron-atividade {
+  margin: 8px 0 0;
+}
+
+.ha-cron-acoes {
+  grid-column: 8 / 11;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+  padding: var(--espaco-midia);
+  border-left: 1px solid color-mix(in srgb, currentColor 20%, transparent);
+}
+
+.ha-cron-secundarios {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.ha-cron-acoes .cm-botao,
+.ha-cron-acoes .sb-moldura {
+  width: 100%;
+}
+
+.ha-cron-painel {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.ha-cron-painel-acoes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.ha-cron-painel-acoes > * {
+  flex: 1 1 auto;
+}
+
+/* O campo da nota: sem caixa, fio sólido embaixo na cor do texto do bloco, Literata 32. */
+.ha-nota-campo {
+  box-sizing: border-box;
+  border: 0;
+  border-bottom: 1px solid currentColor;
+  border-radius: 0;
+  background-color: transparent;
+  color: inherit;
+  font-family: var(--fonte-sb-serifa);
+  font-size: var(--texto-titulo-2-tamanho);
+  line-height: var(--texto-titulo-2-entrelinha);
+  letter-spacing: 0;
+  resize: none;
+}
+
+/* A ilustração da Sessão: traço preto sobre mel, nos dois temas (nunca sobre o cacau da noite). */
+.ha-midia-sessao {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  box-sizing: border-box;
+  aspect-ratio: 3 / 2;
+  padding: var(--espaco-midia);
+  border-radius: 8px;
+  background-color: var(--color-mel);
+}
+
+.ha-midia-sessao > img {
+  width: auto;
+  max-width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+@media (max-width: 767px) {
+  .ha-tela .ha-li-ultimos {
+    display: none;
+  }
+
+  .ha-tela .sb-abertura-lateral {
+    margin-top: 16px;
+  }
+
+  .ha-tela .ha-li-link {
+    height: 32px;
+  }
+
+  .ha-painel-grupo[data-largos] {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .ha-andamento .sb-botao,
+  .ha-andamento .sb-moldura,
+  .ha-andamento .cm-botao {
+    font-size: var(--texto-abertura-tamanho);
+    line-height: var(--texto-abertura-entrelinha);
+  }
+
+  .ha-andamento {
+    padding: 24px;
+  }
+
+  .ha-midia-sessao {
+    padding: 24px;
+  }
+
+  [data-ultimos] .sb-numeros-valor {
+    font-size: 3.5rem !important;
+    line-height: 2.8125rem;
+  }
+
+  .ha-andamento-acoes {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .ha-andamento .ha-encerrar {
+    padding: 0 16px;
+  }
+
+  .ha-andamento .sb-moldura-miolo {
+    padding: 0 8px;
+    white-space: normal;
+    text-align: center;
+  }
+
+  .ha-cronometro {
+    padding: 24px;
+  }
+
+  .ha-cron-grade {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .ha-cron-tempo,
+  .ha-cron-acoes {
+    grid-column: 1 / -1;
+    padding: 0;
+  }
+
+  .ha-cron-valor[data-tamanho='normal'] {
+    font-size: 5rem;
+    line-height: 4rem;
+  }
+
+  .ha-cron-valor[data-tamanho='longo'] {
+    font-size: 3.5rem;
+    line-height: 2.8125rem;
+  }
+
+  .ha-cron-acoes {
+    margin-top: 24px;
+    padding: 0;
+    border-left: 0;
+    gap: 8px;
+  }
+
+  .ha-cron-secundarios {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .ha-cron-secundarios > [role='group'] {
+    grid-column: 1 / -1;
+  }
+
+  .barra-registrar {
+    width: 100%;
+    border-radius: 0;
+  }
+
+  .barra-registrar.barra-fixa {
+    width: 100%;
+  }
+
+  .ha-barra-fileira {
+    border-radius: 0;
+  }
+
+  .ha-barra-fileira > button {
+    font-size: var(--texto-corpo-tamanho);
+    line-height: var(--texto-corpo-entrelinha);
+    font-weight: 500;
+  }
+
+  .ha-painel {
+    border-radius: 0;
+  }
+
+  .ha-painel[data-aberto] {
+    padding: 16px;
+  }
+
+  .ha-confirmacao-escolhas .sb-moldura {
+    font-size: var(--texto-abertura-tamanho);
+    line-height: var(--texto-abertura-entrelinha);
+  }
+
+  .ha-confirmacao-acoes {
+    display: grid;
+    flex: 1 1 100%;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+  }
+}
+
+.ha-confirmacao-escolhas {
+  display: grid;
+  flex: 1 1 100%;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.ha-confirmacao-escolhas .sb-moldura-miolo {
+  padding: 0 8px;
+}
+
+@media (min-width: 768px) {
+  .ha-painel[data-aberto] {
+    padding: 16px 24px;
+  }
+
+  .ha-confirmacao {
+    flex-wrap: nowrap;
+  }
+
+  .ha-confirmacao-texto {
+    flex: 1 1 0;
+    min-width: 0;
+    order: 0;
+  }
+
+  .ha-confirmacao-escolhas {
+    flex: 0 1 auto;
+    order: 1;
+  }
+
+  .ha-confirmacao-acoes {
+    flex: 0 0 auto;
+    order: 2;
+  }
+}
+
+@media (min-width: 1400px) {
+  [data-ultimos] .sb-numeros-valor {
+    font-size: 7rem !important;
+  }
+}
+
+/* MAT-38b: Histórico, detalhe, lixeira e notas. Só acréscimo; as cores vêm dos tokens e das variáveis de uso. */
+
+/* O link do texto cobre a linha inteira (o item pai é `relative`) e a própria caixa do `<a>` também tem 44 × 44 px
+   no mínimo: o respiro vertical é padding, e a margem negativa de mesmo tamanho devolve a linha de 25 px ao
+   tamanho de antes. Texto de duas linhas cresce para dentro da margem, sem cobrir a linha de baixo. */
+.rotina-link-esticado {
+  display: flex;
+  align-items: center;
+  box-sizing: border-box;
+  min-width: 2.75rem;
+  min-height: 2.75rem;
+  margin-block: -9.5px;
+  padding-block: 9.5px;
+  text-decoration: none;
+}
+
+.rotina-link-esticado:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.rotina-link-esticado::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+}
+
+/* A fila dos 7 dias que terminam no dia escolhido: sete colunas iguais, sem rolagem horizontal em 390 px. */
+.rotina-fila-de-dias {
+  display: grid;
+  max-width: 30rem;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.rotina-dia-da-fila {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 3rem;
+  padding: 4px 0;
+  border: 1.5px solid transparent;
+  border-radius: var(--radius-campo);
+  background-color: transparent;
+  color: var(--cor-texto);
+}
+
+.rotina-dia-da-fila:hover {
+  border-color: var(--cor-linha);
+}
+
+.rotina-dia-da-fila[aria-current='date'] {
+  border-color: var(--cor-texto);
+  background-color: var(--cor-papel-fundo);
+}
+
+/* A semana: no celular, o dia ocupa a linha de cima e os totais ficam em duas colunas. */
+.rotina-semana-linha {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 4px var(--espaco-pilha);
+  box-sizing: border-box;
+  padding: 14px 0;
+  color: inherit;
+  text-decoration: none;
+}
+
+.rotina-semana-linha > * {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.rotina-semana-linha > :first-child {
+  grid-column: 1 / -1;
+  white-space: normal;
+}
+
+.rotina-semana-linha:hover {
+  background-color: var(--cor-papel-fundo);
+}
+
+/* Cada total da semana: o rótulo em cima (não quebra a linha do grid) e o valor embaixo. */
+.rotina-semana-celula {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.rotina-semana-rotulo {
+  font-size: var(--texto-pequeno-tamanho);
+  line-height: var(--texto-pequeno-entrelinha);
+  color: var(--cor-texto-2);
+  overflow-wrap: anywhere;
+}
+
+.rotina-semana-valor {
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+
+/* Em rem, para a grade de cinco colunas acompanhar o tamanho da fonte: com a raiz em 200%, 64rem já são 2048 px. */
+@media (min-width: 64rem) {
+  .rotina-semana-linha {
+    grid-template-columns: minmax(0, 1.2fr) minmax(0, 1.4fr) repeat(3, minmax(0, 1fr));
+    align-items: center;
+  }
+
+  .rotina-semana-linha > :first-child {
+    grid-column: auto;
+  }
+}
+
+/* O link de texto da confirmação ("Ver no Histórico"): com a fonte grande o texto quebra dentro do botão
+   em vez de passar da caixa e da janela. O alvo de toque continua o mesmo (min-height do `.cm-botao`). */
+.cm-botao.rotina-link-quebra {
+  height: auto;
+  min-width: 0;
+  max-width: 100%;
+  padding-block: 8px;
+  white-space: normal;
+  text-align: start;
+  overflow-wrap: anywhere;
+}
+
+/* A barra decorativa do sono da semana: largura em % na própria barra; o valor sempre aparece em texto. */
+.rotina-barra {
+  display: block;
+  height: 0.5rem;
+  margin-top: 4px;
+  border-radius: var(--radius-pilula);
+  background-color: var(--color-oliva);
+}
+
+:root[data-tema='madrugada'] .rotina-barra {
+  background-color: var(--color-mel);
+}
+
+/* Madrugada: todo alvo do conteúdo da rotina tem 56 px de altura e 44 px de largura (G11); --alvo-toque já vale 56
+   neste tema. Hoje e Sessão montam um <main> sem `.rotina-principal` (só `data-tela`), por isso a regra anterior,
+   presa a `main.rotina-principal`, não os alcançava e o `.alvo-toque` do dia (44 px) continuava valendo neles. */
+:root[data-tema='madrugada'] main:is(.rotina-principal, [data-tela='hoje'], [data-tela='sessao']) :is(a, button, select, textarea, input:not([type='checkbox'], [type='radio'])) {
+  min-width: 2.75rem;
+  min-height: var(--alvo-toque);
+}
+
+/* O link esticado ganha os 56 px dentro da própria linha: padding e margem negativa de mesmo tamanho (a linha
+   de texto tem 25 px), como os 44 px do dia, para a altura da linha e do que vem em volta não mudar. */
+:root[data-tema='madrugada'] main:is(.rotina-principal, [data-tela='hoje'], [data-tela='sessao']) .rotina-link-esticado {
+  margin-block: calc((1.5625rem - var(--alvo-toque)) / 2);
+  padding-block: calc((var(--alvo-toque) - 1.5625rem) / 2);
 }

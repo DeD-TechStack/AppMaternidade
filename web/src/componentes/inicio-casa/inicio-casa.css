@@ -1,0 +1,1502 @@
+/* The Início (REP-HOME): the page-owned layout of the seven bands. Everything here reads the tokens (`var(--color-*)`,
+   the MEDIDAS roles `--espaco-junto|pilha|grupo|bloco|midia|secao`) or the measured geometry of RECUT.md, written once
+   as custom properties on `[data-casa]` below. No gradient, no shadow, no blur, no italic, no loop, no 3D; nothing in
+   this file animates (the lamp and the header pill transition only opacity, background-color and color).
+
+   Two compositions of the hero and the stage, one switch (the same query the page reads in JS, `CONSULTA_SALA`):
+   - The room, `(min-width: 1180px) and (min-aspect-ratio: 1/1)`: RECUT §2-§3, positioned from the seam (x 556.5 at
+     1440). The plate (M05, 900 wide) is set so its own seam falls on the seam of the h1 (the first span's width plus
+     12 px); the night column is anchored to the quadro's right edge, never to the window's. The stage (the first
+     framed screen) is band 2 itself: its walls, floors, frame and night sheet are the band's layers (moment 2).
+   - Stacked, everywhere else (below 1180 px, and any portrait window such as 1024 x 1366): one column, the page is
+     night from the h1's second line down (RECUT §4); the plate is sized by the window's height on short screens.
+   The bands below the stage switch at 1024 px: from there each one is two columns (text left, object or field right) and
+   each object stands on its band's edge; no band has a floor strip.
+
+   Seven axes (existing direction retained):
+   1. Skeleton: full-bleed stacked bands; each care moment keeps its own ground across the viewport.
+   2. First screen: type beside one room; the handoff between carers remains the opening idea.
+   3. Section boundary: continuous floors; plates and captions meet on the same surface token.
+   4. Image placement: room bleed, framed product, then edge-anchored M04; no new box around the art.
+   5. Signature: the day/night room and product handoff; seam work must not move either composition.
+   6. Density: one care moment per band; keep all existing copy and measured spacing.
+   7. Navigation: the shared top bar; no page-owned replacement or shell edits.
+
+   Floor details (HOME-SEAMS), bands 1 to 4:
+    - Band 1, room: the plate's floors end on the hero's foot (`--heroi-alto`), at any width, so the stage starts on a
+      clean edge (no 0.5 px of floor over it at 1440, no strip of wall under the floor below 1440).
+   - Band 2, stacked: M06's night floor starts at 0.8599 of the plate (`--m06-chao-fracao`, 555.2 of 645.69) and runs to
+     both edges of the window; the room keeps the stage's own floor strip.
+   - Bands 3 to 7 (HOME-SECOND-HALF): no floor strip; each object stands on its band's edge.
+   - Band 4: the plate's frame shows rows 0 to 832 of the 1200 x 870 art; the band line cuts the mat and the
+     next band's areia goes on from there; the band has no bottom padding. From 1024 the plate bleeds off the left edge
+     (by the quadro's margin), below 1024 off both.
+   - Display variant C: the 16:00 caption ends one `bloco` left of the seam (`--heroi-costura-x`).
+
+   Hero text sizes are the DESIGN.md levels (`text-exibicao`, `text-abertura`, `text-titulo-1`, `text-corpo`). */
+@layer components {
+  /* The Início root (HOME-WIDTH, slot sheet S1): the one `[data-casa]` whose hero holds the h1. `PaginaCasa` takes no
+     props, so the hook is CSS-only: `:has(> [data-cena-heroi] .ic-titulo)` matches exactly one element on the Início and
+     none on the other five pages of the house (this sheet stays loaded after a navigation, so a bare `[data-casa]` rule
+     would leak). It is the page container (`container-type: inline-size`): every `cqi` below is consumed on a descendant,
+     never on this element, where it would resolve against its own ancestor. */
+  [data-casa]:has(> [data-cena-heroi] .ic-titulo) {
+    container-type: inline-size;
+
+    /* The shell header's height, from its own token (88 px from 1100 px, 72 px below; the meter reads the same boxes). */
+    --cabecalho-alto: var(--cm-cabecalho);
+
+    /* The quadro follows the container (83.333 cqi: 1200 px at 1440, 1600 at 1920, 2133 at 2560) and a short, wide window
+       caps it at 213.33 svh, so the plate, the seam and the lede stay one group. The global token (1200 to 1600 px, in
+       vw) is not touched: this overrides it on the Início only. */
+    --quadro-largura: clamp(1200px, 83.333cqi, min(2134px, 213.33svh));
+    --quadro-margem: max(var(--quadro-calha), calc((100cqi - var(--quadro-largura)) / 2));
+
+    /* The left text edge: the quadro's, or the gutter on narrow windows. */
+    --heroi-esq: var(--quadro-margem);
+
+    /* The seam of the plate: the h1's first span ("Ela mamou", in em of the display size) plus the 12 px (`junto`) that
+       separate it from the seam. The width is a property of the face, so the ratio is per face: this default is the one
+       of Literata 600, the face of A (the shipped one) and of C (same face, same weight, other size, so the same em);
+       variant B (M PLUS Rounded 1c 800, 5.126 em, 410.1 px at 80 px, read from the meter) re-declares it right below. The
+       meter's COSTURA rule reads the real gap between the plate's seam and the h1's. Measured at 1440, 1920 and 2560 the gap
+       from the quadro edge to the h1 word gap is 5.50 em (5.356 em of span + `junto`), Fable's 5.1 em of the sheet's
+       first reading; the seam hangs on it, never on the quadro edge. */
+    --heroi-span1-em: 5.356;
+    --heroi-vao: calc(var(--heroi-span1-em) * var(--texto-exibicao-tamanho) + var(--espaco-junto));
+    --heroi-costura-x: calc(var(--heroi-esq) + var(--heroi-vao));
+
+    /* The scale of the room: one unitless number, the smallest of three terms, clamped to [0.9, 1.78]. `tan(atan2(a, b))`
+       is the ratio a / b of two lengths as a number.
+       - the width term: the quadro over 1200 px (1 at 1440, 1.78 at 2560);
+       - the first-screen term: the window less the header over the 723 px of the 1440 room, so the hero fits the first
+         screen down to a 739 px tall window and scrolls under it (width drives, height only caps);
+       - the seam term: the plate may grow until its left edge reaches the window's left edge (the plate is 0.5443 of its
+         own width from its seam to its left edge; 489.87 = 0.5443 x 900, and the plate itself is narrower below 1440). */
+    --heroi-k-largura: tan(atan2(var(--quadro-largura), 1200px));
+    --heroi-k-altura: tan(atan2(calc(100svh - var(--cabecalho-alto)), 723px));
+    --heroi-k-costura: tan(atan2(var(--heroi-costura-x), calc(489.87 * min(100cqi, 1440px) / 1440)));
+    --heroi-k: clamp(0.9, min(var(--heroi-k-largura), var(--heroi-k-altura), var(--heroi-k-costura)), 1.78);
+
+    /* The measured positions of RECUT §2-§3 at 1440, measured from the hero's top (doc y 72) or the stage's top; each
+       one times `--heroi-k`, so the plate, its floor line and its caption keep their places in the hero. */
+    --heroi-alto: calc(723px * var(--heroi-k));
+    --heroi-titulo-topo: calc(32px * var(--heroi-k));
+    --heroi-placa-topo: calc(152px * var(--heroi-k));
+    /* The value sentence and its actions hang on the night wall, right of the lamp, as one block anchored to the hero's
+       foot (W1): its last box (the pill) ends 194.2 px above the hero's floor at 1440 (723 - 556.8 + 28), the distance the
+       stage's night column keeps from the stage floor, so the two blocks stand on the same line of the floor. The block
+       grows upward from there, never from a top offset. */
+    --heroi-texto-fundo: calc((723px - 556.8px + 28px) * var(--heroi-k));
+    --heroi-acoes-vao: 24px;
+    --heroi-leg-topo: calc(666.5px * var(--heroi-k));
+    /* The measure of the night column is the text's, not the room's: the type does not scale, and a wider column would
+       start under the lamp of the scaled plate. */
+    --heroi-medida: 388px;
+    /* The night column ends on the quadro's right edge (x 1320 at 1440, 1880 at 2560), never on the window's. */
+    --heroi-noite-esq: calc(100% - var(--heroi-esq) - var(--heroi-medida));
+    --palco-topo: 24px;
+    /* The stage is bounded by the window (24 px under its top) and by the plate: the block the room composition takes
+       at full size (the 320 px frame, 2.2241 x as tall, plus the free room above and under it), 876 px. A taller window
+       does not stretch the stage; a short one (640 to 875 px, M16) shrinks it and the frame with it. */
+    --palco-placa-alto: calc(320px * var(--heroi-k) * var(--moldura-razao) + var(--palco-quadro-livre) - var(--palco-topo));
+    --palco-alto: min(calc(100svh - var(--palco-topo)), var(--palco-placa-alto));
+    --palco-chao: calc(108px * var(--heroi-k));
+    --palco-m06-largura: calc(395.5px * var(--heroi-k));
+    /* M06's top to its own floor line, so the plate stands on the stage's floor line at any stage height. */
+    --palco-m06-chao: calc(555.2px * var(--heroi-k));
+    /* The text block of the night column ends 28 px above the floor line; the caption is 32 px above the stage's end. */
+    --palco-texto-fundo: calc(136px * var(--heroi-k));
+    --palco-leg-fundo: calc(32px * var(--heroi-k));
+    /* Room the frame needs on a window 640 to 900 tall (motion sheet §3.1): the header's 64 px that lie over the pinned
+       stage (the 88 px header less the stage's 24 px `palco-topo`), 8.5 px of air and the 24 px under the window's top
+       (96.5 px = header 88 + 8.5, they do not scale), and the floor strip (108 px at 1440); the frame's height is 2.2241
+       times its screen layer's width. So the whole frame sits at least 8.5 px under the header while the stage is
+       pinned, and where the window is short the screen shrinks to the height cap (312.7 px at 900 tall) instead of
+       taking the room from the floor strip or the spacing. */
+    --palco-quadro-livre: calc(96.5px + var(--palco-chao));
+    --moldura-razao: 2.2241;
+    /* M06's own floor line as a fraction of the plate's height (555.2 of 645.69 at 395.5 wide, RECUT): the stacked
+       composition runs the night floor on to both edges of the window from this line down. */
+    --m06-chao-fracao: 0.8599;
+
+    /* The widths of bands 4 to 7 (HOME-SECOND-HALF; the WIDTH card did not land them, so they are declared here, once).
+       Each one is read from the container (cqi) where it is used, never on this element. The plate of band 4 is half the
+       container up to 1040 px (720 at 1440); the door field of band 6 is 43 cqi (619 at 1440); the street of band 7 is
+       half the container between 326 and 720 px, held to the 326 px of a 390 window (the plate's own width there). The
+       second edge is the one x that band 4's text, band 6's heading and the door field's left edge share (821 at 1440).
+       The text of band 4 ends 28 px above the band line (the floor rule of WIDTH). */
+    --faixa4-placa: min(50cqi, 1040px);
+    --faixa6-porta: 43cqi;
+    --fecho-janela: clamp(min(326px, 100cqi - 2 * var(--quadro-calha)), 50cqi, 720px);
+    --segunda-borda: calc(100cqi - var(--faixa6-porta));
+    --faixa-texto-fundo: 28px;
+  }
+
+  /* The framed screens (`ProdutoEmMoldura`: the real capture under ASSET-1's frame raster): 320 px of screen layer at 1440
+     and 280 at 390 (RECUT §6), read from the container (cqi) like the quadro. The shared box (`.cm-produto-moldura` in
+     secoes.css) does the rest: the capture is inset by 3 % of the screen layer's width, the frame is 1.06 x that wide and
+     `--moldura-razao` x as tall. */
+  [data-casa]:has(> [data-cena-heroi] .ic-titulo) .cm-produto-moldura {
+    --produto-tela: clamp(280px, calc(280px + (100cqi - 390px) * 40 / 1050), 320px);
+  }
+
+  /* The h1: one string, two inks. The first span is cacau on the day wall, the second papel on the night wall. */
+  [data-casa] .ic-titulo {
+    margin: 0;
+    font-weight: var(--peso-exibicao);
+    font-style: normal;
+  }
+
+  [data-casa] .ic-titulo [data-h1-dia] {
+    color: var(--color-cacau);
+  }
+
+  [data-casa] .ic-titulo [data-h1-noite] {
+    color: var(--color-papel);
+  }
+
+  [data-casa] .ic-lede {
+    max-width: var(--heroi-medida);
+    margin: 0;
+    color: var(--color-papel);
+    text-wrap: pretty;
+  }
+
+  [data-casa] .ic-acoes {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--espaco-pilha) var(--espaco-grupo);
+    margin-top: var(--espaco-grupo);
+  }
+
+  /* The link of the hero is papel on the night wall; the mel pill keeps its own colours. */
+  [data-casa] .ic-acoes .cm-botao-texto {
+    color: var(--color-papel);
+  }
+
+  /* The mel pill keeps its own width at every width, so "Ver como funciona" sits beside it under the value sentence
+     (the shared BotaoLargo fills the quadro below 768; here it is one of two actions in a row, which wraps at 320). */
+  [data-casa] .ic-acoes .cm-botao.cm-botao-largo {
+    display: inline-flex;
+    width: auto;
+  }
+
+  /* Below 768 the plate is the 390 window (`<source>` of the picture): its seam is at 142.3 of 390, not at 0.5443 of the
+     whole plate. The custom property is set inline by CenaHeroi, so the window needs the important flag. */
+  @media (max-width: 767px) {
+    [data-casa] [data-cena-heroi][aria-labelledby='ic-titulo'] {
+      --cena-costura: 0.365 !important;
+    }
+  }
+
+  /* ---- Stacked: one column (below 1180, or a portrait window) --------------------------------------------------- */
+  @media not all and (min-width: 1180px) and (min-aspect-ratio: 1/1) {
+    /* The hero is cacau from the day band down. Its text container dissolves so every piece is an item of one column. */
+    [data-casa] [data-cena-heroi][aria-labelledby='ic-titulo'] {
+      display: flex;
+      flex-direction: column;
+      background-color: var(--color-cacau);
+      color: var(--color-papel);
+    }
+
+    [data-casa] [data-cena-heroi][aria-labelledby='ic-titulo'] .cm-cena-texto {
+      display: contents;
+    }
+
+    /* Day band: 32 + 48 + 8 px (RECUT §4, y 56 to 144), full bleed; then the night starts with the second line. */
+    [data-casa] .ic-titulo {
+      display: flex;
+      flex-direction: column;
+      order: 1;
+    }
+
+    [data-casa] .ic-titulo [data-h1-dia] {
+      display: block;
+      padding: var(--espaco-midia) var(--quadro-calha) var(--espaco-junto);
+      background-color: var(--color-papel);
+    }
+
+    [data-casa] .ic-titulo [data-h1-noite] {
+      display: block;
+      padding: var(--espaco-junto) var(--quadro-calha) 0;
+    }
+
+    [data-casa] .ic-noite-heroi {
+      order: 2;
+      padding: var(--espaco-pilha) var(--quadro-calha) 0;
+    }
+
+    /* The plate window: full width on a phone; from 768 (the whole plate) no wider than 760 px, centred, with its walls
+       and floors running on to both edges, so the caption of 16:00 stays in the first fold of a tablet. */
+    [data-casa] [data-cena-heroi][aria-labelledby='ic-titulo'] .cm-cena-placa {
+      order: 3;
+      align-self: center;
+      width: min(100%, 760px);
+      margin-top: var(--espaco-grupo);
+    }
+
+    [data-casa] .ic-leg1 {
+      order: 4;
+      padding: var(--espaco-junto) var(--quadro-calha) var(--espaco-pilha);
+    }
+
+    /* The night moments follow each other one `secao` apart (48 px at 390): the frame, the band's heading, M06. */
+    [data-casa] .ic-palco {
+      order: 5;
+      padding: var(--espaco-junto) var(--quadro-calha) var(--espaco-secao);
+    }
+
+    /* Band 2 is cacau all the way. */
+    [data-casa] [data-faixa][aria-labelledby='ic-noite'] [data-faixa-lado] {
+      left: 0;
+    }
+
+    [data-casa] [data-faixa][aria-labelledby='ic-noite'] {
+      padding-top: 0;
+    }
+
+    [data-casa] .ic-noite-conteudo {
+      display: grid;
+      gap: 0;
+    }
+
+    [data-casa] .ic-noite-texto {
+      display: grid;
+      gap: var(--espaco-pilha);
+    }
+
+    [data-casa] .ic-m06 {
+      /* Positioned, so the light group (absolute, inset 0) registers against this plate, not the frame. */
+      position: relative;
+      isolation: isolate;
+      width: min(300px, 100%);
+      margin: var(--espaco-secao) auto 0;
+    }
+
+    [data-casa] .ic-m06 img:not([data-luz]) {
+      display: block;
+      width: 100%;
+      height: auto;
+    }
+
+    /* The plate's floor runs on to both edges of the window: a night-floor layer behind the plate (the plate opens its
+       own stacking context, so z -1 stays above the band's wall), from the plate's floor line down to its foot, where
+       the caption strip below carries the same token. The band clips the overflow (overflow-x). */
+    [data-casa] .ic-m06::before {
+      position: absolute;
+      top: calc(var(--m06-chao-fracao) * 100%);
+      bottom: 0;
+      left: -100vw;
+      z-index: -1;
+      width: 300vw;
+      background-color: var(--color-texto-2);
+      content: '';
+    }
+
+    /* The caption of 17:30 lies on the night floor, a strip across the whole window. */
+    [data-casa] .ic-piso-noite {
+      margin-inline: calc(-1 * var(--quadro-calha));
+      padding: var(--espaco-junto) var(--quadro-calha);
+      background-color: var(--color-texto-2);
+    }
+
+    /* From 768 (tablets, 1024 x 1366): no blank half beside an object. The hero is a grid whose last row puts the
+       16:00 caption beside the frame that shows the 16:00 row; band 2 puts its text beside M06. */
+    @media (min-width: 768px) {
+      [data-casa] [data-cena-heroi][aria-labelledby='ic-titulo'] {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+      }
+
+      [data-casa] .ic-titulo,
+      [data-casa] .ic-noite-heroi,
+      [data-casa] [data-cena-heroi][aria-labelledby='ic-titulo'] .cm-cena-placa {
+        grid-column: 1 / -1;
+      }
+
+      [data-casa] [data-cena-heroi][aria-labelledby='ic-titulo'] .cm-cena-placa {
+        justify-self: center;
+      }
+
+      [data-casa] .ic-leg1 {
+        grid-column: 1;
+        align-self: start;
+        padding-top: var(--espaco-midia);
+      }
+
+      [data-casa] .ic-palco {
+        grid-column: 2;
+        padding-top: var(--espaco-midia);
+      }
+
+      [data-casa] .ic-noite-conteudo {
+        grid-template-columns: minmax(0, 1fr) min(300px, 40%);
+        align-items: end;
+        column-gap: var(--espaco-midia);
+      }
+
+      /* Above M06's floor layer (which runs left under the column), so the text is never painted over. */
+      [data-casa] .ic-noite-texto {
+        position: relative;
+        z-index: 1;
+        grid-column: 1;
+        align-self: center;
+      }
+
+      [data-casa] .ic-m06 {
+        grid-column: 2;
+        width: 100%;
+        margin: 0;
+      }
+
+      [data-casa] .ic-piso-noite {
+        grid-column: 1 / -1;
+      }
+    }
+  }
+
+  /* Short landscape windows (a phone on its side, 844 x 390; a laptop at 200 % zoom): the text first, and the plate no
+     taller than half the window. */
+  @media (orientation: landscape) and (max-height: 600px) {
+    [data-casa] [data-cena-heroi][aria-labelledby='ic-titulo'] .cm-cena-placa {
+      width: min(100%, 760px, 50svh * 1672 / 941);
+    }
+  }
+
+  /* Addendum short-screen rule (a phone on its side, 844 x 390; 200 % zoom): the text first, then the scene, which never
+     takes more than half the window's block size. The stacked hero already puts the h1, the value sentence and the
+     actions before the plate (order 1, 2, then 3); here the plate's block is held to 50svh. */
+  @media (max-height: 520px) and (orientation: landscape) {
+    [data-casa] [data-cena-heroi][aria-labelledby='ic-titulo'] .cm-cena-placa {
+      max-block-size: 50svh;
+    }
+  }
+
+  /* ---- Below 1024: the bands after the stage, one column ------------------------------------------------------- */
+  @media (max-width: 1023px) {
+    [data-casa] .ic-tela {
+      display: grid;
+      justify-items: center;
+      gap: var(--espaco-midia);
+    }
+
+    [data-casa] .ic-tela-texto,
+    [data-casa] .ic-so-texto {
+      display: grid;
+      justify-self: stretch;
+      gap: var(--espaco-pilha);
+    }
+
+    /* Band 4: the text, then the plate full-bleed on the band line. */
+    [data-casa] .ic-so {
+      display: grid;
+      gap: var(--espaco-midia);
+    }
+
+    /* Band 5: the statement, then the frame on the band line. */
+    [data-casa] .ic-prova {
+      display: grid;
+      justify-items: center;
+      gap: var(--espaco-midia);
+    }
+
+    [data-casa] .ic-prova .cm-faixa-prova {
+      justify-self: stretch;
+    }
+
+    /* Band 6: the heading, the four rows, then the door field full-bleed on the band line (13:10, the plate's foot). */
+    [data-casa] .ic-perguntas {
+      display: grid;
+      gap: var(--espaco-bloco);
+    }
+
+    [data-casa] .ic-porta {
+      aspect-ratio: 13 / 10;
+      margin-inline: calc(-1 * var(--quadro-calha));
+    }
+
+    [data-casa] .ic-porta img {
+      inline-size: 100%;
+      block-size: 100%;
+      object-fit: cover;
+      object-position: 50% 100%;
+    }
+  }
+
+  /* ---- The room of RECUT §2-§3 (1180 and more, landscape) ------------------------------------------------------ */
+  @media (min-width: 1180px) and (min-aspect-ratio: 1/1) {
+    /* The hero's own box is the room (doc y 72 to 795); the stage follows it in the flow and band 2 lies over the stage. */
+    [data-casa] [data-cena-heroi][aria-labelledby='ic-titulo'] {
+      display: block;
+      min-block-size: var(--heroi-alto);
+    }
+
+    [data-casa] [data-cena-heroi][aria-labelledby='ic-titulo'] .cm-cena-texto {
+      display: contents;
+    }
+
+    /* "Ela mamou" ends 12 px (`junto`) left of the seam and "que horas?" starts 12 px right of it. */
+    [data-casa] .ic-titulo {
+      position: absolute;
+      top: var(--heroi-titulo-topo);
+      left: var(--heroi-esq);
+      z-index: 2;
+      display: flex;
+      gap: calc(2 * var(--espaco-junto));
+      white-space: nowrap;
+    }
+
+    /* The lede and the one filled action hang on the night wall, right of the lamp. */
+    [data-casa] .ic-noite-heroi {
+      position: absolute;
+      top: auto;
+      bottom: var(--heroi-texto-fundo);
+      left: var(--heroi-noite-esq);
+      z-index: 2;
+      width: var(--heroi-medida);
+    }
+
+    /* RECUT §3: the lede is two lines of `abertura` (y 456.8 to 520.8) and the pill starts `heroi-acoes-vao` (24 px) under
+       it (y 544.8), so the first row is exactly two line-heights tall and the actions are the second row. The pill is at
+       the top of its row, whatever the link beside it measures. */
+    [data-casa] .ic-noite-heroi {
+      display: grid;
+      grid-template-rows: calc(2 * var(--texto-abertura-entrelinha)) auto;
+      row-gap: var(--heroi-acoes-vao);
+      align-items: start;
+    }
+
+    [data-casa] .ic-acoes {
+      margin-top: 0;
+      align-items: flex-start;
+    }
+
+    [data-casa] .ic-acoes .cm-botao-texto {
+      align-self: center;
+    }
+
+    /* The plate: its seam on the page seam. The walls and floors run on to both edges of the window. */
+    [data-casa] [data-cena-heroi][aria-labelledby='ic-titulo'] .cm-cena-placa {
+      position: absolute;
+      top: var(--heroi-placa-topo);
+      left: calc(
+        var(--heroi-costura-x) - var(--cena-costura) *
+          (var(--cena-largura-max) * min(100cqi, 1440px) / 1440 * var(--heroi-k))
+      );
+      z-index: 1;
+      width: calc(var(--cena-largura-max) * min(100cqi, 1440px) / 1440 * var(--heroi-k));
+    }
+
+    [data-casa] [aria-labelledby='ic-titulo'] [data-camada='parede-esquerda'],
+    [data-casa] [aria-labelledby='ic-titulo'] [data-camada='parede-direita'] {
+      top: calc(-1 * var(--heroi-placa-topo));
+    }
+
+    /* The hero's floors end exactly on the hero's foot (`heroi-alto` from the hero's top, `heroi-placa-topo` of it above the
+       plate): `bottom` is measured from the plate's own bottom, so `100%` less that foot. Never 65 px under the plate:
+       that left a 56 px strip of wall under the floor at 1280 and spilled 0.5 px over the stage at 1440. */
+    [data-casa] [aria-labelledby='ic-titulo'] [data-camada='chao-esquerda'],
+    [data-casa] [aria-labelledby='ic-titulo'] [data-camada='chao-direita'] {
+      bottom: calc(100% - (var(--heroi-alto) - var(--heroi-placa-topo)));
+    }
+
+    /* The caption of 16:00 on the day floor under the plate, left of the seam. */
+    [data-casa] .ic-leg1 {
+      position: absolute;
+      top: var(--heroi-leg-topo);
+      left: var(--heroi-esq);
+      z-index: 2;
+    }
+
+    /* Band 2 is the stage of moment 2 (REP-HOME motion sheet §3). Its quadro and tone wrappers dissolve, so the stage's
+       containing block is the band itself: the band is the track. At rest (reduced motion, a window under 640 tall, no
+       script) the stage is `--palco-alto` tall (the window less 24 px, never taller than the plate) and nothing moves. Where the pin is built (`data-troca-fixo`, set by the
+       page before the first paint) the track is the stage plus the pin distance D, which the scroll driver writes as
+       `--troca-d` from the catalogue (M16), and the stage sticks 24 px under the top of the window. */
+    [data-casa] [data-faixa][aria-labelledby='ic-noite'] {
+      padding-block: 0;
+    }
+
+    [data-casa] [data-faixa][aria-labelledby='ic-noite'] > .cm-faixa-quadro,
+    [data-casa] [data-faixa][aria-labelledby='ic-noite'] .cm-tom-da-faixa {
+      display: contents;
+    }
+
+    [data-casa] [data-faixa][aria-labelledby='ic-noite']:has([data-troca-fixo]) {
+      min-height: calc(var(--palco-alto) + var(--troca-d, 0px));
+    }
+
+    [data-casa] .ic-estagio {
+      position: relative;
+      width: 100%;
+      height: var(--palco-alto);
+      overflow-x: clip;
+    }
+
+    [data-casa] .ic-estagio[data-troca-fixo] {
+      position: sticky;
+      top: var(--palco-topo);
+    }
+
+    /* Layer order, bottom to top: the day wall (the band's own) and the day floor; the day frame; the night sheet; the
+       night column's content. Window 812 to 895 tall: the frames take the height they have (motion sheet §3.1). */
+    [data-casa]:has(> [data-cena-heroi] .ic-titulo) .ic-estagio .cm-produto-moldura {
+      --produto-tela: min(
+        calc(clamp(280px, calc(280px + (100cqi - 390px) * 40 / 1050), 320px) * var(--heroi-k)),
+        calc((100svh - var(--palco-quadro-livre)) / var(--moldura-razao))
+      );
+      /* The capture's surplus grows with the screen layer, so the travel of moment 5 grows with the room. */
+      --produto-rolagem: min(
+        calc(
+          clamp(
+            calc(var(--produto-rolagem-390, 0) * 1px),
+            calc(var(--produto-rolagem-390, 0) * 1px + (var(--produto-rolagem-1440, 0) - var(--produto-rolagem-390, 0)) * (100vw - 390px) / 1050),
+            calc(var(--produto-rolagem-1440, 0) * 1px)
+          ) * var(--heroi-k)
+        ),
+        var(--produto-tela)
+      );
+
+      position: absolute;
+      z-index: 1;
+      bottom: var(--palco-chao);
+      left: calc(var(--heroi-costura-x) - var(--espaco-grupo) - var(--produto-tela) * 1.06);
+    }
+
+    /* A zero-size marker on the seam: the scroll driver reads its `offsetLeft`. */
+    [data-casa] .ic-medida {
+      position: absolute;
+      top: 0;
+      left: var(--heroi-costura-x);
+      width: 0;
+      height: 0;
+    }
+
+    [data-casa] .ic-piso-dia {
+      position: absolute;
+      inset-inline: 0;
+      bottom: 0;
+      z-index: 0;
+      height: var(--palco-chao);
+      background-color: var(--color-areia);
+    }
+
+    /* The night sheet. At rest the outer box sits at the seam with no transform and the inner box is pulled back by the
+       same distance, so the content is in the stage's coordinates and the twin of the frame is clipped out of sight.
+       With the pin both boxes span the stage and take opposite `translateX`; their first value (the seam) is the
+       rest state, so the first paint matches; the driver writes the rest inline. */
+    [data-casa] .ic-folha {
+      position: absolute;
+      inset-block: 0;
+      left: var(--heroi-costura-x);
+      right: 0;
+      z-index: 2;
+      overflow: clip;
+    }
+
+    [data-casa] .ic-folha-interior {
+      position: absolute;
+      inset-block: 0;
+      left: calc(-1 * var(--heroi-costura-x));
+      right: 0;
+    }
+
+    [data-casa] .ic-estagio[data-troca-fixo] .ic-folha {
+      left: 0;
+      transform: translateX(var(--heroi-costura-x));
+    }
+
+    [data-casa] .ic-estagio[data-troca-fixo] .ic-folha-interior {
+      left: 0;
+      transform: translateX(calc(-1 * var(--heroi-costura-x)));
+    }
+
+    /* `will-change` only on the sheet's two boxes, only while the stage is in the window. */
+    [data-casa] .ic-estagio[data-troca-visivel] .ic-folha,
+    [data-casa] .ic-estagio[data-troca-visivel] .ic-folha-interior {
+      will-change: transform;
+    }
+
+    [data-casa] .ic-folha-parede {
+      position: absolute;
+      inset: 0;
+      background-color: var(--color-cacau);
+    }
+
+    [data-casa] .ic-folha-piso {
+      position: absolute;
+      inset-inline: 0;
+      bottom: 0;
+      height: var(--palco-chao);
+      background-color: var(--color-texto-2);
+    }
+
+    /* The twin takes the day frame's box: it is a `.cm-produto-moldura` in the stage's coordinates, so the rule above
+       gives it the same custom properties, the same left and the same bottom as the day frame (within 1 px). Its two
+       layers follow the shared box (`secoes.css`) under their own marks, which carry no `data-produto-*`. */
+    [data-casa] .ic-gemea [data-troca-gemea-tela] {
+      position: absolute;
+      top: var(--produto-borda);
+      left: var(--produto-borda);
+      width: var(--produto-tela);
+      height: calc(100% - 2 * var(--produto-borda));
+      border-radius: calc(var(--produto-tela) * 0.1166 - var(--produto-borda));
+      object-fit: cover;
+      object-position: top;
+    }
+
+    [data-casa] .ic-gemea [data-troca-gemea-arte] {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      height: auto;
+      pointer-events: none;
+    }
+
+    [data-casa] .ic-noite-conteudo {
+      display: contents;
+    }
+
+    /* The stage's night column starts one `grupo` right of M06 (whose light reaches its box's right edge) and ends on
+       the quadro's right edge: 1016 to 1320 at 1440, never over the plate and never past the quadro. */
+    [data-casa] .ic-estagio {
+      --palco-noite-esq: max(
+        var(--heroi-noite-esq),
+        var(--heroi-costura-x) + 2 * var(--espaco-grupo) + var(--palco-m06-largura)
+      );
+    }
+
+    [data-casa] .ic-noite-texto {
+      position: absolute;
+      bottom: var(--palco-texto-fundo);
+      left: var(--palco-noite-esq);
+      z-index: 4;
+      display: grid;
+      gap: var(--espaco-pilha);
+      width: calc(100% - var(--heroi-esq) - var(--palco-noite-esq));
+    }
+
+    [data-casa] .ic-m06 {
+      position: absolute;
+      top: calc(var(--palco-alto) - var(--palco-chao) - var(--palco-m06-chao));
+      left: calc(var(--heroi-costura-x) + var(--espaco-grupo));
+      z-index: 3;
+      width: var(--palco-m06-largura);
+      margin: 0;
+    }
+
+    [data-casa] .ic-m06 img:not([data-luz]) {
+      display: block;
+      width: 100%;
+      height: auto;
+    }
+
+    /* The caption of the night floor. The swap node of moment 3 keeps one line of height, so nothing moves when the
+       text changes. */
+    [data-casa] .ic-piso-noite {
+      position: absolute;
+      bottom: var(--palco-leg-fundo);
+      left: var(--palco-noite-esq);
+      z-index: 4;
+    }
+
+    [data-casa] .ic-piso-noite [data-troca-legenda] {
+      min-height: 1lh;
+    }
+  }
+
+  /* ---- The room with enlarged text (item 11 of HOME-WIDTH) ------------------------------------------------------------ */
+  /* The room (the plate on the seam, the h1 across it, the lede on the night wall right of the lamp, the pinned stage) is
+     drawn for 16 px text: the lede is two lines (a fixed two-line grid row, bottom anchored) only at a 16 px root. Above it
+     the lede takes three or four lines, and a bottom-anchored block that grows would climb into the lamp (rule W1: when
+     the two-line assumption fails, the hero leaves the room). So the condition is the text size, on any window width:
+     above a 16 px root the hero and band 2 flow as the stacked composition does (one column, the h1 wraps, the lede and
+     the actions come under it, the stage is a plain band).
+     A plain width bound cannot say that: at 16 px the room must stay down to the narrowest window the media query gives
+     (1180 px less a classic scrollbar of up to 20 px = 1160 px = 72.5 rem), while 2560 px at 200 % is a container of more
+     than 79.5 rem. The bound is therefore 72.5 rem, less a slack of 8 px, plus a bonus of (1rem - 16px) times 10000.
+     Inside a container query `1rem` is the root's own computed font size, so the bonus is 0 at a 16 px root and positive
+     above it: from 17 px up it is 10000 px or more, far wider than any window, so every window hands over. Under 16 px
+     the bound is negative and the room stays. The slack is there because `1rem - 16px` is not exactly 0 in the browser's
+     float arithmetic: its error times the multiplier is a few px (a multiplier of 100000 gave a bound a few px above 72.5
+     rem and handed a 1160 to 1166 px container over at 16 px). The narrowest container the room can have is 1160 px =
+     72.5 rem, so at a 16 px root the bound is 72.5 rem - 8 px = 1152 px, safely under it (the room stays with a classic
+     scrollbar of up to 20 px), and the multiplier is 10000, ten times less error than before. The page script
+     (`useTextoGrande` in Inicio.tsx: root font size above 16 px) reads the same state and renders the DOM this block lays
+     out: the stage frame in the hero (`.ic-palco`, with the night frame raster) and none of the room layers in band 2. The
+     media query above is the window's half of the condition, the same one the script reads.
+     No margin crosses a band edge here: the gap under the hero's frame is the padding-bottom of `.ic-palco`, and band 2
+     starts with its own padding. Everything is read from the Início root. */
+  @media (min-width: 1180px) and (min-aspect-ratio: 1/1) {
+    @container (width < calc(72.5rem - 8px + (1rem - 16px) * 10000)) {
+      [data-casa]:has(> [data-cena-heroi] .ic-titulo) [data-cena-heroi][aria-labelledby='ic-titulo'] {
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+        min-block-size: 0;
+        background-color: var(--color-cacau);
+        color: var(--color-papel);
+      }
+
+      [data-casa]:has(> [data-cena-heroi] .ic-titulo) .ic-titulo {
+        position: static;
+        z-index: auto;
+        display: flex;
+        flex-direction: column;
+        order: 1;
+        gap: 0;
+        white-space: normal;
+      }
+
+      [data-casa]:has(> [data-cena-heroi] .ic-titulo) .ic-titulo [data-h1-dia] {
+        display: block;
+        padding: var(--espaco-midia) var(--heroi-esq) var(--espaco-junto);
+        background-color: var(--color-papel);
+      }
+
+      [data-casa]:has(> [data-cena-heroi] .ic-titulo) .ic-titulo [data-h1-noite] {
+        display: block;
+        padding: var(--espaco-junto) var(--heroi-esq) 0;
+      }
+
+      [data-casa]:has(> [data-cena-heroi] .ic-titulo) .ic-noite-heroi {
+        position: static;
+        z-index: auto;
+        display: block;
+        order: 2;
+        width: auto;
+        padding: var(--espaco-pilha) var(--heroi-esq) 0;
+        grid-template-rows: none;
+      }
+
+      [data-casa]:has(> [data-cena-heroi] .ic-titulo) .ic-acoes {
+        margin-top: var(--espaco-grupo);
+        align-items: center;
+      }
+
+      [data-casa]:has(> [data-cena-heroi] .ic-titulo) [data-cena-heroi][aria-labelledby='ic-titulo'] .cm-cena-placa {
+        position: relative;
+        top: auto;
+        left: auto;
+        order: 3;
+        align-self: center;
+        width: min(100%, 760px);
+        margin-top: var(--espaco-grupo);
+      }
+
+      [data-casa]:has(> [data-cena-heroi] .ic-titulo) [aria-labelledby='ic-titulo'] [data-camada='parede-esquerda'],
+      [data-casa]:has(> [data-cena-heroi] .ic-titulo) [aria-labelledby='ic-titulo'] [data-camada='parede-direita'] {
+        top: 0;
+      }
+
+      [data-casa]:has(> [data-cena-heroi] .ic-titulo) [aria-labelledby='ic-titulo'] [data-camada='chao-esquerda'],
+      [data-casa]:has(> [data-cena-heroi] .ic-titulo) [aria-labelledby='ic-titulo'] [data-camada='chao-direita'] {
+        bottom: 0;
+      }
+
+      [data-casa]:has(> [data-cena-heroi] .ic-titulo) .ic-leg1 {
+        position: static;
+        z-index: auto;
+        order: 4;
+        padding: var(--espaco-junto) var(--heroi-esq) var(--espaco-pilha);
+      }
+
+      /* The caption is the day's by the data, but here it lies on the cacau wall of the stacked hero. */
+      [data-casa]:has(> [data-cena-heroi] .ic-titulo) .ic-leg1 [data-legenda] {
+        color: var(--color-papel);
+      }
+
+      /* The hero's stage (the first framed screen, in its night raster on the cacau wall): the last item of the column,
+         one `junto` under the caption and one `secao` above band 2, which starts with no padding of its own. */
+      [data-casa]:has(> [data-cena-heroi] .ic-titulo) .ic-palco {
+        order: 5;
+        padding: var(--espaco-junto) var(--heroi-esq) var(--espaco-secao);
+      }
+
+      /* Band 2: a plain cacau band, no track, no pin, no night sheet. */
+      [data-casa]:has(> [data-cena-heroi] .ic-titulo) [data-faixa][aria-labelledby='ic-noite'] {
+        padding-block: 0 var(--espaco-secao);
+      }
+
+      [data-casa]:has(> [data-cena-heroi] .ic-titulo) [data-faixa][aria-labelledby='ic-noite'] [data-faixa-lado] {
+        left: 0;
+      }
+
+      [data-casa]:has(> [data-cena-heroi] .ic-titulo) [data-faixa][aria-labelledby='ic-noite']:has([data-troca-fixo]) {
+        min-height: 0;
+      }
+
+      [data-casa]:has(> [data-cena-heroi] .ic-titulo) [data-faixa][aria-labelledby='ic-noite'] > .cm-faixa-quadro,
+      [data-casa]:has(> [data-cena-heroi] .ic-titulo) [data-faixa][aria-labelledby='ic-noite'] .cm-tom-da-faixa {
+        display: block;
+      }
+
+      [data-casa]:has(> [data-cena-heroi] .ic-titulo) .ic-estagio,
+      [data-casa]:has(> [data-cena-heroi] .ic-titulo) .ic-estagio[data-troca-fixo] {
+        position: static;
+        height: auto;
+        padding-block-start: 0;
+        overflow-x: visible;
+      }
+
+      [data-casa]:has(> [data-cena-heroi] .ic-titulo) .ic-medida,
+      [data-casa]:has(> [data-cena-heroi] .ic-titulo) .ic-piso-dia,
+      [data-casa]:has(> [data-cena-heroi] .ic-titulo) .ic-folha {
+        display: none;
+      }
+
+      /* The day frame of the stage stands in the flow, centred, at the unscaled size of the frames below 1180. */
+      [data-casa]:has(> [data-cena-heroi] .ic-titulo) .ic-estagio .cm-produto-moldura {
+        --produto-tela: clamp(280px, calc(280px + (100cqi - 390px) * 40 / 1050), 320px);
+
+        position: relative;
+        bottom: auto;
+        left: auto;
+        margin: 0 auto;
+      }
+
+      [data-casa]:has(> [data-cena-heroi] .ic-titulo) .ic-estagio [data-produto-acao] {
+        position: relative;
+        top: auto;
+        inset-inline: auto;
+        color: var(--color-papel);
+      }
+
+      [data-casa]:has(> [data-cena-heroi] .ic-titulo) .ic-estagio [data-produto-rolar]:focus-visible {
+        outline-color: var(--color-papel);
+      }
+
+      [data-casa]:has(> [data-cena-heroi] .ic-titulo) .ic-estagio [data-produto-rolar]:focus-visible [data-produto-acao] {
+        outline: 0;
+      }
+
+      [data-casa]:has(> [data-cena-heroi] .ic-titulo) .ic-noite-conteudo {
+        display: grid;
+        gap: 0;
+      }
+
+      [data-casa]:has(> [data-cena-heroi] .ic-titulo) .ic-noite-texto {
+        position: relative;
+        bottom: auto;
+        left: auto;
+        z-index: 1;
+        width: auto;
+      }
+
+      [data-casa]:has(> [data-cena-heroi] .ic-titulo) .ic-m06 {
+        position: relative;
+        top: auto;
+        left: auto;
+        z-index: auto;
+        isolation: isolate;
+        width: min(300px, 100%);
+        margin: var(--espaco-secao) auto 0;
+      }
+
+      [data-casa]:has(> [data-cena-heroi] .ic-titulo) .ic-m06::before {
+        position: absolute;
+        top: calc(var(--m06-chao-fracao) * 100%);
+        bottom: 0;
+        left: -100vw;
+        z-index: -1;
+        width: 300vw;
+        background-color: var(--color-texto-2);
+        content: '';
+      }
+
+      [data-casa]:has(> [data-cena-heroi] .ic-titulo) .ic-piso-noite {
+        position: relative;
+        bottom: auto;
+        left: auto;
+        z-index: auto;
+        isolation: isolate;
+        padding: var(--espaco-junto) 0;
+      }
+
+      /* The bar reaches both window edges like the ground strip above it: a layer behind the text, as `.ic-chao` does
+         (the band clips what spills). */
+      [data-casa]:has(> [data-cena-heroi] .ic-titulo) .ic-piso-noite::before {
+        position: absolute;
+        inset-block: 0;
+        left: -100vw;
+        z-index: -1;
+        width: 300vw;
+        background-color: var(--color-texto-2);
+        content: '';
+      }
+    }
+  }
+
+  /* ---- 1024 and more: the bands after the stage ------------------------------------------------------------------ */
+  @media (min-width: 1024px) {
+    /* Band 3: the text beside the frame, centred on it; the frame right-aligned to the quadro and standing on the band's
+       bottom edge (the band has no bottom padding, so the band's height is `secao` plus the frame's). */
+    [data-casa] .ic-tela {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      align-items: center;
+      column-gap: var(--espaco-midia);
+      row-gap: 0;
+    }
+
+    [data-casa]:has(> [data-cena-heroi] .ic-titulo) .ic-tela .cm-produto-moldura {
+      /* The frame follows the quadro like the room does (the width ratio only: 1 up to 1440), so on a wide window the
+         gap between the heading and the frame closes instead of opening past 400 px. Read from the container (cqi). */
+      --produto-tela: calc(clamp(280px, calc(280px + (100cqi - 390px) * 40 / 1050), 320px) * var(--heroi-k-largura));
+
+      align-self: end;
+      justify-self: end;
+    }
+
+    [data-casa] .ic-tela-texto,
+    [data-casa] .ic-so-texto {
+      display: grid;
+      gap: var(--espaco-pilha);
+    }
+
+    /* Band 4: the plate flush with the window's left edge and the band line, the text on the second edge, its last line
+       28 px above the band line. The first column ends at the second edge; the plate takes the quadro's margin back. */
+    [data-casa] .ic-so {
+      display: grid;
+      grid-template-columns: calc(var(--segunda-borda) - var(--quadro-margem)) minmax(0, 1fr);
+      align-items: end;
+    }
+
+    [data-casa] .ic-so-texto {
+      grid-row: 1;
+      grid-column: 2;
+      padding-block-end: var(--faixa-texto-fundo);
+    }
+
+    /* Band 5: the statement on the left (a measure of 640 at most), the Notas frame right-aligned to the quadro on the
+       band line. The text keeps one `secao` under the list where the list is the taller of the two. */
+    [data-casa] .ic-prova {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      align-items: end;
+      column-gap: var(--espaco-midia);
+    }
+
+    [data-casa] .ic-prova .cm-faixa-prova {
+      align-self: start;
+      padding-block-end: var(--espaco-secao);
+    }
+
+    [data-casa] .ic-prova .cm-produto-moldura {
+      justify-self: end;
+    }
+
+    /* Band 6: the questions left, from the quadro edge to the second edge less one `midia`; the heading right, on the
+       second edge, as the lintel; the door field under it, from the second edge to the right window edge and down to the
+       band line. The field's track is the quadro's part of it; its margin takes the window's part. */
+    [data-casa] .ic-perguntas {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) calc(var(--faixa6-porta) - var(--quadro-margem));
+      grid-template-rows: auto 1fr;
+      column-gap: var(--espaco-midia);
+      row-gap: var(--espaco-bloco);
+    }
+
+    [data-casa] .ic-perguntas .cm-perguntas > h2 {
+      grid-row: 1;
+      grid-column: 2;
+    }
+
+    [data-casa] .ic-perguntas .cm-perguntas-lista {
+      grid-row: 1 / span 2;
+      grid-column: 1;
+      max-width: none;
+      margin: 0;
+      padding-block-end: var(--espaco-secao);
+    }
+
+    [data-casa] .ic-porta {
+      grid-row: 2;
+      grid-column: 2;
+      margin-inline-end: calc(-1 * var(--quadro-margem));
+    }
+
+    [data-casa] .ic-porta img {
+      inline-size: min(var(--faixa6-porta), 627px);
+      block-size: auto;
+    }
+  }
+
+  /* Band 6: the shared block dissolves into the page's grid, so the heading and the field share a grid. The heading and the
+     list stay in the tree. The questions are rows: a rule between them, `grupo` of padding. */
+  [data-casa] .ic-perguntas .cm-perguntas {
+    display: contents;
+  }
+
+  [data-casa] .ic-perguntas .cm-perguntas-lista {
+    gap: 0;
+  }
+
+  [data-casa] .ic-perguntas .cm-perguntas-lista > li {
+    padding-block: var(--espaco-grupo);
+    border-top: 1px solid currentcolor;
+  }
+
+  [data-casa] .ic-perguntas .cm-perguntas-lista > li:last-child {
+    border-bottom: 1px solid currentcolor;
+  }
+
+  /* The door field: cacau, the wall of the door plate (the plate's own ground is the same token), so the plate has no
+     visible box. The plate stands in its bottom-right corner; the frame clips it while it enters (inicio-faixas.css). */
+  [data-casa] .ic-porta {
+    display: flex;
+    align-items: flex-end;
+    justify-content: flex-end;
+    min-inline-size: 0;
+    background-color: var(--color-cacau);
+    overflow: clip;
+  }
+
+  [data-casa] .ic-porta img {
+    display: block;
+    max-inline-size: none;
+  }
+
+  /* Bands 3 to 7 stand their object on the band's edge: no bottom padding (band 7 also opens one `secao-ampla`). Nothing
+     is drawn under an object: a floor is only the continuation of a plate. */
+  [data-casa] [data-faixa]:has(.ic-tela),
+  [data-casa] [data-faixa]:has(.ic-so),
+  [data-casa] [data-faixa]:has(.ic-prova),
+  [data-casa] [data-faixa]:has(.ic-perguntas),
+  [data-casa] [data-faixa]:has(.ic-fecho) {
+    padding-bottom: 0;
+  }
+
+  [data-casa] [data-faixa]:has(.ic-fecho) {
+    padding-top: var(--espaco-secao-ampla);
+  }
+
+  /* Band 7: the closing (centred, the only centred block), then A05, the street, on the band's bottom edge (the footer's
+     top): a `grupo` under the pill, so the highest roof is never nearer to it than that. One column that may shrink
+     (`minmax(0, 1fr)`), or the street's own width would stretch the track instead of overflowing it evenly. */
+  [data-casa] .ic-fecho {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    justify-items: center;
+    row-gap: var(--espaco-grupo);
+  }
+
+  /* The closing block stands above the street in stacking: the street rises under the pill (below), so its box overlaps
+     the pill's, and the pill must stay the one that takes the click. */
+  [data-casa] .ic-fecho .cm-fechamento {
+    position: relative;
+    z-index: 1;
+  }
+
+  /* The street runs edge to edge: the window's width (the container's, `cqi`) up to the master's 1672 px, never scaled
+     below its own pixels (the plate is 1672 x 642, `a05-rua.MANIFESTO.json`). The quadro is narrower than the window, so
+     the box is wider than its track: the grid (`justify-items: center`) centres it and it overflows the track by the
+     same amount on both sides; the band clips what is past the window (`overflow-x: clip`). No `inset` or `translate`
+     re-centres it: on top of the grid's centring that pair would shift the box to one side. `overflow: clip` is not a
+     scroll container: without `min-block-size: 0` the in-flow img (block-size auto) would set the frame's automatic
+     minimum height (a grid item). Every clip frame with an aspect ratio says so (inicioFaixas.test.tsx, SH-10). The
+     light layer is the plate's own box (`[data-luz-grupo]` is `inset: 0`). */
+  [data-casa] .ic-fecho-cena {
+    position: relative;
+    inline-size: min(100cqi, 1672px);
+    aspect-ratio: 1672 / 642;
+    min-block-size: 0;
+    margin: 0;
+    overflow: clip;
+    pointer-events: none;
+  }
+
+  /* From 768 the pill is its own width, centred, and under it the highest roof is the tall building's: row 62 of 1672
+     (0.037 of the street's width). The street rises by 0.035 of its width, so that roof stands a `grupo` and a little more
+     under the pill (never nearer), while the chimney and the low roofs beside the pill rise next to it, clear of the
+     heading. Under 768 the pill is as wide as the column and covers the chimney, so the street stays a `grupo` below it. */
+  @media (min-width: 768px) {
+    [data-casa] .ic-fecho-cena {
+      margin-block-start: calc(var(--espaco-grupo) * -1.5);
+    }
+  }
+
+  [data-casa] .ic-fecho-cena img:not([data-luz]) {
+    display: block;
+    inline-size: 100%;
+    block-size: auto;
+  }
+
+  /* The windows come on in the catalogue's M11 time (`--luz-fecho-ms`, set by the page from CATALOGO.M11). */
+  [data-casa] .ic-fecho-cena [data-luz] {
+    transition-duration: var(--luz-fecho-ms);
+  }
+
+  [data-casa] .ic-h2-exibicao {
+    font-weight: var(--peso-exibicao);
+  }
+
+  /* Band 4: the plate's frame shows rows 0 to 832 of the 870 (1200 / 832), clipped, the image top-aligned; the band line
+     cuts the mat at its widest row and band 5's areia goes on from there. Below 1024 the plate is the window's width. */
+  [data-casa] .ic-so-cena {
+    margin: 0;
+    aspect-ratio: 1200 / 832;
+    min-block-size: 0;
+    overflow: clip;
+    inline-size: 100cqi;
+  }
+
+  [data-casa] .ic-so-cena img {
+    display: block;
+    inline-size: 100%;
+    block-size: auto;
+  }
+
+  @media (max-width: 1023px) {
+    [data-casa] .ic-so-cena {
+      margin-inline: calc(-1 * var(--quadro-calha));
+    }
+  }
+
+  /* From 1024 the plate is `--faixa4-placa` wide in the first column and takes the quadro's margin back, so it is flush
+     with the window's left edge. After the base rule above. */
+  @media (min-width: 1024px) {
+    [data-casa] .ic-so-cena {
+      grid-row: 1;
+      grid-column: 1;
+      inline-size: var(--faixa4-placa);
+      margin-inline: calc(-1 * var(--quadro-margem)) 0;
+    }
+  }
+
+  /* Band 5: the five hairlines of the facts (one before each fact and one under the last) are drawn by the page, not by
+     a border, so they can draw once: `scaleX(0)` to `scaleX(1)`, from the left, 400 ms linear, when the LIST is signed
+     (`data-assinada`: 60 % of it in view, at once with reduced motion). The list, not the band's wrapper: the wrapper is
+     taller than the window on a phone (1425 px at 390 x 844), so 60 % of it is never in view. They never undraw. */
+  [data-casa] .ic-prova [data-prova-lista] {
+    max-width: var(--leitura);
+    margin: 0;
+  }
+
+  [data-casa] .ic-prova [data-prova-lista] > li {
+    position: relative;
+    border-top: 0;
+    border-bottom: 0;
+  }
+
+  [data-casa] .ic-prova [data-prova-lista] > li::before {
+    position: absolute;
+    inset: 0 0 auto;
+    block-size: 1px;
+    background-color: currentcolor;
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 400ms linear;
+    content: '';
+  }
+
+  [data-casa] .ic-prova [data-prova-lista] > li:last-child::after {
+    position: absolute;
+    inset: auto 0 0;
+    block-size: 1px;
+    background-color: currentcolor;
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 400ms linear;
+    content: '';
+  }
+
+  [data-casa] .ic-prova [data-prova-lista][data-assinada] > li::before,
+  [data-casa] .ic-prova [data-prova-lista][data-assinada] > li:last-child::after {
+    transform: scaleX(1);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    [data-casa] .ic-prova [data-prova-lista] > li::before,
+    [data-casa] .ic-prova [data-prova-lista] > li:last-child::after {
+      transition: none;
+    }
+  }
+
+  /* ---- Moment 5: the Histórico frame scrolls its real screen --------------------------------------------------- */
+  /* The frame is a toggle button (`ProdutoEmMoldura rolavel`) named by its visible label "Explorar a tela", with the
+      static state cue ("Vista inicial" / "Mais detalhes") beside it. The pressed state (`data-rolado` on the figure,
+      set with `aria-pressed`) is the ONLY thing that moves the screen: hover and keyboard focus never do. The Y_ALTA capture is one
+     screen width taller than the screen layer (390:1234 under a 390:844 layer). The frame OPENS on the capture's foot
+     (the 16:00 Juliana and 17:30 Ícaro rows); when pressed the screen scrolls up by
+     MANIFESTO `rolagem_px` (280 px at 390, 320 at 1440: `ROLAGEM_PX`, set by the page as the two unitless ends of
+     `--produto-rolagem`) to the app header and the morning rows, and back. The travel is capped by the screen layer's
+     width, which is the capture's surplus on a stage shorter than the drawing. 400 ms on the standard curve,
+     object-position only; reduced motion: a toggle lands at once. The night twin of the stage
+     follows the day frame's pressed state, so the sheet's edge never shows two scrolls. */
+  [data-casa] .cm-produto-moldura {
+    --produto-rolagem: min(
+      clamp(
+        calc(var(--produto-rolagem-390, 0) * 1px),
+        calc(var(--produto-rolagem-390, 0) * 1px + (var(--produto-rolagem-1440, 0) - var(--produto-rolagem-390, 0)) * (100vw - 390px) / 1050),
+        calc(var(--produto-rolagem-1440, 0) * 1px)
+      ),
+      var(--produto-tela)
+    );
+  }
+
+  [data-casa] [data-produto-rolar] {
+    display: block;
+    width: 100%;
+    padding: 0;
+    border: 0;
+    border-radius: calc(var(--produto-tela) * 1.06 * 0.11);
+    background: none;
+    color: inherit;
+    cursor: pointer;
+  }
+
+  [data-casa] [data-produto-rolar]:focus-visible {
+    outline: 3px solid var(--color-papel);
+    outline-offset: 4px;
+  }
+
+  [data-casa] .ic-estagio [data-produto-rolar]:focus-visible {
+    outline-color: var(--color-cacau);
+  }
+
+  /* Rest: the foot. The image's top edge sits `--produto-rolagem` above the screen layer's top. */
+  [data-casa] [data-produto-rolar] [data-produto-tela],
+  [data-casa] .ic-gemea [data-troca-gemea-tela] {
+    object-position: 50% calc(-1 * var(--produto-rolagem));
+    transition: object-position 400ms var(--curva-padrao);
+  }
+
+  /* Pressed (`data-rolado`): the top (the app header), `--produto-rolagem` further up the day. Only this state moves the
+     screen and its night twin; focus and hover keep whatever the pressed state shows, so the cue, `aria-pressed` and the
+     picture never disagree. */
+  [data-casa] [data-rolado] [data-produto-tela],
+  [data-casa] .ic-estagio:has([data-rolado]) [data-troca-gemea-tela] {
+    object-position: 50% 0%;
+  }
+
+  /* The visible action: the label "Explorar a tela" and, beside it, the static state cue. It is page text under the
+     frame, never over the screen. Below 1024 (the hero's frame, on the cacau wall) it is the button's last row, in
+     flow; the row is at least one touch target tall and wraps (200 % text, 320 px, long pt-BR words). */
+  [data-casa] [data-produto-camadas] {
+    position: relative;
+    display: block;
+  }
+
+  [data-casa] [data-produto-acao] {
+    display: flex;
+    padding-inline: var(--espaco-pilha);
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    column-gap: var(--espaco-junto);
+    min-height: var(--alvo-toque);
+    padding-block: var(--espaco-junto);
+    color: var(--color-papel);
+    font-family: var(--fonte-texto);
+    font-size: var(--texto-pequeno-tamanho);
+    line-height: var(--texto-pequeno-entrelinha);
+    text-align: start;
+  }
+
+  [data-casa] [data-produto-rotulo],
+  [data-casa] [data-produto-estado] {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+
+  [data-casa] [data-produto-rotulo] {
+    font-weight: 600;
+    text-decoration: underline;
+    text-decoration-thickness: 0.0625em;
+    text-underline-offset: 0.25em;
+  }
+
+  [data-casa] [data-produto-rolar]:hover [data-produto-rotulo] {
+    text-decoration-thickness: 0.125em;
+  }
+
+  [data-casa] [data-produto-estado] {
+    font-weight: 400;
+  }
+
+  /* From 1024 (the stage): the frame stands on the floor line and its box is fixed by the stage, so the row hangs from
+     the figure's bottom edge onto the day floor (areia: cacau text, about 11:1) and takes no height from the frame. The
+     button's ring wraps the frame only, so the row carries its own ring while the button has focus. */
+  [data-casa] .ic-estagio [data-produto-acao] {
+    position: absolute;
+    top: 100%;
+    inset-inline: 0;
+    color: var(--color-cacau);
+  }
+
+  [data-casa] .ic-estagio [data-produto-rolar]:focus-visible [data-produto-acao] {
+    outline: 3px solid var(--color-cacau);
+    outline-offset: -3px;
+  }
+
+  /* The sleep frame (band 3): the Hoje capture is 390:880, taller than the 390:844 screen layer, so it is shown whole,
+     never cropped: contained, its two thin side margins on the app's own paper. */
+  [data-casa] .ic-tela [data-produto-tela] {
+    object-fit: contain;
+    background-color: var(--color-papel);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    [data-casa] [data-produto-rolar] [data-produto-tela],
+    [data-casa] .ic-gemea [data-troca-gemea-tela] {
+      transition: none;
+    }
+  }
+
+  /* ---- Moment 4: the signed caption (16:00 under the hero plate, 17:30 on the night floor) ------------------------- */
+  /* The voices of the caption: the words around them stay Outfit (the line's own face). The hour leads in Literata,
+     heavy, at one and a half times the caption's size (`texto-abertura`, the line's own token: no new level), in tabular
+     lining figures so 16:00 and 17:30 stand on the same grid. The name is Literata upright at the caption's size, in the
+     caption's colour (the night floor is mid grey: a lighter ink would fall under 4.5:1). No rule, no underline: nothing
+     reads like a link. The hour is a taller face than the words around it: with `inherit`, and even with a line height of
+     1, its ascent over the shared baseline is larger than the caption's, and the line box grows by about 3 px. The hour
+     keeps the caption's baseline and its own line box is smaller than its glyphs (half of the caption's size, written
+     with the `--texto-*` token the lint asks for there), so the caption's line is as tall as before the hour grew. */
+  [data-casa] .ic-legenda-hora {
+    font-family: var(--fonte-exibicao);
+    font-size: calc(var(--texto-abertura-tamanho) * 1.5);
+    font-weight: 800;
+    font-variant-numeric: tabular-nums lining-nums;
+    line-height: calc(var(--texto-abertura-tamanho) * 0.5);
+  }
+
+  /* The padding under the name stands for the rule the name no longer draws: the caption keeps the height it had, so the
+     bands below it (two static captions in the flow under 1024) stay where they were. */
+  [data-casa] .ic-legenda-autor {
+    display: inline-block;
+    padding-block-end: 2px;
+    font-family: var(--fonte-exibicao);
+    font-size: var(--texto-abertura-tamanho);
+    font-weight: var(--peso-titulo);
+    font-style: normal;
+    text-decoration: none;
+  }
+
+  /* ---- Moment 6: between the pages of the house the floor carries over ------------------------------------------ */
+  /* The header and footer links among the Início and the three product pages navigate with `viewTransition`
+     (PAGINAS_DA_CASA in casca/Cabecalho.tsx). This sheet ships with the main bundle (the Início is imported eagerly),
+     so the name below holds on every casa hero: the day floor of one page morphs into the next one's. Reduced motion:
+     no animation at all, the new page at once. */
+  [data-casa] [data-cena-heroi] [data-camada='chao-esquerda'] {
+    view-transition-name: chao;
+  }
+
+  ::view-transition-group(chao) {
+    animation-duration: 400ms;
+    animation-timing-function: var(--curva-padrao);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    ::view-transition-group(*),
+    ::view-transition-old(*),
+    ::view-transition-new(*) {
+      animation: none;
+    }
+  }
+
+  /* ---- The header pill (RECUT §5): quiet while the hero's pill is in view, filled at every other position -------- */
+  /* The shell has no hook for this: the page's `useGanchoDoCabecalho` sets `data-inicio-heroi="visivel"` on <html>
+     while the hero's mel pill is in view (at every width: the pill sits under the value sentence on a phone too), and
+     removes it when the pill leaves view and on unmount. With no attribute the pill is the shell's own filled one
+     (every other page, every other scroll position). The attribute is set before the first paint, so a page opened at
+     the top shows the quiet pill with no flash. Only background-color and color change, in 160 ms on
+     the standard curve (and `scale`, the shell's touch press, is kept in the list); the box does not change. The
+     selectors carry the shell's `.cm-botao-primario` weight and more (0,4,3 against 0,2,0), so no `!important`. */
+  :root:has(main [data-cena-heroi]) header[data-cabecalho]:not([data-tom='noite']) a[data-cabecalho-pilula] {
+    transition-property: scale, background-color, color;
+    transition-duration: 120ms, 160ms, 160ms;
+    transition-timing-function: ease-out, var(--curva-padrao), var(--curva-padrao);
+  }
+
+  html[data-inicio-heroi='visivel'] header[data-cabecalho]:not([data-tom='noite']) a[data-cabecalho-pilula] {
+    border-color: var(--color-cacau);
+    background-color: transparent;
+    color: var(--color-cacau);
+  }
+
+  @media (hover: hover) {
+    html[data-inicio-heroi='visivel'] header[data-cabecalho]:not([data-tom='noite']) a[data-cabecalho-pilula]:hover {
+      background-color: var(--color-cacau);
+      color: var(--color-papel);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    :root:has(main [data-cena-heroi]) header[data-cabecalho] a[data-cabecalho-pilula] {
+      transition-duration: 0s;
+    }
+  }
+}
+
+/* The type of bands 3 to 7 (HOME-SECOND-HALF, DIRECAO 3.8), outside the layers on purpose: the shared pieces set their
+   sizes with the `text-*` utilities (a utilities-layer class, which a rule in the components layer cannot outweigh), and
+   the page sets the sizes it needs here from the same token variables, with no new size, no new variable and no italic.
+   Band 3's hour is the 404's out-of-scale level (112 / 56); bands 5 and 7 state in `exibicao` (80 / 44); the questions of
+   band 6 are `titulo-2` (36 / 28); the sentence of band 5 is `titulo-3`; the second fact is `titulo-4`; the rest is body. */
+
+/* Band 3: two lines, "Dormiu" and "às 20:30.", by the width in em (never a `<br>`); lining, tabular figures. */
+[data-casa] .ic-tela-texto h2 {
+  max-inline-size: 4.8em;
+  font-size: var(--texto-exibicao-404-tamanho);
+  line-height: var(--texto-exibicao-404-entrelinha);
+  font-variant-numeric: tabular-nums lining-nums;
+}
+
+[data-casa] .ic-tela-texto p {
+  max-inline-size: var(--heroi-medida);
+}
+
+/* Band 4: the answer keeps the page's night-column measure. */
+[data-casa] .ic-so-texto p {
+  max-inline-size: var(--heroi-medida);
+}
+
+/* Band 5: the statement. */
+[data-casa] .ic-prova .cm-faixa-prova {
+  gap: 0;
+}
+
+[data-casa] .ic-prova .cm-faixa-prova > h2 {
+  margin-block-end: var(--espaco-grupo);
+  font-size: var(--texto-exibicao-tamanho);
+  line-height: var(--texto-exibicao-entrelinha);
+  font-weight: var(--peso-exibicao);
+}
+
+[data-casa] .ic-prova .cm-faixa-prova > p {
+  margin-block-end: var(--espaco-bloco);
+  font-family: var(--fonte-titulo);
+  font-size: var(--texto-titulo-3-tamanho);
+  line-height: var(--texto-titulo-3-entrelinha);
+}
+
+/* The facts are rows of one size (judge point "one row size"), and the shared FaixaProva gives the first one the
+   `text-abertura` utility: body size for all, then the second one, the note the phone proves, one level up. */
+[data-casa] .ic-prova [data-prova-lista] > li {
+  font-size: var(--texto-corpo-tamanho);
+  line-height: var(--texto-corpo-entrelinha);
+}
+
+[data-casa] .ic-prova [data-prova-lista] > li:nth-child(2) {
+  font-family: var(--fonte-titulo);
+  font-size: var(--texto-titulo-4-tamanho);
+  line-height: var(--texto-titulo-4-entrelinha);
+}
+
+/* Band 6: the questions are the display lines of the band; the answers stay body. */
+[data-casa] .ic-perguntas .cm-perguntas-lista h3 {
+  font-size: var(--texto-titulo-2-tamanho);
+  line-height: var(--texto-titulo-2-entrelinha);
+}
+
+/* Band 7: the closing statement in two balanced lines. */
+[data-casa] .ic-fecho .cm-fechamento > h2 {
+  max-inline-size: 10em;
+  font-size: var(--texto-exibicao-tamanho);
+  line-height: var(--texto-exibicao-entrelinha);
+  font-weight: var(--peso-exibicao);
+  text-wrap: balance;
+}

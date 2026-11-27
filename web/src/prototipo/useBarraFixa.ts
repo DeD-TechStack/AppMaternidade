@@ -29,20 +29,23 @@ export function useBarraFixa() {
       const cabe = barraDeveFicarFixa(window.innerHeight, fonteRaizEmPx())
       setFixa(cabe)
       if (cabe) {
-        const altura = elemento!.getBoundingClientRect().height
-        raiz.style.setProperty('scroll-padding-bottom', `${Math.ceil(altura) + FOLGA_DE_ROLAGEM_PX}px`)
+        const altura = Math.ceil(elemento!.getBoundingClientRect().height)
+        raiz.style.setProperty('--ha-barra-altura', `${altura}px`)
+        raiz.style.setProperty('scroll-padding-bottom', `${altura + FOLGA_DE_ROLAGEM_PX}px`)
       } else {
+        raiz.style.removeProperty('--ha-barra-altura')
         raiz.style.removeProperty('scroll-padding-bottom')
       }
     }
 
     const observador = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(medir)
-    observador?.observe(elemento)
+    observador?.observe(elemento, { box: 'border-box' })
     window.addEventListener('resize', medir)
 
     return () => {
       observador?.disconnect()
       window.removeEventListener('resize', medir)
+      raiz.style.removeProperty('--ha-barra-altura')
       raiz.style.removeProperty('scroll-padding-bottom')
     }
   }, [])

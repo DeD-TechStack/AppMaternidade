@@ -1,56 +1,71 @@
-/* Gerado de web/DESIGN.md por designmd export; não editar à mão */
-@theme {
-  --color-primary: #1a1511;
-  --color-neutral: #f6efe3;
-  --color-accent: #b0401c;
-  --color-on-accent: #fff8ee;
-  --color-info: #2b5c70;
-  --color-line: #1a1511;
-  --color-focus: #1a1511;
-  --color-paper-deep: #ebe1d0;
-  --color-field-1: #c9a39a;
-  --color-field-2: #b8adc4;
-  --color-night-primary: #e3d6c3;
-  --color-night-neutral: #17120e;
-  --color-night-accent: #c47055;
-  --color-night-on-accent: #17120e;
-  --color-night-info: #8fb0bf;
-  --color-night-line: #e3d6c3;
-  --color-night-focus: #f7efe2;
-  --color-night-paper-deep: #251e18;
-  --color-night-field-1: #3a2723;
-  --color-night-field-2: #2c2733;
-  --font-display: "Fraunces";
-  --font-heading: "Fraunces";
-  --font-body: "Instrument Sans";
-  --font-numeric: "Instrument Sans";
-  --font-label: "Instrument Sans";
-  --text-display: 4.5rem;
-  --text-heading: 2.25rem;
-  --text-body: 1.0625rem;
-  --text-numeric: 3.5rem;
-  --text-label: 0.875rem;
-  --tracking-display: -0.02em;
-  --tracking-heading: -0.01em;
-  --tracking-label: 0.04em;
-  --font-weight-display: 800;
-  --font-weight-heading: 600;
-  --font-weight-body: 400;
-  --font-weight-numeric: 600;
-  --font-weight-label: 600;
-  --radius-tag: 3px;
-  --radius-control: 6px;
-  --radius-card: 8px;
-  --radius-media: 8px;
-  --spacing-xs: 4px;
-  --spacing-sm: 8px;
-  --spacing-md: 16px;
-  --spacing-lg: 24px;
-  --spacing-xl: 40px;
-  --spacing-2xl: 64px;
-  --spacing-3xl: 96px;
-  --spacing-page-margin: 16px;
-  --spacing-measure: 65ch;
-  --spacing-target: 44px;
-  --spacing-target-night: 56px;
+/* Tokens do site "Campo de mel" (.oc/contrato/DESIGN.md v1, 11/11/2026, seções 1 a 3). Escritos à mão:
+   é o único arquivo de web/src com cor em hexadecimal ou rgb(). Todo o resto lê estas variáveis.
+   `static`: todas as variáveis saem no CSS, também as que só a amostra da /sistema lê por `var()`. */
+@theme static {
+  /* Duas famílias só: Literata e Outfit (DESIGN.md 2 e 8). As famílias padrão do Tailwind (sans, serif,
+     mono) apontam para elas, para nenhuma outra família (nem monospace) chegar ao CSS gerado. */
+  --fonte-exibicao: 'Literata Variable', serif;
+  --font-titulo: var(--fonte-exibicao);
+  --font-texto: 'Outfit Variable', system-ui, sans-serif;
+  --font-sans: var(--font-texto);
+  --font-serif: var(--font-titulo);
+  --font-mono: var(--font-texto);
+  --default-font-family: var(--font-texto);
+  --default-mono-font-family: var(--font-texto);
+  /* Peso dos títulos: o nível `exibicao` lê --peso-exibicao; titulo-1 a titulo-4 e a marca do cabeçalho leem
+     --peso-titulo. Uma troca de face (FG-2b) muda este bloco e --fonte-exibicao, e mais nada. */
+  --peso-exibicao: 600;
+  --peso-titulo: 600;
+
+  /* 1. Paleta (papéis; nomes do tema do Tailwind) */
+  --color-*: initial;
+  --color-papel: #F8F6EB;
+  --color-mel: #F2C14E;
+  --color-mel-claro: #F7D684;
+  --color-oliva: #697255;
+  --color-oliva-tinta: #4F5740;
+  --color-cacau: #2B2320;
+  --color-areia: #EADDC5;
+  --color-texto-2: #6E6560;
+  --color-branco: #FFFFFF;
+  --color-noite: #2B2320;
+  --color-noite-cartao: #3A302B;
+  --color-noite-2: #B9C09F;
+  --color-transparent: transparent;
+  --color-current: currentColor;
+
+  /* 3. Raios */
+  --radius-painel: 24px;
+  --radius-cartao: 20px;
+  --radius-pilula: 999px;
+  --radius-campo: 14px;
+}
+
+:root {
+  /* 3. As duas sombras e os dois gradientes permitidos, com os valores do DESIGN.md. */
+  --sombra-flutuante: 0 2px 4px rgb(43 35 32 / .08), 0 18px 40px rgb(43 35 32 / .16);
+  --sombra-cartao: 0 1px 2px rgb(43 35 32 / .06), 0 8px 24px rgb(43 35 32 / .06);
+  --luz-estudio: radial-gradient(120% 90% at 15% 10%, #F7D684 0%, #F2C14E 60%);
+  --brilho-mel: radial-gradient(closest-side, rgb(242 193 78 / .22), transparent);
+  /* Abrir e fechar (menu, caixas de diálogo, acordeão; styles/abrir-fechar.css). Movimento reduzido zera as duas. */
+  --mov-abrir: 220ms;
+  --mov-fechar: 160ms;
+  --mov-curva: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* The display variants of FG-2b (REP-HOME, temporary: FG-2b keeps one block and deletes the other two).
+   A is the default block above (Literata 600). B and C are chosen at boot by `?exibicao=b|c` (main.tsx). Nothing
+   else selects on the attribute: a variant is a block of tokens. */
+html[data-exibicao="b"] {
+  --fonte-exibicao: 'M PLUS Rounded 1c', sans-serif;
+  --peso-exibicao: 800;
+  --peso-titulo: 700;
+}
+
+html[data-exibicao="c"] {
+  --fonte-exibicao: 'Literata Variable', serif;
+  --peso-exibicao: 600;
+  --peso-titulo: 600;
+  --texto-exibicao-tamanho: clamp(2.5rem, calc(2.5rem + (100vw - 390px) * 24 / 1050), 4rem);
+  --texto-exibicao-entrelinha: clamp(2.75rem, calc(2.75rem + (100vw - 390px) * 24 / 1050), 4.25rem);
 }

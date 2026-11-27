@@ -1,0 +1,335 @@
+import { createHash } from 'node:crypto'
+import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs'
+import { join } from 'node:path'
+import { describe, expect, it } from 'vitest'
+
+// REP-HOME, round 1: the design-side contracts of the rebuilt `/`, read from disk (node:fs and
+// node:crypto only, so a missing file is an assertion failure and never a missing module).
+//   REPH-I-15  no forbidden library or effect in package.json or in the sources of `/`.
+//   REPH-I-17  display variants A/B/C, the boot read of `?exibicao=b|c`, the M PLUS Rounded 1c package,
+//              its licence, its PROVENANCE line and the meter's FONTES allow-list.
+//   REPH-I-21  DESIGN.md: a Motion row per moment 1-3 and a note on the variants.
+//   REPH-I-22  catalogo.ts: the records M15-M17 hold every motion number of the spec section 3.3.
+// The page sources are the ones of the composition "a luz, pela hora": `paginas/Inicio.tsx` and
+// `componentes/inicio-composicao/**` (inicio-casa and movimento/troca are not the page any more).
+
+const PASTA_WEB = process.cwd()
+const SRC = join(PASTA_WEB, 'src')
+const lerWeb = (...partes: string[]) => readFileSync(join(PASTA_WEB, ...partes), 'utf8')
+const lerSrc = (...partes: string[]) => readFileSync(join(SRC, ...partes), 'utf8')
+
+const PASTAS_DA_PAGINA = [join(SRC, 'componentes', 'inicio-composicao')]
+
+function arquivosDe(pasta: string): string[] {
+  if (!existsSync(pasta)) return []
+  return readdirSync(pasta).flatMap((nome) => {
+    const caminho = join(pasta, nome)
+    return statSync(caminho).isDirectory() ? arquivosDe(caminho) : [caminho]
+  })
+}
+
+/** The page's own sources (not its tests): the page file plus the composition folder. */
+const fontesDaPagina = () => [join(SRC, 'paginas', 'Inicio.tsx'), ...PASTAS_DA_PAGINA.flatMap(arquivosDe)].filter((arquivo) => !/\.test\.tsx?$/.test(arquivo))
+
+/** sha256 of a file's bytes with CRLF folded to LF (byte-safe via latin1), so a Windows CRLF checkout hashes like the LF file. */
+const normalizarLF = (bytes: Buffer): Buffer => Buffer.from(bytes.toString('latin1').replace(/\r\n/g, '\n'), 'latin1')
+const sha256LF = (bytes: Buffer): string => createHash('sha256').update(normalizarLF(bytes)).digest('hex')
+
+const semComentarios = (texto: string) => texto.replace(/\/\*[\s\S]*?\*\//g, '').replace(/(^|[^:'"`\\])\/\/.*$/gm, '$1')
+
+// ---------------------------------------------------------------------------------------------
+// REPH-I-15
+// ---------------------------------------------------------------------------------------------
+
+const PACOTES_PROIBIDOS =
+  /^(gsap|lenis|@studio-freight\/lenis|three|@react-three\/.+|@rive-app\/.+|lottie-web|@lottiefiles\/.+|@splinetool\/.+)$/
+
+/** Forbidden packages named in a package.json text (dependencies, devDependencies, peer and optional). */
+function pacotesProibidos(packageJson: string): string[] {
+  const dados = JSON.parse(packageJson) as Record<string, Record<string, string> | undefined>
+  const nomes = ['dependencies', 'devDependencies', 'peerDependencies', 'optionalDependencies'].flatMap((chave) => Object.keys(dados[chave] ?? {}))
+  return nomes.filter((nome) => PACOTES_PROIBIDOS.test(nome))
+}
+
+const EFEITOS_PROIBIDOS: Array<[nome: string, padrao: RegExp]> = [
+  ['backdrop-filter', /backdrop-filter/],
+  ['filter: blur()', /blur\(/],
+  ['gradient', /-gradient\(/],
+  ['infinite loop', /iteration-count\s*:\s*infinite|\binfinite\b/],
+  ['letreiro (marquee)', /cm-letreiro/],
+  ['3D transform', /perspective|preserve-3d|translate3d|rotate[XYZ]\(|scale3d|matrix3d/],
+  ['forbidden library import', /(?:from\s+|import\(\s*|require\(\s*)['"](?:gsap|lenis|@studio-freight\/lenis|three|@react-three\/[^'"]+|@rive-app\/[^'"]+|lottie-web|@lottiefiles\/[^'"]+|@splinetool\/[^'"]+)['"]/],
+]
+
+/** The forbidden effects a source text carries (comments removed). */
+const efeitosProibidos = (texto: string) => EFEITOS_PROIBIDOS.filter(([, padrao]) => padrao.test(semComentarios(texto))).map(([nome]) => nome)
+
+// The one gradient the composition keeps: a wall split at the seam (hard stop, no blend), as in estilo.test.ts. Only this
+// exact shape, only in composicao.css, is taken out of the text before the scan; the 'gradient' pattern itself stays.
+const COMPOSICAO_CSS = join(SRC, 'componentes', 'inicio-composicao', 'composicao.css')
+const DIVISAO_NA_COSTURA =
+  /^linear-gradient\(to right, (transparent|var\(--[\w-]+\)) 0 var\(--costura\), var\(--[\w-]+\) var\(--costura\)\)$/
+
+/** The `*-gradient(...)` calls of a text, whole (nested parentheses included). */
+function gradientes(texto: string): string[] {
+  const achados: string[] = []
+  for (const m of texto.matchAll(/(?:repeating-)?(?:linear|radial|conic)-gradient\(/g)) {
+    let fundo = 1
+    let i = m.index + m[0].length
+    while (i < texto.length && fundo > 0) {
+      if (texto[i] === '(') fundo += 1
+      else if (texto[i] === ')') fundo -= 1
+      i += 1
+    }
+    achados.push(texto.slice(m.index, i))
+  }
+  return achados
+}
+
+/** The text with its seam-division gradients removed (any other gradient stays in it). */
+const semDivisoesNaCostura = (texto: string) => gradientes(texto).filter((g) => DIVISAO_NA_COSTURA.test(g)).reduce((t, g) => t.split(g).join(''), texto)
+
+/** The forbidden effects of a page source: the seam exception applies to composicao.css only. */
+const efeitosDaFonte = (arquivo: string, texto: string) => efeitosProibidos(arquivo === COMPOSICAO_CSS ? semDivisoesNaCostura(texto) : texto)
+
+describe('REPH-I-15 no forbidden library or effect on /', () => {
+  it('REPH-I-15 package.json has no forbidden package, the page sources exist and carry no forbidden effect, and the scanner sees each one', () => {
+    // Controls of the scanners.
+    expect(pacotesProibidos('{"dependencies":{"gsap":"3.0.0"}}')).toEqual(['gsap'])
+    expect(pacotesProibidos('{"devDependencies":{"@react-three/fiber":"1"}}')).toEqual(['@react-three/fiber'])
+    expect(pacotesProibidos('{"dependencies":{"motion":"12.43.0"}}')).toEqual([])
+    expect(efeitosProibidos('.a { backdrop-filter: blur(4px) }')).toEqual(expect.arrayContaining(['backdrop-filter', 'filter: blur()']))
+    expect(efeitosProibidos('.a { animation: x 1s infinite }')).toContain('infinite loop')
+    expect(efeitosProibidos('.a { background: linear-gradient(red, blue) }')).toContain('gradient')
+    expect(efeitosProibidos('.a { transform: perspective(10px) }')).toContain('3D transform')
+    expect(efeitosProibidos("import gsap from 'gsap'")).toContain('forbidden library import')
+    expect(efeitosProibidos('/* infinite */ .a { color: red }')).toEqual([])
+    // Controls of the seam exception: the hard-stop division passes on composicao.css, a blend or another file does not.
+    const costura = '.a { background: linear-gradient(to right, transparent 0 var(--costura), var(--noite) var(--costura)); }'
+    expect(efeitosDaFonte(COMPOSICAO_CSS, costura)).toEqual([])
+    expect(efeitosDaFonte('outro.css', costura)).toContain('gradient')
+    expect(efeitosDaFonte(COMPOSICAO_CSS, '.a { background: linear-gradient(to right, var(--a), var(--b)); }')).toContain('gradient')
+    expect(efeitosDaFonte(COMPOSICAO_CSS, `${costura} .b { background: radial-gradient(closest-side, var(--a), transparent); }`)).toContain('gradient')
+    // The real thing.
+    expect(pacotesProibidos(lerWeb('package.json'))).toEqual([])
+    for (const pasta of PASTAS_DA_PAGINA) expect(existsSync(pasta), pasta).toBe(true)
+    const fontes = fontesDaPagina()
+    // The page file and the composition stylesheet (the folder holds nothing else).
+    expect(fontes.length).toBeGreaterThanOrEqual(2)
+    expect(fontes).toContain(COMPOSICAO_CSS)
+    for (const arquivo of fontes) expect(efeitosDaFonte(arquivo, readFileSync(arquivo, 'utf8')), arquivo).toEqual([])
+  })
+
+  it('REPH-I-15 the motion library is motion 12.43.0 (exact) and the page imports only from motion/react', () => {
+    const pacote = JSON.parse(lerWeb('package.json')) as { dependencies?: Record<string, string> }
+    expect(pacote.dependencies?.motion).toBe('12.43.0')
+    for (const pasta of PASTAS_DA_PAGINA) expect(existsSync(pasta), pasta).toBe(true)
+    for (const arquivo of fontesDaPagina().filter((f) => /\.tsx?$/.test(f))) {
+      const importados = [...semComentarios(readFileSync(arquivo, 'utf8')).matchAll(/from\s+['"]([^'"]+)['"]/g)].map((m) => m[1])
+      for (const modulo of importados.filter((m) => /^(motion|framer-motion)(\/|$)/.test(m))) {
+        expect(modulo, arquivo).toBe('motion/react')
+      }
+    }
+  })
+
+  it('REPH-I-15 the composition stylesheet has no infinite loop and no cm-letreiro rule exists for /', () => {
+    const css = arquivosDe(join(SRC, 'componentes', 'inicio-composicao')).filter((f) => f.endsWith('.css'))
+    expect(css.length).toBeGreaterThan(0)
+    for (const arquivo of css) {
+      const limpo = semComentarios(readFileSync(arquivo, 'utf8'))
+      expect(limpo, arquivo).not.toMatch(/infinite/)
+      expect(limpo, arquivo).not.toMatch(/cm-letreiro/)
+    }
+  })
+})
+
+// ---------------------------------------------------------------------------------------------
+// REPH-I-17
+// ---------------------------------------------------------------------------------------------
+
+/** The body of the first rule whose selector matches `seletor` (a regex source), or null. */
+function bloco(css: string, seletor: string): string | null {
+  const m = new RegExp(`${seletor}\\s*\\{([^}]*)\\}`).exec(semComentarios(css))
+  return m ? m[1] : null
+}
+
+const PACOTE_FONTE = '@fontsource/m-plus-rounded-1c'
+const LICENCA_FONTE = join('licencas', 'fontsource-m-plus-rounded-1c.txt')
+
+describe('REPH-I-17 display variants A/B/C and the M PLUS Rounded 1c package', () => {
+  it('REPH-I-17 tokens.css: variant A is the default block, B and C are html[data-exibicao] blocks with their faces, weights and sizes', () => {
+    const tokens = lerSrc('styles', 'tokens.css')
+    // A: the default token block keeps Literata 600 (the first declarations, before any variant block).
+    const padrao = semComentarios(tokens).split(/html\[data-exibicao/)[0]
+    expect(padrao).toMatch(/--fonte-exibicao:\s*'Literata Variable',\s*serif/)
+    expect(padrao).toMatch(/--peso-exibicao:\s*600/)
+    expect(padrao).toMatch(/--peso-titulo:\s*600/)
+    // B: M PLUS Rounded 1c, weights 800 (exibicao) and 700 (titulo), same sizes as A.
+    const b = bloco(tokens, `html\\[data-exibicao=["']b["']\\]`)
+    expect(b, 'html[data-exibicao="b"] block').not.toBeNull()
+    expect(b).toMatch(/--fonte-exibicao:\s*['"]M PLUS Rounded 1c['"]/)
+    expect(b).toMatch(/--peso-exibicao:\s*800/)
+    expect(b).toMatch(/--peso-titulo:\s*700/)
+    // C: Literata 600 at 64/68 (1440) and 40/44 (390).
+    const c = bloco(tokens, `html\\[data-exibicao=["']c["']\\]`)
+    expect(c, 'html[data-exibicao="c"] block').not.toBeNull()
+    expect(c).toMatch(/--fonte-exibicao:\s*['"]Literata Variable['"]/)
+    expect(c).toMatch(/--peso-exibicao:\s*600/)
+    for (const medida of [/(64px|4rem)\b/, /(68px|4\.25rem)\b/, /(40px|2\.5rem)\b/, /(44px|2\.75rem)\b/]) expect(c).toMatch(medida)
+    // The variants are blocks of tokens: nothing else selects on the attribute.
+    expect([...semComentarios(tokens).matchAll(/data-exibicao/g)]).toHaveLength(2)
+  })
+
+  it('REPH-I-17 main.tsx no longer reads ?exibicao nor sets data-exibicao (C6)', () => {
+    const principal = lerSrc('main.tsx')
+    expect(principal).not.toMatch(/exibicao/)
+    expect(principal).not.toMatch(/URLSearchParams/)
+    expect(principal).not.toMatch(/dataset\./)
+    // The removed ?paleta boot (palette B): the page runs on palette A only.
+    expect(principal).not.toMatch(/paleta/)
+  })
+
+  it('REPH-I-17 @fontsource/m-plus-rounded-1c is 5.3.0 exactly, no longer imported by index.css, its licence copied and its PROVENANCE line written', () => {
+    const pacote = JSON.parse(lerWeb('package.json')) as { dependencies?: Record<string, string> }
+    expect(pacote.dependencies?.[PACOTE_FONTE]).toBe('5.3.0')
+    const trava = JSON.parse(lerWeb('package-lock.json')) as { packages?: Record<string, { version?: string }> }
+    expect(trava.packages?.[`node_modules/${PACOTE_FONTE}`]?.version).toBe('5.3.0')
+
+    // The licence copy, and the PROVENANCE row that points at it with its sha256.
+    expect(existsSync(join(PASTA_WEB, LICENCA_FONTE))).toBe(true)
+    const licenca = readFileSync(join(PASTA_WEB, LICENCA_FONTE))
+    expect(licenca.toString('utf8')).toMatch(/SIL OPEN FONT LICENSE/i)
+    const hash = sha256LF(licenca)
+    // Control: a CRLF copy of the same text must normalize to the same hash as the LF text.
+    const copiaCRLF = Buffer.from(normalizarLF(licenca).toString('latin1').replace(/\n/g, '\r\n'), 'latin1')
+    expect(sha256LF(copiaCRLF)).toBe(hash)
+    const linha = lerWeb('PROVENANCE.md')
+      .split(/\r?\n/)
+      .find((l) => l.includes(PACOTE_FONTE))
+    expect(linha, `a PROVENANCE.md line for ${PACOTE_FONTE} (licence sha256 ${hash})`).toBeDefined()
+    expect(linha).toContain('5.3.0')
+    expect(linha).toContain('OFL-1.1')
+    expect(linha).toContain('web/licencas/fontsource-m-plus-rounded-1c.txt')
+    expect(linha).toContain(hash)
+    expect(linha).toMatch(/latin/i)
+    expect(linha).toMatch(/700/)
+    expect(linha).toMatch(/800/)
+
+    // C6: index.css no longer imports the package (the B variant is gone from the page).
+    const css = lerSrc('index.css')
+    expect(css).not.toMatch(/m-plus-rounded-1c/)
+  })
+
+  it('REPH-I-17 the meter FONTES allow-list names M PLUS Rounded 1c next to Literata and Outfit', () => {
+    const medidor = readFileSync(join(PASTA_WEB, 'scripts', 'medir-dom.mjs'), 'utf8')
+    const lista = /export const FAMILIAS_PERMITIDAS = \[([^\]]*)\]/.exec(medidor)
+    expect(lista).not.toBeNull()
+    for (const familia of ['Literata', 'Outfit', 'M PLUS Rounded 1c']) expect(lista![1]).toContain(`'${familia}'`)
+  })
+})
+
+// ---------------------------------------------------------------------------------------------
+// REPH-I-21
+// ---------------------------------------------------------------------------------------------
+
+/** The text of the `## <titulo>` section of a markdown file, up to the next `## `. */
+function secao(markdown: string, titulo: string): string {
+  const inicio = markdown.search(new RegExp(`^## ${titulo}\\s*$`, 'm'))
+  if (inicio === -1) return ''
+  const resto = markdown.slice(inicio + 1)
+  const fim = resto.search(/^## /m)
+  return fim === -1 ? resto : resto.slice(0, fim)
+}
+
+describe('REPH-I-21 DESIGN.md: a Motion row per moment 1-3 and a note on the variants', () => {
+  it('REPH-I-21 the Motion table has rows for M15 (lamp), M16 (night wipe) and M17 (caption) with their numbers and a reduced-motion cell', () => {
+    const movimento = secao(lerWeb('DESIGN.md'), 'Motion')
+    const linhas = movimento.split(/\r?\n/).filter((linha) => linha.startsWith('|'))
+    const linhaDe = (id: string) => linhas.find((linha) => new RegExp(`\\b${id}\\b`).test(linha))
+    const m15 = linhaDe('M15')
+    const m16 = linhaDe('M16')
+    const m17 = linhaDe('M17')
+    expect(m15, 'a Motion row for M15').toBeDefined()
+    expect(m16, 'a Motion row for M16').toBeDefined()
+    expect(m17, 'a Motion row for M17').toBeDefined()
+    for (const numero of ['240', '320', '300', '80']) expect(m15).toMatch(new RegExp(`\\b${numero}\\b`))
+    for (const numero of ['600', '480', '360']) expect(m16).toMatch(new RegExp(`\\b${numero}\\b`))
+    for (const numero of ['160', '220']) expect(m17).toMatch(new RegExp(`\\b${numero}\\b`))
+    expect(m17).toMatch(/\b6\b/)
+    // Three cells at least (where | movement | reduced motion), the last one not empty.
+    for (const linha of [m15!, m16!, m17!]) {
+      const celulas = linha.split('|').slice(1, -1).map((c) => c.trim())
+      expect(celulas.length, linha).toBeGreaterThanOrEqual(3)
+      expect(celulas[celulas.length - 1], linha).not.toBe('')
+    }
+  })
+
+  it('REPH-I-21 the Typography section carries a note on the three variant blocks', () => {
+    const tipografia = secao(lerWeb('DESIGN.md'), 'Typography')
+    expect(tipografia).toContain('data-exibicao')
+    expect(tipografia).toContain('M PLUS Rounded 1c')
+    expect(tipografia).toMatch(/\bB\b/)
+    expect(tipografia).toMatch(/\bC\b/)
+    // The note for the variants is temporary (FG-2b removes the losing blocks): the line says so.
+    const notas = tipografia.split(/\r?\n/).filter((linha) => linha.includes('data-exibicao'))
+    expect(notas.some((linha) => /FG-2b|tempor/i.test(linha))).toBe(true)
+  })
+})
+
+// ---------------------------------------------------------------------------------------------
+// REPH-I-22
+// ---------------------------------------------------------------------------------------------
+
+/** The body of the record `Mnn: { ... }` in catalogo.ts: from its key to the next record key or the end of the object. */
+function registro(catalogo: string, id: string): string | null {
+  // The body starts after the opening brace of the key (an indented line is fine) and stops at the next record key
+  // or at the closing of the object (`as const` or `satisfies`).
+  const abre = new RegExp(`^[ \\t]*${id}:\\s*\\{`, 'm').exec(catalogo)
+  if (!abre) return null
+  const resto = catalogo.slice(abre.index + abre[0].length)
+  const fim = resto.search(/^[ \t]*M\d+:\s*\{|^\}\s*(?:as const|satisfies)/m)
+  const corpo = fim === -1 ? resto : resto.slice(0, fim)
+  return `${id}: {${corpo}`
+}
+
+describe('REPH-I-22 catalogo.ts: M15 (lamp), M16 (night wipe) and M17 (caption) hold every number of the section 3.3 table', () => {
+  const catalogo = () => lerSrc('movimento', 'catalogo.ts')
+
+  it('REPH-I-22 M15 is the lamp: cone 240 ms, pool 320 ms, 80 ms stagger, 300 ms delay, curve (0.16, 1, 0.3, 1), opacity only', () => {
+    const m15 = registro(catalogo(), 'M15')
+    expect(m15, 'record M15').not.toBeNull()
+    expect(m15).toMatch(/id:\s*'M15'/)
+    expect(m15).toMatch(/tipo:\s*'tempo'/)
+    for (const numero of ['240', '320']) expect(m15).toMatch(new RegExp(`\\b${numero}\\b`))
+    expect(m15).toMatch(/escalonamentoMs:\s*80\b/)
+    expect(m15).toMatch(/atrasoMs:\s*300\b/)
+    expect(m15).toMatch(/\[\s*0\.16,\s*1,\s*0\.3,\s*1\s*\]/)
+  })
+
+  it('REPH-I-22 M16 is the night wipe: a scroll record with the pin distances 600 (1440), 480 (1024-1279) and 360 (below 1024), the svh equivalent in a comment', () => {
+    const m16 = registro(catalogo(), 'M16')
+    expect(m16, 'record M16').not.toBeNull()
+    expect(m16).toMatch(/id:\s*'M16'/)
+    expect(m16).toMatch(/tipo:\s*'rolagem'/)
+    for (const numero of ['600', '480', '360']) expect(m16).toMatch(new RegExp(`\\b${numero}\\b`))
+    expect(m16).toMatch(/janelaPx/)
+    expect(m16).toMatch(/svh/)
+  })
+
+  it('REPH-I-22 M17 is the caption: out 160 ms, in 220 ms, 6 px, curve (0.4, 0, 0.2, 1)', () => {
+    const m17 = registro(catalogo(), 'M17')
+    expect(m17, 'record M17').not.toBeNull()
+    expect(m17).toMatch(/id:\s*'M17'/)
+    expect(m17).toMatch(/duracaoSaidaMs:\s*160\b/)
+    expect(m17).toMatch(/duracaoMs:\s*220\b/)
+    expect(m17).toMatch(/deslocamentoPx:\s*6\b/)
+    expect(m17).toMatch(/\[\s*0\.4,\s*0,\s*0\.2,\s*1\s*\]/)
+  })
+
+  it('REPH-I-22 the three records are in the catalogue object and the page folders exist', () => {
+    // The composition runs on native scroll/CSS, so no source reads CATALOGO.M15..M17 any more: the records stay as the spec.
+    const texto = catalogo()
+    for (const id of ['M15', 'M16', 'M17']) expect(registro(texto, id), id).not.toBeNull()
+    expect(PASTAS_DA_PAGINA.every((pasta) => existsSync(pasta))).toBe(true)
+  })
+})

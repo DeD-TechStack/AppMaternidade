@@ -1,14 +1,13 @@
+import { readFileSync } from 'node:fs'
+import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
 import { fireEvent, screen } from '@testing-library/react'
-import axe from 'axe-core'
-import { criarEstadoInicial, type EstadoPrototipo } from './prototipo/estado.ts'
-import { renderizarRota } from './teste/renderizarRota.tsx'
-
-const claro = (): EstadoPrototipo => criarEstadoInicial(Date.now())
-const madrugada = (): EstadoPrototipo => ({ ...criarEstadoInicial(Date.now()), madrugada: true })
+import { rodarAxe } from './teste/axe.ts'
+import { renderizarRota, renderizarRotaPronta, aguardarCarga } from './teste/renderizarRota.tsx'
+import { semSessaoEmAndamento } from './teste/rotina.fixture.ts'
 
 async function violacoes(container: HTMLElement): Promise<string[]> {
-  const resultado = await axe.run(container, {
+  const resultado = await rodarAxe(container, {
     rules: {
       // O jsdom não calcula cores nem layout, então a regra de contraste do axe
       // não tem como avaliar a página. O contraste é conferido em estilo.test.ts.
@@ -34,49 +33,54 @@ describe('acessibilidade (axe-core)', () => {
     expect(await violacoes(container)).toEqual([])
   })
 
-  const temas: Array<[string, () => EstadoPrototipo]> = [
-    ['claro', claro],
-    ['madrugada', madrugada],
+  const temas: Array<[string, boolean]> = [
+    ['claro', false],
+    ['madrugada', true],
   ]
 
-  for (const [tema, estado] of temas) {
+  for (const [tema, madrugada] of temas) {
     it(`não tem violações no Hoje (${tema})`, async () => {
-      const { container } = renderizarRota('/app/hoje', { estadoInicial: estado() })
-      await screen.findByRole('heading', { level: 1 })
-      expect(document.documentElement.hasAttribute('data-tema')).toBe(tema === 'madrugada')
+      const { container } = await renderizarRotaPronta('/app/hoje', { madrugada })
+      expect(document.documentElement.hasAttribute('data-tema')).toBe(madrugada)
 
       expect(await violacoes(container)).toEqual([])
     })
 
     it(`não tem violações na Sessão (${tema})`, async () => {
-      const { container } = renderizarRota('/app/sessao', { estadoInicial: estado() })
-      await screen.findByRole('heading', { level: 1 })
-      expect(document.documentElement.hasAttribute('data-tema')).toBe(tema === 'madrugada')
+      const { container } = await renderizarRotaPronta('/app/sessao', { madrugada })
+      expect(document.documentElement.hasAttribute('data-tema')).toBe(madrugada)
+
+      expect(await violacoes(container)).toEqual([])
+    })
+
+    it(`não tem violações no formulário de registro (${tema})`, async () => {
+      const { container } = await renderizarRotaPronta('/app/registro/novo?tipo=mamadeira', { madrugada })
 
       expect(await violacoes(container)).toEqual([])
     })
   }
 
   it('não tem violações na Sessão vazia', async () => {
-    const { container } = renderizarRota('/app/sessao', { estadoInicial: { ...claro(), sessao: null } })
-    await screen.findByRole('heading', { level: 1 })
+    const { container } = await renderizarRotaPronta('/app/sessao', { ajustarRotina: semSessaoEmAndamento })
 
     expect(await violacoes(container)).toEqual([])
   })
 
-  it('não tem violações no Hoje com a escolha de fralda aberta e a confirmação na tela', async () => {
-    const { container } = renderizarRota('/app/hoje')
+  it('não tem violações no Hoje com o painel da fralda, a fralda registrada (confirmação) e o Mais aberto', async () => {
+    const { container } = await renderizarRotaPronta('/app/hoje')
     fireEvent.click(screen.getByRole('button', { name: 'Registrar fralda de Heloísa' }))
+    expect(screen.getByRole('group', { name: 'Fralda de Heloísa' })).toBeTruthy()
     expect(await violacoes(container)).toEqual([])
 
     fireEvent.click(screen.getByRole('button', { name: 'Xixi' }))
+    await aguardarCarga()
     expect(screen.getByRole('status').textContent).toContain('Fralda registrada: Xixi')
     fireEvent.click(screen.getByRole('button', { name: 'Mais registros' }))
     expect(await violacoes(container)).toEqual([])
   })
 
   it('não tem violações na Sessão com a nota e com a pergunta de descarte abertas', async () => {
-    const { container } = renderizarRota('/app/sessao')
+    const { container } = await renderizarRotaPronta('/app/sessao')
 
     fireEvent.click(screen.getByRole('button', { name: 'Encerrar e anotar' }))
     expect(await violacoes(container)).toEqual([])
@@ -84,5 +88,17 @@ describe('acessibilidade (axe-core)', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Descartar' }))
     expect(screen.getByText('Descartar esta sessão?')).toBeTruthy()
     expect(await violacoes(container)).toEqual([])
+  })
+})
+
+describe('foco do campo de data (A11Y-002)', () => {
+  // O jsdom não calcula o `outline` de um campo de data de verdade: a prova é a regra no CSS compartilhado.
+  const css = readFileSync(join(process.cwd(), 'src', 'styles', 'site.css'), 'utf8')
+
+  it('há uma regra input[type=date]:focus-visible com anel de 3 px na cor de foco', () => {
+    const regra = /input\[type=['"]date['"]\]:focus-visible\s*\{([^}]*)\}/.exec(css)
+    expect(regra, "falta a regra `input[type='date']:focus-visible` em styles/site.css").not.toBeNull()
+    expect(regra?.[1]).toMatch(/outline:\s*3px solid var\(--cor-foco\)/)
+    expect(regra?.[1]).not.toMatch(/outline:\s*none/)
   })
 })

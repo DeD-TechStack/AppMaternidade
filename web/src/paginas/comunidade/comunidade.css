@@ -1,0 +1,8 @@
+/* Os espaços da Comunidade em duas colunas entre 640 e 1023 px: a `Colunas` só sabe empilhar ou abrir tudo de uma vez
+   (aqui, três colunas a partir de 1024). Os pontos de 640 e de 1024 são os de hoje (`min-[40rem]` e `lg`). O vão é o
+   da primitiva (`bloco`). */
+@media (min-width: 40em) and (max-width: 63.99em) {
+  .comunidade-espacos[data-h~='colunas'] {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}

@@ -1,108 +1,111 @@
-// Textos do Início. Já passaram pela revisão de copy: não reescrever.
+// Textos do Início (MAT-49c) e os avisos comuns. A cópia é final: o Início lê tudo daqui.
 
-export const PROMESSA = 'Quem chega para o turno já sabe o que aconteceu.'
+// A promessa do Início: a primeira linha reta e a segunda, inteira, em itálico. O h1 lido inteiro
+// (textContent) é igual a PROMESSA.
+const PROMESSA_LINHAS = ['A rotina do bebê,', 'dividida com carinho.'] as const
+export const PROMESSA = PROMESSA_LINHAS.join(' ')
 
-export const PILARES = ['Rotina', 'Desenvolvimento', 'Cuidado compartilhado', 'Comunidade'] as const
-
-export const APRESENTACAO =
-  'Um app para a família registrar a rotina do bebê, dividir os cuidados e acompanhar o desenvolvimento, com uma comunidade separada da rotina privada.'
-
-export const TELAS = {
-  titulo: 'Duas telas do protótipo',
-  texto:
-    'Na tela Hoje ficam a soneca que Bruno começou, a nota que Carla deixou às 22:40 e os botões de registro na parte de baixo, ao alcance do polegar. A tela da sessão mostra o cronômetro, contado a partir da hora de início, e quem começou.',
-} as const
-
-export const PARA_QUE_SERVE = {
-  titulo: 'Para que serve',
-  linhas: [
-    {
-      rotulo: 'O problema',
-      texto:
-        'Nos primeiros meses, a rotina do bebê fica espalhada entre a memória, o papel e as mensagens. Quem assume o turno pergunta quando foi a última mamada, que horas a soneca começou e se alguém já passou a pomada.',
-    },
-    {
-      rotulo: 'Como ajuda',
-      texto:
-        'Cada adulto autorizado registra sono, mamada, fralda e tummy time com um ou dois toques, e todos veem o mesmo dia, com o nome de quem registrou. As notas de passagem aparecem no alto da tela de quem chega.',
-    },
-    {
-      rotulo: 'O que muda',
-      texto:
-        'Menos perguntas na troca de turno e menos coisa para guardar de cabeça. O app não cobra metas, não marca nada como atrasado e não dá pontos.',
-    },
-  ],
-} as const
-
-export const FATOS = {
-  titulo: 'O que o app faz',
-  itens: [
-    {
-      valor: '7',
-      legenda:
-        'tipos de registro: sono, amamentação, mamadeira, alimentação sólida, fralda, tummy time e observação.',
-    },
-    { valor: 'Autoria', legenda: 'Cada registro mostra quem fez.' },
-    { valor: 'Convites', legenda: 'Cada cuidador entra por convite, com papel e prazo de validade.' },
-    { valor: 'Lembretes', legenda: 'Os lembretes vêm desligados. Você liga os que quiser.' },
-  ],
-} as const
-
-export const MADRUGADA = {
-  titulo: 'De madrugada também',
-  texto:
-    'O modo madrugada escurece a tela, diminui o brilho e aumenta os botões, para registrar com uma mão e a luz apagada.',
-} as const
-
-export const CHAMADA = {
-  titulo: 'Veja um dia de Heloísa',
-  texto: 'Um dia de exemplo com Heloísa, 3 meses, e quem cuida dela: Juliana, Bruno e Carla.',
-  link: 'Ver o protótipo do Hoje',
-} as const
-
-export const RODAPE = 'Protótipo em construção. Nada aqui é dado real.'
-
-// Links-âncora do cabeçalho do Início: o rótulo e o id da seção para onde cada um leva.
-export const NAVEGACAO = [
-  { rotulo: 'As telas', alvo: 'secao-telas' },
-  { rotulo: 'Para que serve', alvo: 'secao-serve' },
-  { rotulo: 'Madrugada', alvo: 'secao-madrugada' },
-] as const
-
-// Parágrafo ao lado do celular da madrugada: diz o que a miniatura mostra.
-export const LEGENDA_MADRUGADA =
-  'No celular, a mesma sessão de tummy time no modo madrugada: tela escura, cronômetro grande e botões maiores.'
-
-// A atividade sugerida do Tummy time, na tela Sessão e na miniatura dela no Início.
-export const ATIVIDADE_TUMMY = 'Espelho no chão'
-
-// O que as telas em miniatura dos aparelhos do Início mostram. São dados fixos de uma família
-// fictícia, os mesmos do estado inicial do protótipo; o relógio não anda.
-export const MINIATURAS = {
-  hoje: {
-    titulo: 'Hoje',
-    bebe: 'Heloísa, 3 meses',
-    sessao: { rotulo: 'Sono', duracao: '1 h 12 min', pessoa: 'Bruno' },
-    nota: { rotulo: 'Para você saber', texto: 'Pomada só à noite.', autor: 'Carla, 22:40' },
-    ultimos: {
-      rotulo: 'Últimos',
+export const INICIO = {
+  heroi: {
+    titulo: PROMESSA_LINHAS,
+    lide: 'Registre mamada, sono e fralda em dois toques. Na troca de turno, quem chega já vê o que aconteceu.',
+    primario: { rotulo: 'Começar grátis', destino: '/app/hoje' },
+    secundario: { rotulo: 'Ver como funciona', destino: '/como-funciona' },
+  },
+  numeros: { titulo: 'Números do app' },
+  selos: { titulo: 'O que o app promete' },
+  turno: {
+    titulo: ['Quem chega no turno', 'já sabe o que houve.'],
+    texto:
+      'Cada pessoa registra o que fez, com o nome. Na troca, o app mostra tudo o que aconteceu desde a última vez que você olhou.',
+    cartao: {
+      titulo: 'Desde que você saiu',
       itens: [
-        { rotulo: 'Mamada', quando: 'há 2 h 10 min' },
-        { rotulo: 'Fralda', quando: 'há 50 min' },
-        { rotulo: 'Tummy time', quando: 'ontem 17:30' },
+        { texto: 'Mamada, lado esquerdo', pessoa: 'Ju', hora: '02:40' },
+        { texto: 'Fralda trocada', pessoa: 'Ícaro', hora: '03:10' },
+        { texto: 'Soneca começou', pessoa: 'Carla', hora: '03:25' },
       ],
     },
   },
-  sessao: {
-    titulo: 'Tummy time de Heloísa',
-    cronometro: '04:35',
-    hora: '17:02',
-    pessoa: 'Juliana',
-    atividade: ATIVIDADE_TUMMY,
-    acoes: ['Encerrar', 'Encerrar e anotar', 'Descartar'],
+  madrugada: {
+    titulo: ['De madrugada,', 'com uma mão só.'],
+    lide: 'O botão de iniciar mamada fica na metade de baixo da tela, grande e amarelo sobre o fundo escuro.',
+    botao: { rotulo: 'Ver o modo madrugada', destino: '/como-funciona' },
+  },
+  tabela: {
+    titulo: ['O caderno ajuda.', 'O app divide.'],
+    legenda: 'AppMaternidade e caderno com mensagens soltas',
+    linhas: [
+      { necessidade: 'Registrar uma mamada com dois toques', app: true, caderno: false },
+      { necessidade: 'Ver o que a outra pessoa já registrou', app: true, caderno: false },
+      { necessidade: 'Funcionar de madrugada, com uma mão', app: true, caderno: false },
+      { necessidade: 'Dar acesso com prazo para a babá', app: true, caderno: false },
+      { necessidade: 'Sem metas nem comparações', app: true, caderno: true },
+    ],
+  },
+  citacao: {
+    texto: 'Pomada só à noite, a de dia acabou. Se ela acordar, o bico está na bolsa.',
+    autor: 'Carla, avó da Helo, na nota das 22:40',
+  },
+  depoimentos: {
+    titulo: ['Quem cuida', 'conta como é.'],
+    relatos: [
+      {
+        texto: 'Agora eu sei a hora da última mamada sem acordar ninguém para perguntar.',
+        nome: 'Marina',
+        papel: 'Mãe de primeira viagem',
+      },
+      {
+        texto: 'Eu anoto a soneca e a mãe dela vê do trabalho. Não preciso mandar mensagem.',
+        nome: 'Seu Antônio',
+        papel: 'Avô, cuida às terças',
+      },
+      {
+        texto: 'Vejo só o que preciso no meu turno, e o acesso acaba quando a gente combinou.',
+        nome: 'Lúcia',
+        papel: 'Babá de meio período',
+      },
+    ],
+  },
+  perguntas: {
+    titulo: ['Perguntas', 'de quem chega agora.'],
+    itens: [
+      {
+        pergunta: 'Quanto custa?',
+        resposta:
+          'O preço, se houver, ainda não foi definido, e nunca haverá anúncio feito com os dados da sua rotina.',
+      },
+      {
+        pergunta: 'Quem vê os registros do bebê?',
+        resposta: 'Só as pessoas que você convidar para a família. Nada do que é registrado aparece na comunidade.',
+      },
+      {
+        pergunta: 'Funciona de madrugada?',
+        resposta:
+          'Funciona. O modo madrugada escurece a tela e deixa o botão de mamada grande, na metade de baixo, ao alcance do polegar.',
+      },
+      {
+        pergunta: 'Posso convidar a babá?',
+        resposta: 'Pode. O convite tem papel e prazo, e você revoga o acesso quando quiser.',
+      },
+    ],
+  },
+  fechamento: {
+    titulo: ['Sua família inteira', 'no mesmo dia.'],
+    primario: { rotulo: 'Começar grátis', destino: '/app/hoje' },
   },
 } as const
 
-// O aviso de toda tela quando o site não tem as variáveis do banco: nada é salvo.
+// Os 3 números do produto: cada um é um fato, numa linha.
+export const FATOS = [
+  { valor: '7', legenda: 'tipos de registro' },
+  { valor: '2', legenda: 'toques' },
+  { valor: '0', legenda: 'metas ou comparações' },
+] as const
+
+// A atividade sugerida do Tummy time, na tela Sessão.
+export const ATIVIDADE_TUMMY = 'Espelho no chão'
+
+// O aviso do site quando ele não tem as variáveis do banco: nada é salvo. Fica numa linha do rodapé.
 export const AVISO_DEMONSTRACAO =
   'Demonstração sem banco: nada do que você registra aqui é salvo. Ao recarregar a página, tudo volta ao começo.'

@@ -4,6 +4,9 @@ import { resolve } from 'node:path'
 import { defineConfig, type Plugin } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
+import { imagetools } from 'vite-imagetools'
+import { chavePublica } from './build/conferirChavePublica.ts'
+import { politicaDeConteudo } from './build/politicaDeConteudo.ts'
 
 // O subcaminho do site no build: vazio ou ausente é "/"; "/x" vira "/x/"; o resto não vale.
 function subcaminhoDoBuild(valor: string | undefined): string {
@@ -28,12 +31,37 @@ function paginaNaoEncontrada(): Plugin {
   }
 }
 
+// Com as páginas em pacotes à parte, o CSS dos pacotes compartilhados vai para o arquivo antes do `index.css`. A ordem
+// das camadas vale pela primeira aparição; sem esta linha a `components` ficaria abaixo da `base` do Tailwind.
+function ordemDasCamadas(): Plugin {
+  return {
+    name: 'ordem-das-camadas',
+    enforce: 'post',
+    apply: 'build',
+    generateBundle(_opcoes, pacote) {
+      for (const item of Object.values(pacote)) {
+        if (item.type === 'asset' && item.fileName.endsWith('.css')) {
+          item.source = `@layer theme,base,components,utilities;${String(item.source)}`
+        }
+      }
+    },
+  }
+}
+
 // https://vite.dev/config/
 export default defineConfig(({ command }) => ({
   base: command === 'build' ? subcaminhoDoBuild(process.env.BASE_SITE) : '/',
-  plugins: [react(), tailwindcss(), paginaNaoEncontrada()],
+  // Um só arquivo de CSS, na ordem de sempre: dividir o CSS por página mudaria a ordem da cascata.
+  build: { cssCodeSplit: false },
+  plugins: [react(), tailwindcss(), imagetools(), chavePublica(), politicaDeConteudo(), paginaNaoEncontrada(), ordemDasCamadas()],
   test: {
     environment: 'jsdom',
     setupFiles: ['./src/teste/setup.ts'],
+    // Os testes de web/scripts usam o node:test (node --test); o Vitest não os roda.
+    exclude: ['**/node_modules/**', '**/dist/**', 'scripts/**'],
+    // Metade das CPUs lógicas: deixa folga para o host e para o Chrome do geometria.test.tsx.
+    maxWorkers: '50%',
+    // O limite padrão de 5 s é apertado num host compartilhado; 20 s ainda falha rápido num teste travado.
+    testTimeout: 20000,
   },
 }))

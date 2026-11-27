@@ -1,4 +1,12 @@
-import { readFileSync } from 'node:fs'
+import { existsSync, readFileSync } from 'node:fs'
+import { createRequire } from 'node:module'
+import { createElement } from 'react'
+import { renderToStaticMarkup } from 'react-dom/server'
+import ts from 'typescript'
+import { parse } from 'yaml'
+import { Ilustracao, NOMES_ILUSTRACAO } from './componentes/campo/Ilustracao.tsx'
+import { ITENS_DO_CABECALHO } from './componentes/casca/textos.ts'
+import { CATALOGO } from './movimento/catalogo.ts'
 import { describe, expect, it } from 'vitest'
 import { listarFontes, pastaSrcDe } from './teste/fontes.ts'
 
@@ -10,14 +18,36 @@ const temaCss = lerTexto('styles/tema.css')
 const estiloGlobal = lerTexto('index.css')
 const indexHtml = readFileSync(pastaSrc + '../index.html', 'utf8')
 
+
+const harmoniaCss = lerTexto('styles/harmonia.gerado.css')
+const siteCss = lerTexto('styles/site.css')
+const design = lerTexto('../DESIGN.md')
+const semComentariosCss = (texto: string) => texto.replace(/\/\*[\s\S]*?\*\//g, '')
+
+function declaracao(corpo: string, propriedade: string): string | undefined {
+  return new RegExp(`(?:^|;)\\s*${propriedade}\\s*:\\s*([^;{}]+)`).exec(semComentariosCss(corpo))?.[1].trim()
+}
+
+const claro = /(?:^|\n):root\s*\{([^}]*)\}/.exec(temaCss)?.[1] ?? ''
+const madrugada = /:root\[data-tema='madrugada'\]\s*\{([^}]*)\}/.exec(temaCss)?.[1] ?? ''
+
 function lerTokens(css: string): Record<string, string> {
-  const bloco = /@theme\s*\{([^}]*)\}/.exec(css)
-  if (!bloco) throw new Error('bloco @theme não encontrado em tokens.css')
+  const bloco = /@theme static\s*\{([^}]*)\}/.exec(semComentariosCss(css))
+  if (!bloco) throw new Error('bloco @theme static não encontrado em tokens.css')
   const cores: Record<string, string> = {}
-  for (const [, nome, hex] of bloco[1].matchAll(/--color-([a-z0-9-]+):\s*(#[0-9a-f]{6})\s*;/g)) {
-    cores[nome] = hex
+  for (const [, nome, hex] of bloco[1].matchAll(/--color-([a-z0-9-]+):\s*(#[0-9a-f]{6})\s*;/gi)) {
+    if (nome in cores) throw new Error(`cor duplicada: ${nome}`)
+    cores[nome] = hex.toLowerCase()
   }
   return cores
+}
+
+function corDe(papel: string, tema: string, tokens = tokensCss): string {
+  const alias = declaracao(semComentariosCss(tema), `--cor-${papel}`)
+  const token = /^var\(--color-([a-z0-9-]+)\)$/.exec(alias ?? '')?.[1]
+  const hex = token && lerTokens(tokens)[token]
+  if (!hex) throw new Error(`--cor-${papel} não resolve para uma cor da paleta: ${alias}`)
+  return hex
 }
 
 // Luminância relativa da WCAG 2.x (sRGB).
@@ -55,88 +85,81 @@ function diferencaDeMatiz(a: string, b: string): number {
   return Math.min(d, 360 - d)
 }
 
+
+// DESIGN.md, Colors / Components: no papel lê-se tinta/links, não mel; mel é fundo com tinta de cacau.
+// Os campos reais usam --cor-cartao; os painéis alternam --cor-campo-1/2 e --cor-campo-sessao.
 describe('contraste e limites dos tokens', () => {
-  const cores = lerTokens(tokensCss)
-
-  it('a primeira linha de tokens.css é a marca de arquivo gerado', () => {
-    expect(tokensCss.split(/\r?\n/)[0]).toBe(
-      '/* Gerado de web/DESIGN.md por designmd export; não editar à mão */',
+  it('a autoria de cores fica em tokens.css e a marca de geração fica em harmonia.gerado.css', () => {
+    expect(tokensCss.split('*/')[0]).toContain('Escritos à mão')
+    expect(harmoniaCss.split(/\r?\n/)[0]).toBe(
+      '/* GERADO por web/scripts/gerar-tema.mjs a partir do front matter de web/DESIGN.md. NÃO EDITE À MÃO.',
     )
+    expect(semComentariosCss(harmoniaCss)).not.toMatch(/--(?:color|cor)-/)
   })
 
-  it('o bloco @theme tem as 20 cores do DESIGN.md', () => {
-    expect(Object.keys(cores).sort()).toEqual(
-      [
-        'primary', 'neutral', 'accent', 'on-accent', 'info', 'line', 'focus', 'paper-deep',
-        'field-1', 'field-2',
-        'night-primary', 'night-neutral', 'night-accent', 'night-on-accent', 'night-info',
-        'night-line', 'night-focus', 'night-paper-deep',
-        'night-field-1', 'night-field-2',
-      ].sort(),
-    )
+  it('o bloco @theme static tem exatamente os 12 papéis e os valores do DESIGN.md', () => {
+    const front = /^---\r?\n([\s\S]*?)\r?\n---/.exec(design)?.[1]
+    const { colors } = parse(front ?? '') as { colors: Record<string, string> }
+    expect(Object.keys(colors).sort()).toEqual([
+      'areia', 'branco', 'cacau', 'mel', 'mel-claro', 'noite', 'noite-2', 'noite-cartao', 'oliva', 'oliva-tinta', 'papel', 'texto-2',
+    ])
+    expect(lerTokens(tokensCss)).toEqual(Object.fromEntries(Object.entries(colors).map(([nome, hex]) => [nome, hex.toLowerCase()])))
   })
 
-  const paresDeTexto: Array<[string, string]> = [
-    ['primary', 'neutral'],
-    ['on-accent', 'accent'],
-    ['accent', 'neutral'],
-    ['info', 'neutral'],
-    ['night-primary', 'night-neutral'],
-    ['night-on-accent', 'night-accent'],
-    ['night-accent', 'night-neutral'],
-    ['night-info', 'night-neutral'],
-    ['primary', 'field-1'],
-    ['primary', 'field-2'],
-    ['night-primary', 'night-field-1'],
-    ['night-primary', 'night-field-2'],
-  ]
-  for (const [texto, fundo] of paresDeTexto) {
-    it(`${texto} sobre ${fundo} tem contraste de pelo menos 4,5`, () => {
-      expect(contraste(cores[texto], cores[fundo])).toBeGreaterThanOrEqual(4.5)
-    })
+  const paresDeTexto = [
+    ['texto', 'fundo'], ['sobre-destaque', 'destaque'], ['link', 'fundo'], ['info', 'fundo'],
+    ['texto', 'campo-1'], ['texto', 'campo-2'], ['texto', 'cartao'], ['numero-sessao', 'campo-sessao'],
+    ['texto-botao-campo', 'botao-campo'],
+  ] as const
+  const paresDeFoco = ['fundo', 'destaque', 'campo-1', 'campo-2', 'cartao', 'campo-sessao']
+  for (const [modo, tema] of [['dia', claro], ['madrugada', madrugada]] as const) {
+    for (const [texto, fundo] of paresDeTexto) {
+      it(`${modo}: ${texto} sobre ${fundo} tem contraste de pelo menos 4,5`, () => {
+        expect(contraste(corDe(texto, tema), corDe(fundo, tema))).toBeGreaterThanOrEqual(4.5)
+      })
+    }
+    for (const fundo of paresDeFoco) {
+      it(`${modo}: foco contra ${fundo} tem contraste de pelo menos 3`, () => {
+        expect(contraste(corDe('foco', tema), corDe(fundo, tema))).toBeGreaterThanOrEqual(3)
+      })
+    }
   }
 
-  const paresDeFoco: Array<[string, string]> = [
-    ['focus', 'neutral'],
-    ['focus', 'accent'],
-    ['night-focus', 'night-neutral'],
-    ['night-focus', 'night-accent'],
-    ['focus', 'field-1'],
-    ['focus', 'field-2'],
-    ['night-focus', 'night-field-1'],
-    ['night-focus', 'night-field-2'],
-  ]
-  for (const [foco, fundo] of paresDeFoco) {
-    it(`${foco} contra ${fundo} tem contraste de pelo menos 3`, () => {
-      expect(contraste(cores[foco], cores[fundo])).toBeGreaterThanOrEqual(3)
-    })
-  }
+  it('o leitor de contraste não confunde alias ausente, papel igual à tinta ou foco igual ao fundo com um tema válido', () => {
+    expect(() => corDe('texto', '--cor-texto: var(--color-inexistente);')).toThrow(/não resolve/)
+    const adulterado = claro.replace('--cor-texto: var(--color-cacau)', '--cor-texto: var(--color-papel)')
+    expect(contraste(corDe('texto', adulterado), corDe('fundo', adulterado))).toBeLessThan(4.5)
+    const semFoco = claro.replace('--cor-foco: var(--color-cacau)', '--cor-foco: var(--color-papel)')
+    expect(contraste(corDe('foco', semFoco), corDe('fundo', semFoco))).toBeLessThan(3)
+  })
 
   it('as linhas usam a cor da tinta', () => {
-    expect(cores.line).toBe(cores.primary)
-    expect(cores['night-line']).toBe(cores['night-primary'])
+    for (const tema of [claro, madrugada]) expect(corDe('linha', tema)).toBe(corDe('texto', tema))
   })
 
   it('o papel é claro e quente, não branco', () => {
-    const [r, , b] = canais(cores.neutral)
-    expect(luminancia(cores.neutral)).toBeGreaterThanOrEqual(0.85)
+    const papel = corDe('fundo', claro)
+    const [r, , b] = canais(papel)
+    expect(luminancia(papel)).toBeGreaterThanOrEqual(0.85)
     expect(r).toBeGreaterThan(b)
-    expect(cores.neutral).not.toBe('#ffffff')
+    expect(papel).not.toBe('#ffffff')
   })
 
   it('a tinta é quase preta, não preta', () => {
-    expect(luminancia(cores.primary)).toBeLessThanOrEqual(0.03)
-    expect(cores.primary).not.toBe('#000000')
+    const tinta = corDe('texto', claro)
+    expect(luminancia(tinta)).toBeLessThanOrEqual(0.03)
+    expect(tinta).not.toBe('#000000')
   })
 
   it('o fundo da madrugada é escuro e quente', () => {
-    const [r, , b] = canais(cores['night-neutral'])
-    expect(luminancia(cores['night-neutral'])).toBeLessThanOrEqual(0.02)
+    const fundo = corDe('fundo', madrugada)
+    const [r, , b] = canais(fundo)
+    expect(luminancia(fundo)).toBeLessThanOrEqual(0.02)
     expect(r).toBeGreaterThanOrEqual(b)
   })
 
-  it('o urucum da madrugada tem o mesmo matiz do urucum do dia (até 10°)', () => {
-    expect(diferencaDeMatiz(cores.accent, cores['night-accent'])).toBeLessThanOrEqual(10)
+  it('o destaque da madrugada mantém o matiz do mel do dia (até 10°)', () => {
+    expect(diferencaDeMatiz(corDe('destaque', claro), corDe('destaque', madrugada))).toBeLessThanOrEqual(10)
   })
 })
 
@@ -146,6 +169,57 @@ describe('contraste e limites dos tokens', () => {
 const fontes = listarFontes(pastaSrc)
 const arquivosCss = fontes.filter((f) => f.nome.endsWith('.css'))
 const arquivosTsx = fontes.filter((f) => f.nome.endsWith('.tsx'))
+const composicao = 'componentes/inicio-composicao/composicao.css'
+const cssSemCosturas = (texto: string) => texto.replace(
+  /linear-gradient\(to right, (?:transparent|var\(--[\w-]+\)) 0 var\(--costura\), var\(--[\w-]+\) var\(--costura\)\)/g,
+  '',
+)
+
+function blocosApos(css: string, inicio: RegExp): string[] {
+  const limpo = semComentariosCss(css)
+  return [...limpo.matchAll(inicio)].map((m) => {
+    const de = m.index + m[0].length
+    let nivel = 1
+    let ate = de
+    while (ate < limpo.length && nivel) {
+      if (limpo[ate] === '{') nivel++
+      if (limpo[ate] === '}') nivel--
+      ate++
+    }
+    if (nivel) throw new Error(`bloco não fechado: ${m[0]}`)
+    return limpo.slice(de, ate - 1)
+  })
+}
+
+const movimentoPermitido = /@media\s+(?:\([^(){},]+\)\s+and\s+)*\(prefers-reduced-motion:\s*no-preference\)(?:\s+and\s+\([^(){},]+\))*\s*\{/g
+const suporteTimeline = /@supports\s*\(\(animation-timeline:\s*view\(\)\) and \(animation-range:\s*entry\)\)\s*\{/g
+const declaracaoTimeline = /(?:^|[;{}])\s*(?:(?:animation|scroll|view)-timeline(?:-name|-axis|-inset)?|timeline-scope)\s*:/g
+
+function linhasDeRolagemNaoProtegidas(css: string): number {
+  const total = semComentariosCss(css).match(declaracaoTimeline)?.length ?? 0
+  const protegidas = [
+    ...blocosApos(css, movimentoPermitido).flatMap((b) => blocosApos(b, suporteTimeline)),
+    ...blocosApos(css, suporteTimeline).flatMap((b) => blocosApos(b, movimentoPermitido)),
+  ].reduce((n, bloco) => n + (bloco.match(declaracaoTimeline)?.length ?? 0), 0)
+  return total - protegidas
+}
+
+function imagensSemAlt(texto: string): string[] {
+  const fonte = ts.createSourceFile('produto.tsx', texto, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX)
+  const achados: string[] = []
+  function visitar(no: ts.Node) {
+    if ((ts.isJsxOpeningElement(no) || ts.isJsxSelfClosingElement(no)) && no.tagName.getText(fonte) === 'img') {
+      const alt = no.attributes.properties.find((p): p is ts.JsxAttribute => ts.isJsxAttribute(p) && p.name.getText(fonte) === 'alt')
+      const valor = alt?.initializer
+      if (!valor || (ts.isJsxExpression(valor) && (!valor.expression || /^(?:null|undefined)$/.test(valor.expression.getText(fonte))))) {
+        achados.push(`linha ${fonte.getLineAndCharacterOfPosition(no.getStart(fonte)).line + 1}`)
+      }
+    }
+    ts.forEachChild(no, visitar)
+  }
+  visitar(fonte)
+  return achados
+}
 
 describe('limites do CSS', () => {
   it('encontra os arquivos que deve verificar', () => {
@@ -155,16 +229,12 @@ describe('limites do CSS', () => {
   })
 
   const proibidos: Array<[string, RegExp]> = [
-    ['gradiente', /gradient\(/],
     ['backdrop-filter', /backdrop-filter/],
     ['backdrop-blur', /backdrop-blur/],
     ['filter: blur', /filter\s*:\s*blur/],
     ['blur(', /blur\(/],
     ['classe blur-', /(^|[^\w])blur-/],
     ['classe shadow- (exceto shadow-none)', /(^|[^\w-])shadow-(?!none)/],
-    ['<img', /<img/],
-    ['imagem raster', /\.(png|jpe?g|webp)\b/],
-    ['paralaxe ou rolagem ligada à animação', /animation-timeline|scroll-timeline|background-attachment\s*:\s*fixed|scroll-snap/],
     ['rolagem suave sequestrada', /scroll-behavior\s*:\s*smooth/],
   ]
   for (const [nome, regex] of proibidos) {
@@ -174,14 +244,75 @@ describe('limites do CSS', () => {
     })
   }
 
-  it('box-shadow só existe com desfoque de até 4 px', () => {
-    for (const { nome, texto } of arquivosCss) {
-      for (const [, valor] of texto.matchAll(/box-shadow\s*:\s*([^;}]+)/g)) {
-        if (valor.trim() === 'none') continue
-        const medidas = valor.split(/[\s,]+/).filter((t) => /^-?\d/.test(t))
-        const desfoque = parseFloat(medidas[2] ?? '0')
-        expect(desfoque, `${nome}: ${valor}`).toBeLessThanOrEqual(4)
+
+  it('não há mistura por gradiente: só os dois tokens e as paradas duras da composição', () => {
+    for (const { nome, texto } of fontes) {
+      let css = semComentariosCss(texto)
+      if (nome === 'styles/tokens.css') {
+        for (const papel of ['luz-estudio', 'brilho-mel']) {
+          expect(css, papel).toMatch(new RegExp(`--${papel}:\\s*radial-gradient\\(`))
+          css = css.replace(new RegExp(`--${papel}:\\s*radial-gradient\\([^;]+;`), '')
+        }
       }
+      if (nome === composicao) css = cssSemCosturas(css)
+      expect(css, nome).not.toMatch(/-gradient\(|\bbg-(?:gradient|linear|radial|conic)\b/)
+    }
+  })
+
+  it('mantém o limite de 4 px de desfoque avulso e aceita apenas as duas sombras normatizadas', () => {
+    for (const { nome, texto } of arquivosCss) {
+      for (const [, valor] of semComentariosCss(texto).matchAll(/box-shadow\s*:\s*([^;}]+)/g)) {
+        if (/^(none|var\(--sombra-(flutuante|cartao)\))$/.test(valor.trim())) continue
+        const medidas = /^(?:inset\s+)?-?[\d.]+(?:px)?\s+-?[\d.]+(?:px)?\s+([\d.]+)(px)?\b/.exec(valor.trim())
+        expect(medidas, `${nome}: ${valor}`).not.toBeNull()
+        expect(Number(medidas![1]), `${nome}: ${valor}`).toBeLessThanOrEqual(4)
+        expect(valor, nome).not.toMatch(/\)\s*,/)
+      }
+    }
+  })
+
+  it('as imagens JSX declaram alt, inclusive alt vazio nas decorativas', () => {
+    const achados = arquivosTsx.flatMap(({ nome, texto }) => imagensSemAlt(texto).map((local) => `${nome}: ${local}`))
+    expect(achados).toEqual([])
+    expect(imagensSemAlt('/* <img src="x" /> */ const elemento = <img alt="" src="x" />')).toEqual([])
+    expect(imagensSemAlt('const elemento = <img src="x" />')).toEqual(['linha 1'])
+    expect(imagensSemAlt('const elemento = <img src="x" alt={undefined} />')).toEqual(['linha 1'])
+  })
+
+  it('as imagens raster usam WebP/AVIF, salvo as camadas RGBA registradas no PROVENANCE', () => {
+    const excecoes: Record<string, string[]> = {
+      'paginas/Inicio.tsx': ['cenas/inicio/m05-luz-1672w.png', 'cenas/inicio/m05-luz-390c-1170w.png',
+        'cenas/inicio/m06-luz-792w.png', 'cenas/inicio-faixas/a05-rua-luz-1672w.png'],
+      'conteudo/casa/comoFunciona.ts': ['cenas/inicio/m06-luz-792w.png'],
+      'conteudo/casa/desenvolvimento.ts': ['molduras/moldura-dia.png', 'molduras/moldura-dia-1356w.png'],
+    }
+    const arquivosForaDosFormatos = (nome: string, texto: string) => [...texto.matchAll(/[^\s'"`{}()]+\.(?:png|jpe?g)\b/gi)]
+      .map(([url]) => url.replace(/^\//, ''))
+      .filter((url) => !Object.hasOwn(excecoes, nome) || !excecoes[nome].includes(url))
+    expect(fontes.flatMap(({ nome, texto }) => arquivosForaDosFormatos(nome, texto).map((url) => `${nome}: ${url}`))).toEqual([])
+    for (const url of new Set(Object.values(excecoes).flat())) {
+      expect(existsSync(pastaSrc + '../public/' + url), url).toBe(true)
+      const pasta = url.slice(0, url.lastIndexOf('/'))
+      expect(lerTexto(`../public/${pasta}/PROVENANCE.md`)).toContain(url.slice(pasta.length + 1))
+    }
+    expect(arquivosForaDosFormatos('paginas/Inicio.tsx', 'const foto = "cenas/inicio/extra.jpg"')).toEqual(['cenas/inicio/extra.jpg'])
+    expect(arquivosForaDosFormatos('paginas/Sistema.tsx', 'const foto = "cenas/inicio/m06-luz-792w.png"')).toHaveLength(1)
+  })
+
+  it('não sequestra rolagem; timelines nativas exigem suporte e movimento permitido', () => {
+    for (const { nome, texto } of arquivosCss) {
+      expect(linhasDeRolagemNaoProtegidas(texto), nome).toBe(0)
+      expect(semComentariosCss(texto), nome).not.toMatch(/background-attachment\s*:\s*fixed|scroll-snap/)
+    }
+    const regra = '.a { animation-timeline: view(); }'
+    const suporte = (x: string) => `@supports ((animation-timeline: view()) and (animation-range: entry)) { ${x} }`
+    const midia = (x: string) => `@media (prefers-reduced-motion: no-preference) { ${x} }`
+    expect(linhasDeRolagemNaoProtegidas(suporte(midia(regra)))).toBe(0)
+    expect(linhasDeRolagemNaoProtegidas(midia(suporte(regra)))).toBe(0)
+    for (const alterado of [regra, suporte(regra), midia(regra), suporte(midia(regra)) + regra,
+      suporte(`@media (prefers-reduced-motion: no-preference), (min-width: 1px) { ${regra} }`),
+    ]) {
+      expect(linhasDeRolagemNaoProtegidas(alterado)).toBe(1)
     }
   })
 
@@ -192,32 +323,31 @@ describe('limites do CSS', () => {
     expect(bloco![1]).toMatch(/transition:\s*none\s*!important/)
   })
 
-  it('a entrada dos blocos dura até 300 ms e desloca até 16 px', () => {
-    const animacoes = [...estiloGlobal.matchAll(/animation\s*:\s*([^;]+);/g)]
-      .map((m) => m[1])
-      .filter((valor) => !/^\s*none\b/.test(valor))
-    expect(animacoes.length).toBeGreaterThan(0)
-    for (const valor of animacoes) {
-      const duracao = /(\d+(?:\.\d+)?)(ms|s)\b/.exec(valor)
-      expect(duracao, valor).not.toBeNull()
-      const ms = parseFloat(duracao![1]) * (duracao![2] === 's' ? 1000 : 1)
-      expect(ms, valor).toBeLessThanOrEqual(300)
+
+  it('a troca curta da legenda do palco dura até 300 ms e desloca até 16 px (DESIGN.md, M17)', () => {
+    const { duracaoMs, duracaoSaidaMs, deslocamentoPx } = CATALOGO.M17
+    for (const duracao of [duracaoMs, duracaoSaidaMs]) {
+      expect(duracao).toBeGreaterThan(0)
+      expect(duracao).toBeLessThanOrEqual(300)
     }
-    const deslocamentos = [...estiloGlobal.matchAll(/translate[XY]?\(\s*(-?\d+(?:\.\d+)?)px/g)].map((m) =>
-      Math.abs(parseFloat(m[1])),
-    )
-    expect(deslocamentos.length).toBeGreaterThan(0)
-    for (const px of deslocamentos) expect(px).toBeLessThanOrEqual(16)
+    expect(Math.abs(deslocamentoPx)).toBeGreaterThan(0)
+    expect(Math.abs(deslocamentoPx)).toBeLessThanOrEqual(16)
   })
 
-  it('o corpo do texto fica entre 16 e 18 px', () => {
-    const body = /(?:^|[\s}])body\s*\{([^}]*)\}/.exec(estiloGlobal)
-    expect(body).not.toBeNull()
-    const tamanho = /font-size:\s*(\d+(?:\.\d+)?)(rem|px)/.exec(body![1])
-    expect(tamanho).not.toBeNull()
-    const px = parseFloat(tamanho![1]) * (tamanho![2] === 'rem' ? 16 : 1)
-    expect(px).toBeGreaterThanOrEqual(16)
-    expect(px).toBeLessThanOrEqual(18)
+  it('o corpo usa a escala fluida, 17 px a 390 e 18 px a 1440 (DESIGN.md)', () => {
+    const corpo = /(?:^|[\s}])body\s*\{([^}]*)\}/.exec(estiloGlobal)?.[1] ?? ''
+    expect(declaracao(corpo, 'font-size')).toBe('var(--texto-corpo-tamanho)')
+    const token = /--texto-corpo-tamanho:\s*([^;]+)/.exec(harmoniaCss)?.[1]
+    const escala = /^clamp\(([\d.]+)rem, calc\(([\d.]+)rem \+ \(100vw - (\d+)px\) \* ([\d.]+) \/ (\d+)\), ([\d.]+)rem\)$/.exec(token ?? '')
+    expect(escala).not.toBeNull()
+    const [piso, base, ancora, ganho, intervalo, teto] = escala!.slice(1).map(Number)
+    const px = (largura: number) => Math.min(teto * 16, Math.max(piso * 16, base * 16 + (largura - ancora) * ganho / intervalo))
+    expect(px(320)).toBeGreaterThanOrEqual(16)
+    expect(px(390)).toBeCloseTo(17, 4)
+    expect(px(1440)).toBeCloseTo(18, 4)
+    expect(piso * 16).toBeCloseTo(17, 4)
+    expect(teto * 16).toBeCloseTo(18 + (1920 - 1440) / (1440 - 390), 4)
+    expect(px(1920)).toBeCloseTo(teto * 16, 4)
   })
 
   it('o body usa as variáveis de uso e a fonte de texto', () => {
@@ -233,50 +363,97 @@ describe('limites do CSS', () => {
     )
   })
 
-  it('importa o Tailwind, os tokens, o tema e só o subconjunto latin das fontes', () => {
-    const importados = [...estiloGlobal.matchAll(/@import\s+'([^']+)'/g)].map((m) => m[1])
-    expect(importados).toEqual([
-      'tailwindcss',
-      './styles/tokens.css',
-      './styles/tema.css',
-      '@fontsource/fraunces/latin-600.css',
-      '@fontsource/fraunces/latin-800.css',
-      '@fontsource/fraunces/latin-400-italic.css',
-      '@fontsource/instrument-sans/latin-400.css',
-      '@fontsource/instrument-sans/latin-500.css',
-      '@fontsource/instrument-sans/latin-600.css',
-    ])
+  const importsDoCss = (css: string) =>
+    [...css.replace(/\/\*[\s\S]*?\*\//g, ' ').matchAll(/@import\b\s*([^;]+)(?:;|$)/gi)].map((m) => m[1].trim())
+  const importsEsperados = [
+    "'tailwindcss'",
+    "'./styles/tokens.css'",
+    "'./styles/harmonia.gerado.css'",
+    "'./styles/tema.css'",
+    "'@fontsource-variable/literata/opsz.css'",
+    "'@fontsource-variable/literata/wght-italic.css'",
+    "'@fontsource-variable/outfit/wght.css'",
+    "'./styles/site.css'",
+    "'./styles/campo.css'",
+    "'./styles/foco.css'",
+    "'./styles/abrir-fechar.css'",
+  ]
+
+  it('importa, na ordem aprovada, Tailwind, folhas do site e as variantes de Literata e Outfit', () => {
+    expect(importsDoCss(estiloGlobal)).toEqual(importsEsperados)
   })
 
-  it('há de 3 a 6 ilustrações distintas (data-ilustracao), todas decorativas', () => {
-    const svgs = arquivosTsx.flatMap((f) => [...f.texto.matchAll(/<svg\b[^>]*>/g)].map((m) => m[0]))
-    expect(svgs.length).toBeGreaterThan(0)
-    const nomes = new Set(svgs.map((abertura) => /data-ilustracao="([^"]+)"/.exec(abertura)?.[1]))
-    expect(nomes.has(undefined), 'todo <svg> do produto é uma ilustração com data-ilustracao').toBe(false)
-    expect(nomes.size).toBeGreaterThanOrEqual(3)
-    expect(nomes.size).toBeLessThanOrEqual(6)
-    for (const abertura of svgs) expect(abertura).toContain('aria-hidden="true"')
+  it('detecta import extra, ausente ou fora de ordem, e uma variante de fonte não aprovada', () => {
+    const linhas = importsEsperados.map((alvo) => `@import ${alvo};`)
+    const css = linhas.join('\n')
+    expect(importsDoCss(css)).toEqual(importsEsperados)
+
+    const foraDeOrdem = [linhas[0], linhas[1], linhas[3], linhas[2], ...linhas.slice(4)]
+
+    for (const alterado of [
+      `${css}\n@import url("./extra.css");`,
+      `${css}\n@import './extra.css'`,
+      ...linhas.map((_, i) => linhas.filter((_, indice) => indice !== i).join('\n')),
+      foraDeOrdem.join('\n'),
+      css.replace('literata/opsz.css', 'literata/latin-ext-opsz.css'),
+    ]) {
+      expect(importsDoCss(alterado)).not.toEqual(importsEsperados)
+    }
+  })
+
+
+  it('as três variantes carregam apenas o subconjunto Latin (contrato de entrega, independente da ordem)', () => {
+    const resolver = createRequire(import.meta.url)
+    const foraDoLatin = importsDoCss(estiloGlobal)
+      .map((entrada) => /^['"](@fontsource-variable\/[^'"]+)['"]$/.exec(entrada)?.[1])
+      .filter((entrada): entrada is string => entrada !== undefined)
+      .flatMap((entrada) => {
+        const css = readFileSync(resolver.resolve(entrada), 'utf8')
+        const urls = [...css.matchAll(/url\(['"]?\.\/files\/([^)'"\s]+)['"]?\)/g)].map((m) => m[1])
+        expect(urls.length, entrada).toBeGreaterThan(0)
+        return urls.filter((url) => !/^(?:literata|outfit)-latin-(?:opsz|wght)-(?:normal|italic)\.woff2$/.test(url))
+      })
+    expect(foraDoLatin).toEqual([])
+  })
+
+  it('há de 3 a 6 desenhos de traço distintos; decoração fica muda e imagem informativa tem descrição', () => {
+    expect(new Set(NOMES_ILUSTRACAO).size).toBe(NOMES_ILUSTRACAO.length)
+    expect(NOMES_ILUSTRACAO.length).toBeGreaterThanOrEqual(3)
+    expect(NOMES_ILUSTRACAO.length).toBeLessThanOrEqual(6)
+    for (const nome of NOMES_ILUSTRACAO) {
+      for (const decorativa of [true, false]) {
+        const raiz = document.createElement('div')
+        raiz.innerHTML = renderToStaticMarkup(createElement(Ilustracao, { nome, decorativa }))
+        const imagem = raiz.querySelector('img')!
+        expect(imagem.getAttribute('data-ilustracao')).toBe(nome)
+        expect(imagem.getAttribute('alt'), nome).toMatch(decorativa ? /^$/ : /\S/)
+        for (const escala of ['1x', '2x']) {
+          const alvo = `/ilustracoes/${nome}@${escala}.webp`
+          expect(imagem.getAttribute('srcset'), alvo).toContain(alvo)
+          expect(existsSync(pastaSrc + '../public' + alvo), alvo).toBe(true)
+        }
+      }
+    }
+    expect(arquivosTsx.filter(({ texto }) => /<svg\b/.test(semComentariosCss(texto))).map((f) => f.nome)).toEqual([])
   })
 })
 
 describe('tema', () => {
+  // Apelidos e tintas de DESIGN.md, Colors; `mel` é intencionalmente o mesmo nos dois modos.
   const usos = [
-    'cor-fundo', 'cor-texto', 'cor-destaque', 'cor-sobre-destaque', 'cor-info',
-    'cor-linha', 'cor-foco', 'cor-papel-fundo', 'cor-campo-sessao',
-  ]
-  const claro = /:root\s*\{([^}]*)\}/.exec(temaCss)![1]
-  const madrugada = /\[data-tema=['"]madrugada['"]\]\s*\{([^}]*)\}/.exec(temaCss)![1]
+    ['fundo', 'papel', 'noite'], ['texto', 'cacau', 'papel'], ['destaque', 'mel', 'mel'],
+    ['sobre-destaque', 'cacau', 'cacau'], ['info', 'oliva-tinta', 'noite-2'], ['linha', 'cacau', 'papel'],
+    ['foco', 'cacau', 'mel'], ['papel-fundo', 'areia', 'noite-cartao'], ['campo-sessao', 'mel', 'noite-cartao'],
+    ['cartao', 'branco', 'noite-cartao'], ['link', 'oliva-tinta', 'noite-2'],
+  ] as const
 
-  it('define as variáveis de uso do tema claro com as cores do dia', () => {
-    for (const uso of usos) {
-      expect(claro, uso).toMatch(new RegExp(`--${uso}:\\s*var\\(--color-(?!night-)[a-z0-9-]+\\)`))
-    }
+  it('define as variáveis de uso do tema claro com os papéis do dia', () => {
+    for (const [uso, dia] of usos) expect(declaracao(semComentariosCss(claro), `--cor-${uso}`), uso).toBe(`var(--color-${dia})`)
   })
 
-  it('o bloco data-tema="madrugada" aponta as mesmas variáveis para as cores da noite', () => {
-    for (const uso of usos) {
-      expect(madrugada, uso).toMatch(new RegExp(`--${uso}:\\s*var\\(--color-night-[a-z0-9-]+\\)`))
-    }
+  it('madrugada global e local usam o mesmo bloco e apontam os mesmos papéis para as tintas da noite', () => {
+    expect(temaCss).toMatch(/\[data-tema-local='madrugada'\],\s*:root\[data-tema='madrugada'\]\s*\{/)
+    for (const [uso, , noite] of usos) expect(declaracao(semComentariosCss(madrugada), `--cor-${uso}`), uso).toBe(`var(--color-${noite})`)
   })
 
   it('a madrugada aumenta o alvo rápido para 56 px', () => {
@@ -284,13 +461,16 @@ describe('tema', () => {
     expect(madrugada).toMatch(/--alvo-rapido:\s*56px/)
   })
 
-  it('os componentes usam só as variáveis de uso, nunca --color-* nem hex', () => {
-    const consumidores = fontes.filter(
-      (f) => f.nome !== 'styles/tokens.css' && f.nome !== 'styles/tema.css',
-    )
-    const achados = consumidores
-      .filter((f) => /--color-|#[0-9a-fA-F]{3,8}\b/.test(f.texto))
-      .map((f) => f.nome)
+  it('os componentes só usam cores da paleta, nunca cor crua ou token de cor desconhecido', () => {
+    const papeis = new Set([...Object.keys(lerTokens(tokensCss)), 'transparent', 'current'])
+    const achados = fontes.filter((f) => f.nome !== 'styles/tokens.css').flatMap(({ nome, texto }) => {
+      let limpo = semComentariosCss(texto).replace(/(^|\s)\/\/.*$/gm, '$1')
+      // A05: só o chão de breu aprovado para a composição (mesma exceção exata de teste/estilo.test.ts).
+      if (nome === composicao) limpo = limpo.replace('--co-breu: #18110F;', '')
+      return [...limpo.matchAll(/#[0-9a-f]{3,8}\b|\b(?:rgba?|hsla?)\s*\(|var\(--color-([\w-]+)/gi)]
+        .filter(([, papel]) => !papel || !papeis.has(papel))
+        .map(([valor]) => `${nome}: ${valor}`)
+    })
     expect(achados).toEqual([])
   })
 })
@@ -320,74 +500,107 @@ function corpoAgrupado(...trechos: string[]): string | undefined {
   return regras(semComentarios).find((r) => trechos.every((t) => r.seletor.split(/\s*,\s*/).includes(t)))?.corpo
 }
 
+
+const siteRegras = regras(semComentariosCss(siteCss))
+const corpoNoSite = (seletor: string) => siteRegras.filter((r) => r.seletor === seletor).map((r) => r.corpo).join(';')
+
 describe('G3-1: alvo de toque', () => {
-  it('uma regra única dá 44 × 44 px a .alvo-toque, .botao e .nav-item', () => {
-    const corpo = corpoAgrupado('.alvo-toque', '.botao', '.nav-item')
-    expect(corpo).toBeDefined()
-    expect(corpo).toMatch(/min-width:\s*44px/)
-    expect(corpo).toMatch(/min-height:\s*44px/)
+  it('o piso de 44 × 44 px cobre .alvo-toque e .botao sem vencer o botão do site ou os links atuais', () => {
+    const piso = corpoAgrupado(':where(.alvo-toque)', '.botao') ?? ''
+    expect(declaracao(piso, 'min-width')).toBe('44px')
+    expect(declaracao(piso, 'min-height')).toBe('44px')
+    expect(piso).not.toContain('!important')
+    for (const [seletor, altura] of [['.cm-botao', 56], ['.cm-cab-link', 44]]) {
+      const corpo = corpoNoSite(String(seletor))
+      expect(declaracao(corpo, 'min-width')).toBe('44px')
+      expect(declaracao(corpo, 'min-height')).toBe(`${altura}px`)
+    }
+    expect(declaracao(corpoNoSite('.cm-menu-link'), 'min-height')).toBe('72px')
   })
 
-  it('nenhuma regra isolada reduz o alvo dessas classes', () => {
-    for (const seletor of ['.botao', '.nav-item', '.alvo-toque']) {
-      for (const corpo of corposDe(seletor)) {
-        // `.nav-item` tem min-width: 0 de propósito (R1): é a rede de segurança contra o vazamento
-        // do rótulo. A largura de 44 px é garantida pelo contêiner (22 rem ou mais = colunas de
-        // pelo menos 69 px; abaixo disso a nav vira uma coluna). A altura continua valendo.
-        if (seletor !== '.nav-item') expect(corpo, seletor).not.toMatch(/min-width:\s*0\b/)
-        const altura = /min-height:\s*(\d+)px/.exec(corpo)
-        if (altura) expect(Number(altura[1]), seletor).toBeGreaterThanOrEqual(44)
+  it('nenhuma regra isolada das classes de base reduz o alvo abaixo de 44 px', () => {
+    for (const seletor of ['.botao', ':where(.alvo-toque)', '.cm-botao', '.cm-cab-link', '.cm-menu-link']) {
+      const corpos = [...corposDe(seletor), ...siteRegras.filter((r) => r.seletor === seletor).map((r) => r.corpo)]
+      for (const corpo of corpos) for (const eixo of ['min-width', 'min-height']) {
+        const valor = declaracao(corpo, eixo)
+        if (valor) {
+          expect(valor, `${seletor} ${eixo}`).toMatch(/^\d+px$/)
+          expect(Number.parseInt(valor), `${seletor} ${eixo}`).toBeGreaterThanOrEqual(44)
+        }
       }
     }
   })
 })
 
 describe('G3-2: barra de baixo', () => {
-  it('não depende de media query de altura (ela usa o tamanho inicial da fonte)', () => {
+  const barra = lerTexto('componentes/rotina/BarraRegistroRapido.tsx')
+  it('a barra Registrar fixa só quando pedida e a versão sem fixa fica no fluxo', () => {
+    expect(barra).toMatch(/fixa\s*\?\s*'barra-fixa fixed inset-x-0 bottom-0 z-30'\s*:\s*'relative'/)
+  })
+
+  it('reorganiza as ações pela largura do contêiner em rem, não pela altura da janela', () => {
+    expect(barra).toContain('@container/barra')
+    expect(barra).toMatch(/grid-cols-2\b[^"\n]+@min-\[17\.25rem\]\/barra:grid-cols-4/)
     expect(semComentarios).not.toMatch(/@media\s*\(\s*max-height/)
   })
+})
 
-  it('só .barra-fixa é sticky; .barra-inferior sozinha fica no fluxo', () => {
-    expect(corposDe('.barra-fixa').join('')).toMatch(/position:\s*sticky/)
-    expect(corposDe('.barra-fixa').join('')).toMatch(/bottom:\s*0/)
-    expect(corposDe('.barra-inferior').join('')).not.toMatch(/position:\s*sticky/)
+describe('G3-3: respiro da barra inferior', () => {
+  it('a barra Registrar, presa ao viewport, reserva 6 px ou a área segura, o que for maior', () => {
+    const barra = lerTexto('componentes/rotina/BarraRegistroRapido.tsx')
+    const seguro = /max\(\s*6px\s*,\s*env\(safe-area-inset-bottom(?:\s*,\s*0px)?\)\s*\)/
+    const regrasDaBarra = arquivosCss.flatMap((f) => regras(semComentariosCss(f.texto)))
+      .filter(({ seletor }) => ['[data-barra-registrar]', '[data-barra-registrar].barra-fixa', '.registro-rapido.barra-fixa'].includes(seletor))
+    const utilitario = /data-barra-registrar=""\s*className=\{`[^`]*\bpb-\[([^\]]+)\]/.exec(barra)?.[1]?.replaceAll('_', ' ')
+    const valores = [utilitario, ...regrasDaBarra.map(({ corpo }) => declaracao(corpo, 'padding-bottom'))]
+    expect(valores.some((valor) => valor && seguro.test(valor)), 'BarraRegistroRapido: espaço inferior para área segura (não o padding do conteúdo/rodapé)').toBe(true)
   })
 })
 
-describe('G3-3: respiro da navegação inferior', () => {
-  it('.nav-inferior reserva pelo menos 6 px embaixo, ou a área segura do aparelho', () => {
-    expect(corposDe('.nav-inferior').join('')).toMatch(
-      /padding-bottom:\s*max\(\s*6px\s*,\s*env\(safe-area-inset-bottom\)\s*\)/,
-    )
-  })
-})
-
-describe('G4-2: tipografia sem repetição', () => {
-  it('.etiqueta não declara tipografia (vem de .rotulo)', () => {
-    const corpo = corposDe('.etiqueta').join('')
+describe('G4-2: tipografia compartilhada', () => {
+  it('a etiqueta sem tipografia própria compõe o nível pequeno .t-ui', () => {
+    const corpo = corposDe('.sb-etiqueta').join('')
     expect(corpo).not.toBe('')
-    for (const propriedade of ['font-size', 'font-weight', 'line-height', 'letter-spacing', 'text-transform']) {
-      expect(corpo, propriedade).not.toContain(propriedade)
+    expect(lerTexto('componentes/base/Etiqueta.tsx')).toContain('className="sb-etiqueta t-ui"')
+    for (const propriedade of ['font-family', 'font-size', 'font-weight', 'line-height', 'letter-spacing', 'text-transform']) {
+      expect(declaracao(corpo, propriedade), propriedade).toBeUndefined()
     }
+    expect(declaracao(corposDe('.t-ui').join(''), 'font-size')).toBe('var(--texto-pequeno-tamanho)')
   })
 
-  it('a família de exibição e o espaçamento dos títulos são declarados uma vez só', () => {
-    const conta = (padrao: RegExp) => (semComentarios.match(padrao) ?? []).length
-    expect(conta(/font-family:\s*var\(--fonte-exibicao\)/g)).toBe(1)
-    expect(conta(/letter-spacing:\s*-0\.01em/g)).toBe(1)
-    expect(conta(/letter-spacing:\s*-0\.02em/g)).toBe(1)
+  it('a face de exibição tem uma origem no tema padrão; a casca pública a aplica com especificidade zero', () => {
+    const padrao = blocosApos(tokensCss, /@theme static\s*\{/g).join('')
+    expect(declaracao(padrao, '--fonte-exibicao')).toBe("'Literata Variable', serif")
+    expect(declaracao(padrao, '--font-titulo')).toBe('var(--fonte-exibicao)')
+    expect(declaracao(claro, '--fonte-titulo')).toBe('var(--font-titulo)')
+    expect(declaracao(corpoNoSite(":where(.cm-casca[data-titulos='site']) :where(h1, h2, h3, h4)"), 'font-family')).toBe('var(--fonte-exibicao)')
   })
 
-  it('o grupo da família de exibição cobre todas as classes de exibição', () => {
-    const corpo = regras(semComentarios).find((r) => /font-family:\s*var\(--fonte-exibicao\)/.test(r.corpo))
-    const seletores = corpo!.seletor.split(/\s*,\s*/)
-    expect(seletores).toEqual(
-      expect.arrayContaining(['.marca', '.promessa', '.titulo-secao', '.titulo-tela', '.titulo-linha', '.numero-fato', '.nota-italico']),
-    )
+  it('o grupo compartilhado de títulos cobre h1–h4 e marca; cada tracking segue seu papel', () => {
+    const grupo = siteRegras.find(({ corpo }) => declaracao(corpo, 'font-family') === 'var(--fonte-titulo)')
+    expect(grupo?.seletor.split(/\s*,\s*/)).toEqual(['.cm-h1', '.cm-h2', '.cm-h3', '.cm-h4', '.cm-marca'])
+    for (const [seletor, tracking] of [['.cm-h1', '-0.02em'], ['.cm-h2', '-0.015em'], ['.cm-h3', '-0.01em'], ['.cm-marca', '-0.01em']]) {
+      expect(declaracao(corpoNoSite(seletor), 'letter-spacing'), seletor).toBe(tracking)
+    }
   })
 })
 
 describe('D1: madrugada sem ponto claro', () => {
+  it('a lua ligada da casca usa fundo escuro, contorno de destaque e texto legível', () => {
+    const cabecalho = lerTexto('componentes/casca/Cabecalho.tsx')
+    expect(cabecalho).toMatch(/variante="contorno"[^>]*className="cm-cab-madrugada"[^>]*aria-pressed=\{madrugada\}/)
+    const base = corpoNoSite(".cm-botao-contorno[aria-pressed='true']")
+    expect(base).not.toBe('')
+    const seletorLua = /cm-cab-madrugada.*aria-pressed=.*true|aria-pressed=.*true.*cm-cab-madrugada/
+    const sobrescritas = [siteCss, lerTexto('styles/campo.css')].flatMap((css) => regras(semComentariosCss(css)))
+      .filter((r) => seletorLua.test(r.seletor)).map((r) => r.corpo)
+    const estilo = [base, ...sobrescritas].join(';')
+    const declarado = (nome: string) => estilo.split(';').map((d) => declaracao(d, nome)).filter(Boolean).at(-1)
+    expect(declarado('background-color'), 'a lua não pode ficar papel sobre noite quando ligada').toBe('var(--cor-papel-fundo)')
+    expect(declarado('color')).toBe('var(--cor-texto)')
+    expect(declarado('border') ?? `${declarado('border-width')} solid ${declarado('border-color')}`).toBe('2px solid var(--cor-destaque)')
+  })
+
   it('um botão com aria-pressed="true" não usa a cor do texto como fundo', () => {
     const ligados = regras(semComentarios).filter((r) => /aria-pressed=['"]true['"]/.test(r.seletor))
     expect(ligados.length).toBeGreaterThan(0)
@@ -416,66 +629,81 @@ describe('D1: madrugada sem ponto claro', () => {
   })
 })
 
-describe('D2: coluna única das telas logadas', () => {
-  it('.coluna-app tem largura máxima de 40 rem e fica centrada', () => {
-    const corpo = corposDe('.coluna-app').join('')
-    expect(corpo).toMatch(/max-width:\s*40rem/)
-    expect(corpo).toMatch(/margin-inline:\s*auto/)
+
+describe('D2: quadro das telas logadas (DESIGN.md, Quadro e contêineres)', () => {
+  const layout = lerTexto('componentes/base/layout/layout.css')
+  const seletorQuadro = "[data-h~='quadro']"
+  const corpo = regras(semComentariosCss(layout)).find((r) => r.seletor === seletorQuadro)?.corpo ?? ''
+
+  it('Hoje e Sessão usam o quadro centrado com largura e calha do tema', () => {
+    for (const tela of ['Hoje', 'Sessao']) expect(lerTexto(`paginas/rotina/${tela}.tsx`), tela).toMatch(/<QuadroLayout\b/)
+    expect(declaracao(corpo, 'width')).toBe('min(var(--quadro-largura), 100vw - 2 * var(--quadro-calha))')
+    expect(declaracao(corpo, 'margin-inline')).toBe('auto')
   })
 
-  it('a partir de 48 rem a coluna ganha linhas verticais de 1 px na cor da linha', () => {
-    const bloco = /@media\s*\(\s*min-width:\s*48rem\s*\)\s*\{\s*\.coluna-app\s*\{([^}]*)\}/.exec(semComentarios)
-    expect(bloco).not.toBeNull()
-    expect(bloco![1]).toMatch(/border-inline:\s*1px solid var\(--cor-linha\)/)
-  })
-})
-
-describe('D5: hifenização da navegação', () => {
-  it('.nav-item usa hifens manuais; só o modificador .nav-item-hifeniza hifeniza', () => {
-    const corpo = corposDe('.nav-item').join('')
-    expect(corpo).toMatch(/hyphens:\s*manual/)
-    expect(corpo).not.toMatch(/hyphens:\s*auto/)
-    expect(corposDe('.nav-item-hifeniza').join('')).toMatch(/hyphens:\s*auto/)
+  it('o quadro logado usa calha, não a moldura vertical do protótipo', () => {
+    expect(corpo).not.toMatch(/\bborder(?:-inline|-left|-right)?\s*:/)
+    expect(harmoniaCss).toMatch(/--quadro-calha:\s*clamp\(/)
+    expect(layout).not.toMatch(/\.coluna-app\b/)
+    expect(semComentarios).not.toMatch(/\.coluna-app\b/)
   })
 })
 
-describe('R1: navegação em uma coluna quando os rótulos não cabem', () => {
-  it('.nav-item tem min-width: 0 e overflow-wrap: anywhere (a quebra nunca vaza da coluna)', () => {
-    const corpo = corposDe('.nav-item').join('')
-    expect(corpo).toMatch(/min-width:\s*0\b/)
-    expect(corpo).toMatch(/overflow-wrap:\s*anywhere/)
+describe('D5/R1: navegação da casca em largura e texto restritos', () => {
+  const cabecalho = lerTexto('componentes/casca/Cabecalho.tsx')
+  const menu = lerTexto('componentes/casca/MenuCelular.tsx')
+  const folhas = [corpoNoSite('.cm-cab-link'), corpoNoSite('.cm-menu-link')]
+  const desktop = blocosApos(siteCss, /@media\s*\(min-width:\s*1100px\)\s*\{/g)
+    .flatMap((b) => blocosApos(b, /@container cm-cab\s*\(min-width:\s*67rem\)\s*\{/g)).join('')
+
+  it('não hifeniza automaticamente os rótulos do cabeçalho nem do menu', () => {
+    expect(cabecalho).not.toMatch(/hyphens-auto|\[hyphens:auto\]/)
+    expect(menu).not.toMatch(/hyphens-auto|\[hyphens:auto\]/)
+    for (const corpo of folhas) {
+      expect(corpo).not.toBe('')
+      expect(declaracao(corpo, 'hyphens') ?? 'manual').toBe('manual')
+    }
   })
 
-  it('um ancestral da navegação declara container-type: inline-size', () => {
-    expect(corposDe('.barra-inferior').join('')).toMatch(/container-type:\s*inline-size/)
+  it('o link da linha só usa nowrap onde a navegação cabe; o menu estreito deixa quebrar', () => {
+    expect(declaracao(corpoNoSite('.cm-cab-link'), 'white-space')).toBe('nowrap')
+    expect(declaracao(corpoNoSite('.cm-menu-link'), 'white-space') ?? 'normal').toBe('normal')
+    expect(declaracao(corpoNoSite('.cm-h3'), 'white-space')).toBeUndefined()
+    expect(siteCss).toMatch(/\.cm-h4\s*\{\s*overflow-wrap:\s*anywhere/)
+    expect(menu).toContain('className="cm-menu-link cm-h3"')
   })
 
-  it('abaixo de 22rem do contêiner, @container põe .nav-inferior numa coluna', () => {
-    const bloco = /@container\s*\(\s*max-width:\s*22rem\s*\)\s*\{\s*\.nav-inferior\s*\{([^}]*)\}/.exec(semComentarios)
-    expect(bloco).not.toBeNull()
-    expect(bloco![1]).toMatch(/grid-template-columns:\s*minmax\(0,\s*1fr\)/)
+  it('o ancestral real da linha é um contêiner inline-size', () => {
+    expect(cabecalho).toMatch(/<div className="cm-cab-faixa"[^>]*>[\s\S]*?<nav[^>]*className="cm-cab-links"/)
+    expect(declaracao(corpoNoSite('.cm-cab-faixa'), 'container')).toBe('cm-cab / inline-size')
   })
 
-  it('na coluna única, a legenda e os itens perdem a posição explícita da grade de 5', () => {
-    const bloco = /@container\s*\(\s*max-width:\s*22rem\s*\)\s*\{[\s\S]*?\.nav-legenda,\s*\.nav-item\s*\{([^}]*)\}/.exec(
-      semComentarios,
-    )
-    expect(bloco).not.toBeNull()
-    expect(bloco![1]).toMatch(/grid-column:\s*auto/)
-    expect(bloco![1]).toMatch(/grid-row:\s*auto/)
+  it('a linha começa recolhida e só substitui o botão Menu com as duas guardas: viewport e 67 rem', () => {
+    expect(declaracao(corpoNoSite('.cm-cab-links').split(';').find((x) => /display:\s*none/.test(x)) ?? '', 'display')).toBe('none')
+    const regrasDesktop = regras(desktop)
+    expect(regrasDesktop.find((r) => r.seletor === '.cm-cab-links')?.corpo).toMatch(/display:\s*flex/)
+    expect(regrasDesktop.find((r) => r.seletor === '.sb-cab-menu')?.corpo).toMatch(/display:\s*none/)
   })
 
-  it('na grade de 5 colunas a posição é explícita no CSS: legenda na linha 1, itens na linha 2', () => {
-    expect(corposDe('.nav-legenda').join('')).toMatch(/grid-row:\s*1\b/)
-    expect(corposDe('.nav-item').join('')).toMatch(/grid-row:\s*2\b/)
+  it('o menu estreito é uma lista vertical sem posições de grade que mudem a ordem de leitura', () => {
+    expect(menu).toMatch(/<ul className="cm-menu-lista">[\s\S]*?<li key=\{item\.para\}>[\s\S]*?<NavLink to=\{item\.para\}/)
+    expect(corpoNoSite('.cm-menu-lista')).not.toMatch(/grid-|flex-direction:\s*row/)
+    expect(folhas.join('')).not.toMatch(/\b(?:grid-column|grid-row|order)\s*:/)
   })
 
-  it('os traços do colchete não aparecem na coluna única', () => {
-    const bloco = /@container\s*\(\s*max-width:\s*22rem\s*\)\s*\{[\s\S]*?\.nav-legenda::before,\s*\.nav-legenda::after\s*\{([^}]*)\}/.exec(
-      semComentarios,
-    )
-    expect(bloco).not.toBeNull()
-    expect(bloco![1]).toMatch(/display:\s*none/)
+  it('nas duas apresentações a lista é percorrida na mesma ordem e o link atual é diferenciado sem mudar a posição', () => {
+    for (const jsx of [cabecalho, menu]) expect(jsx).toMatch(/ITENS_DO_CABECALHO\[contexto\]\.map\(/)
+    expect(corpoNoSite(".cm-menu-link[aria-current='page']")).toMatch(/text-decoration:\s*underline/)
+    expect(siteRegras.find((r) => r.seletor.includes(".cm-cab-link[aria-current='page']"))?.corpo).toMatch(/text-decoration-color:\s*currentColor/)
+  })
+
+  it('em 16 rem texto ampliado pode quebrar a linha de ações sem reorganizar os elementos', () => {
+    const curto = blocosApos(siteCss, /@container cm-cab\s*\(max-width:\s*16rem\)\s*\{/g).join('')
+    for (const alvo of ['.cm-cab-miolo', '.cm-cab-acoes']) {
+      const regra = regras(curto).find((r) => r.seletor === alvo)?.corpo ?? ''
+      expect(declaracao(regra, 'flex-wrap'), alvo).toBe('wrap')
+      expect(declaracao(regra, 'order'), alvo).toBeUndefined()
+    }
   })
 })
 
@@ -495,28 +723,36 @@ describe('R3/W1: contorno de foco dos alvos de foco por programa, só para tecla
   })
 })
 
-describe('D6: cronômetro grande', () => {
-  it('.cronometro vai de 4,5 rem a 8 rem, com números tabulares', () => {
-    const corpo = corposDe('.cronometro').join('')
-    expect(corpo).toMatch(/font-size:\s*clamp\(\s*4\.5rem\s*,\s*21vw\s*,\s*8rem\s*\)/)
-    expect(corpo).toMatch(/line-height:\s*1\s*;/)
-    expect(corpo).toMatch(/font-variant-numeric:\s*tabular-nums/)
+
+describe('D6: cronômetro legível', () => {
+  const cronometro = lerTexto('componentes/app/CronometroSessao.tsx')
+  it('Sessão mostra números tabulares, em Literata, na linha do tempo acessível', () => {
+    expect(lerTexto('paginas/rotina/Sessao.tsx')).toMatch(/<CronometroSessao\b/)
+    expect(cronometro).toMatch(/role="timer"[\s\S]*?className=\{`[^`]*\bfont-titulo\b[^`]*\bleading-none\b[^`]*\btabular-nums\b/)
   })
 
-  it('a miniatura tem um modificador menor, que vem depois', () => {
-    const lista = regras(semComentarios).map((r) => r.seletor)
-    expect(lista.indexOf('.cronometro-mini')).toBeGreaterThan(lista.indexOf('.cronometro'))
-    expect(corposDe('.cronometro-mini').join('')).toMatch(/font-size:\s*clamp\(/)
+  it('o cronômetro longo usa uma variante menor nos dois tamanhos, sem depender da ordem das classes', () => {
+    const tamanhos = /normal:\s*'text-\[(\d+)px\] lg:text-\[(\d+)px\]',\s*longo:\s*'text-\[(\d+)px\] lg:text-\[(\d+)px\]'/.exec(cronometro)
+    expect(tamanhos).not.toBeNull()
+    const [normal, normalLargo, longo, longoLargo] = tamanhos!.slice(1).map(Number)
+    expect([normal, normalLargo, longo, longoLargo]).toEqual([72, 160, 56, 120])
+    expect(longo).toBeLessThan(normal)
+    expect(longoLargo).toBeLessThan(normalLargo)
+    expect(cronometro).toContain('TAMANHO[tamanhoDoCronometro(cronometro)]')
+    const cartaoHoje = lerTexto('componentes/app/CartaoSessao.tsx')
+    expect(cartaoHoje).toMatch(/className=\{`[^`]*\bfont-titulo\b[^`]*text-\[64px\][^`]*\btabular-nums\b[^`]*lg:text-\[120px\]/)
+    expect(64).toBeLessThan(normal)
+    expect(120).toBeLessThan(normalLargo)
   })
 })
 
-describe('D7: legenda "Em breve"', () => {
-  it('ocupa as colunas 2 a 5, alinhada à esquerda, com uma linha de 1 px embaixo', () => {
-    const corpo = corposDe('.nav-legenda').join('')
-    expect(corpo).toMatch(/grid-column:\s*2\s*\/\s*span 4/)
-    expect(corpo).toMatch(/text-align:\s*left/)
-    expect(corpo).not.toMatch(/text-align:\s*center/)
-    expect(corpo).toMatch(/border-bottom:\s*1px solid var\(--cor-linha\)/)
+describe('D7: sem destinos “Em breve” na casca atual', () => {
+  it('cabeçalho e menu oferecem apenas as seis áreas reais, na ordem do produto', () => {
+    expect(ITENS_DO_CABECALHO.logado.map((item) => [item.rotulo, item.para])).toEqual([
+      ['Hoje', '/app/hoje'], ['Sessão', '/app/sessao'], ['Histórico', '/app/historico'],
+      ['Desenvolvimento', '/app/desenvolvimento'], ['Comunidade', '/app/comunidade'], ['Família', '/app/familia'],
+    ])
+    expect(semComentarios).not.toMatch(/\.nav-legenda\b/)
   })
 })
 
@@ -527,7 +763,7 @@ describe('index.html', () => {
   })
 
   it('traz a descrição e a cor do tema', () => {
-    expect(indexHtml).toContain('<meta name="description" content="Protótipo do AppMaternidade." />')
+    expect(indexHtml).toContain('<meta name="description" content="Site para a família registrar a rotina do bebê, dividir os cuidados e acompanhar o desenvolvimento. Demonstração com dados fictícios." />')
     expect(indexHtml).toMatch(/<meta name="theme-color" content="#[0-9a-f]{6}" \/>/)
   })
 })

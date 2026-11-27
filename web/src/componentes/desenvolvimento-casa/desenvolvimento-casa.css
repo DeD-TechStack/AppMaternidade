@@ -1,0 +1,918 @@
+/* /desenvolvimento nas seções da casa (redesign editorial). Estático na base: nada nasce escondido e nada se move
+   fora do arquivo de movimento importado abaixo. Espaço só pelos papéis `--espaco-*` e `--quadro-*`; cor só por
+   `--color-*`. Sem sombra, gradiente, blur, itálico, caixa alta, transição ou `transform` neste arquivo.
+
+   MOTION-PAGES (E2, E3): o movimento preso à rolagem mora em `../../movimento/paginas/desenvolvimento.css`, todo sob
+   `@supports` e `prefers-reduced-motion: no-preference`. */
+@import '../../movimento/paginas/desenvolvimento.css';
+
+/* ---- Base da página e ritmo de chão ---- */
+.dc-abertura {
+  --dc-chao: var(--espaco-secao);
+
+  container-type: inline-size;
+  position: relative;
+  overflow-x: clip;
+  background-color: var(--color-papel);
+}
+
+.cm-faixa-inteira:has(> .cm-faixa-quadro > .dc-grade) {
+  --dc-chao: var(--espaco-secao);
+
+  padding-block: var(--dc-chao);
+}
+
+/* A última faixa (urgência 192, cacau) encosta no rodapé de cacau com um fio fino separador, sem fresta clara. */
+[data-pagina-desenvolvimento] .cm-rodape:not(.cm-rodape-compacto) {
+  margin-top: 0;
+}
+
+.cm-faixa-inteira:has(> .cm-faixa-quadro > .dc-urgencia-wrap) {
+  border-bottom: 1px solid var(--color-noite-cartao);
+}
+
+@media (max-width: 767px) {
+  .dc-abertura,
+  .cm-faixa-inteira:has(> .cm-faixa-quadro > .dc-grade) {
+    --dc-chao: var(--espaco-midia);
+  }
+}
+
+/* A pílula "Criar conta" do cabeçalho não disputa com o botão da abertura: nesta página fica em contorno. */
+[data-pagina-desenvolvimento] [data-cabecalho-pilula] {
+  border-color: var(--cor-texto);
+  background-color: transparent;
+  color: var(--cor-texto);
+}
+
+[data-pagina-desenvolvimento] [data-cabecalho-pilula]:hover {
+  background-color: var(--cor-texto);
+  color: var(--cor-fundo);
+}
+
+/* ---- Faixa 1: Abertura (papel) ----------------------------------------------------------------------------------
+   Um ponto focal visual único (cena M04 no tapete) e uma unidade de leitura coesa (h1, frase, ações e aviso de saúde
+   juntos). Abaixo de 960 px: cena no topo, texto imediatamente abaixo; de 960 px em diante: 5.5fr texto à esquerda e
+   6.5fr cena à direita, pousada na base da faixa. */
+.dc-abertura-quadro {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: end;
+  row-gap: var(--espaco-grupo);
+  padding-bottom: var(--dc-chao);
+}
+
+.dc-abertura-texto {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  min-width: 0;
+}
+
+.dc-h1 {
+  font-weight: var(--peso-exibicao);
+  letter-spacing: -0.02em;
+  max-width: 560px;
+}
+
+.dc-lede {
+  margin-top: var(--espaco-pilha);
+  max-width: 480px;
+}
+
+.dc-acoes {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  column-gap: var(--espaco-grupo);
+  row-gap: var(--espaco-junto);
+  margin-top: var(--espaco-grupo);
+}
+
+.dc-link {
+  display: inline-flex;
+  align-items: center;
+  box-sizing: border-box;
+  min-height: 44px;
+  color: inherit;
+  font-weight: 500;
+  text-decoration-line: underline;
+  text-decoration-thickness: 1.5px;
+  text-underline-offset: 6px;
+}
+
+.dc-link:hover {
+  text-decoration-thickness: 2.5px;
+}
+
+.dc-link:focus-visible {
+  outline: 2px solid var(--foco-faixa, var(--color-cacau));
+  outline-offset: 3px;
+  border-radius: 6px;
+}
+
+.dc-aviso {
+  margin-top: var(--espaco-grupo);
+  padding-top: var(--espaco-pilha);
+  border-top: 1px solid var(--color-areia);
+  color: var(--color-texto-2);
+  max-width: 460px;
+}
+
+/* A cena M04: o terço direito da placa de 1672 px é papel vazio; recortar em 1240/941 (ancorado à esquerda) entrega o
+   tapete, a janela de sol, Heloísa e Juliana em cheio, com nitidez próxima de 2x em DPR 2. */
+.dc-cena {
+  display: block;
+  min-width: 0;
+}
+
+.dc-cena img {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 1240 / 941;
+  object-fit: cover;
+  object-position: 0% 50%;
+}
+
+@media (max-width: 959px) {
+  .dc-cena {
+    order: -1;
+    margin-inline: calc(-1 * var(--quadro-calha));
+  }
+
+  .dc-cena img {
+    aspect-ratio: 1240 / 680;
+    object-position: 0% 62%;
+  }
+
+  .dc-acoes > .cm-botao {
+    width: auto;
+  }
+}
+
+@media (max-width: 767px) {
+  .dc-abertura-quadro {
+    row-gap: var(--espaco-pilha);
+  }
+
+  .dc-cena img {
+    aspect-ratio: 1240 / 620;
+    object-position: 0% 68%;
+  }
+
+  .dc-acoes {
+    flex-direction: column;
+    align-items: flex-start;
+    margin-top: var(--espaco-pilha);
+  }
+
+  .dc-aviso {
+    margin-top: var(--espaco-pilha);
+  }
+}
+
+@media (min-width: 960px) {
+  .dc-abertura-quadro {
+    grid-template-columns: minmax(0, 11fr) minmax(0, 13fr);
+    column-gap: var(--espaco-bloco);
+    align-items: center;
+    min-height: clamp(540px, calc(100svh - var(--cm-cabecalho) - var(--espaco-bloco)), 760px);
+    padding-top: var(--espaco-bloco);
+    padding-bottom: 0;
+  }
+
+  .dc-abertura-texto {
+    padding-bottom: var(--dc-chao);
+  }
+
+  .dc-cena {
+    align-self: end;
+    width: 100%;
+  }
+
+  .dc-cena img {
+    aspect-ratio: 1240 / 920;
+    object-position: 0% 100%;
+  }
+}
+
+/* Janela baixa: preserva h1, frase e botão inteiro na primeira dobra. */
+@media (max-width: 899px) and (max-height: 520px) {
+  .dc-h1 {
+    font-size: var(--texto-titulo-1-tamanho);
+    line-height: var(--texto-titulo-1-entrelinha);
+  }
+
+  .dc-lede {
+    margin-top: var(--espaco-junto);
+    font-size: var(--texto-corpo-tamanho);
+    line-height: var(--texto-corpo-entrelinha);
+  }
+
+  .dc-acoes {
+    margin-top: var(--espaco-pilha);
+  }
+}
+
+/* Paisagem baixa (844 x 390, 667 x 375): texto à esquerda e cena à direita medida pela altura útil em svh. */
+@media (max-width: 899px) and (min-width: 521px) and (max-height: 520px) {
+  .dc-abertura-quadro {
+    --dc-razao: 1.7714;
+
+    grid-template-columns:
+      minmax(0, 1fr)
+      min(44%, (100svh - var(--cm-cabecalho) - 2 * var(--espaco-pilha)) * var(--dc-razao));
+    column-gap: var(--espaco-bloco);
+    align-items: start;
+    padding-top: var(--espaco-pilha);
+  }
+
+  .dc-cena {
+    order: 0;
+    margin-inline: 0;
+  }
+
+  .dc-cena img {
+    aspect-ratio: 1240 / 700;
+    object-position: 0% 65%;
+  }
+}
+
+/* Estreita e baixa (390 x 300): texto e ações primeiro; cena desce depois do texto. */
+@media (max-width: 520px) and (max-height: 520px) {
+  .dc-abertura-quadro {
+    padding-top: var(--espaco-junto);
+  }
+
+  .dc-cena {
+    order: 1;
+  }
+}
+
+@media (max-width: 899px) and (max-height: 340px) {
+  .dc-h1 {
+    font-size: var(--texto-titulo-2-tamanho);
+    line-height: var(--texto-titulo-2-entrelinha);
+  }
+}
+
+/* ---- Contêiner comum das faixas internas ---- */
+.dc-grade {
+  container-type: inline-size;
+  scroll-margin-top: calc(var(--cm-cabecalho) + var(--espaco-junto));
+}
+
+.dc-titulo {
+  max-width: 560px;
+}
+
+.dc-intro {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--espaco-pilha);
+  min-width: 0;
+}
+
+.dc-bloco {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espaco-grupo);
+  min-width: 0;
+}
+
+.dc-largo {
+  min-width: 0;
+}
+
+/* ---- Faixa 2: No site, é só um registro (areia) ----------------------------------------------------------------
+   Texto + legenda assinada ao lado do aparelho real (Histórico das 15:00), em pé no chão da faixa. */
+.cm-faixa-inteira:has(> .cm-faixa-quadro > .dc-grade > .dc-registro) {
+  padding-bottom: 0;
+}
+
+.dc-registro {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  row-gap: var(--espaco-grupo);
+  align-items: end;
+}
+
+.dc-registro-texto {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--espaco-pilha);
+  min-width: 0;
+}
+
+.dc-registro-legenda {
+  margin-top: var(--espaco-junto);
+  padding-top: var(--espaco-pilha);
+  border-top: 1px solid currentcolor;
+  width: 100%;
+  max-width: var(--leitura);
+}
+
+.dc-registro-legenda > [data-legenda] {
+  font-family: var(--fonte-exibicao);
+  font-size: var(--texto-titulo-3-tamanho);
+  line-height: var(--texto-titulo-3-entrelinha);
+  font-weight: var(--peso-titulo);
+  font-variant-numeric: tabular-nums lining-nums;
+  text-wrap: balance;
+}
+
+/* O aparelho em pé na borda de baixo da faixa: corta limpo logo abaixo da lista das 20:30, sem sobrar o rodapé da
+   captura. */
+.dc-moldura {
+  --dc-tela: min(300px, (100cqi - 2 * var(--espaco-junto)) / 1.06);
+
+  position: relative;
+  z-index: 1;
+  justify-self: start;
+  height: calc(var(--dc-tela) * 1.48);
+  overflow: hidden;
+}
+
+.dc-moldura .cm-produto-moldura {
+  --produto-tela: var(--dc-tela);
+}
+
+@container (min-width: 52rem) {
+  .dc-registro {
+    grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+    column-gap: var(--espaco-midia);
+    align-items: end;
+  }
+
+  .dc-registro-texto {
+    align-self: center;
+    padding-bottom: var(--dc-chao);
+  }
+
+  .dc-moldura {
+    --dc-tela: min(340px, (100cqi * 5 / 12) / 1.06);
+
+    justify-self: end;
+  }
+}
+
+/* ---- Etiqueta plana (faixa de idade) ---- */
+.dc-etiqueta {
+  display: inline-block;
+  margin: 0;
+  padding: 4px var(--espaco-junto);
+  background-color: var(--color-papel);
+  font-weight: 500;
+  font-variant-numeric: tabular-nums lining-nums;
+}
+
+[data-faixa-fundo='papel'] .dc-etiqueta {
+  background-color: var(--color-areia);
+}
+
+/* ---- Faixa 3: Ideias para brincar em cada fase (papel) --------------------------------------------------------- */
+.dc-ideias {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-areas:
+    'texto'
+    'familia'
+    'fases';
+  row-gap: var(--espaco-grupo);
+}
+
+.dc-ideias-texto {
+  display: flex;
+  flex-direction: column;
+  grid-area: texto;
+  gap: var(--espaco-pilha);
+  min-width: 0;
+}
+
+/* Bloco plano de regras universais ("Valem para todas as fases"): destaque arquitetural em areia com filete de tinta,
+   sem sombra nem raio de cartão. */
+.dc-regras {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espaco-junto);
+  margin-top: var(--espaco-junto);
+  padding: var(--espaco-grupo);
+  border-left: 3px solid var(--color-cacau);
+  background-color: var(--color-areia);
+  max-width: var(--leitura);
+}
+
+.dc-familia {
+  grid-area: familia;
+  align-self: end;
+}
+
+.dc-familia img {
+  display: block;
+  width: min(260px, 100%);
+  height: auto;
+  aspect-ratio: 585 / 632;
+}
+
+@container (min-width: 40rem) {
+  .dc-ideias {
+    grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+    grid-template-areas:
+      'texto familia'
+      'fases fases';
+    column-gap: var(--espaco-midia);
+    row-gap: 0;
+  }
+
+  .dc-ideias-texto {
+    padding-bottom: var(--espaco-bloco);
+  }
+
+  .dc-familia {
+    justify-self: end;
+    margin-bottom: 0;
+  }
+
+  .dc-familia img {
+    width: min(292px, 100%);
+  }
+}
+
+/* Índice rotulado de fases com estado selecionado visível (Pato Jack + Good Inside). */
+.dc-fases-bloco {
+  grid-area: fases;
+  min-width: 0;
+}
+
+.dc-fases-indice {
+  padding-block: var(--espaco-grupo);
+  border-top: 1px solid currentcolor;
+}
+
+.dc-fases-rotulo {
+  margin: 0;
+  font-weight: 500;
+}
+
+.dc-fases-indice > ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--espaco-junto);
+  margin: var(--espaco-pilha) 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.dc-fases-indice li {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.dc-fases-indice a {
+  display: inline-flex;
+  align-items: center;
+  box-sizing: border-box;
+  min-height: 44px;
+  padding: 8px var(--espaco-pilha);
+  border: 1.5px solid var(--color-cacau);
+  border-radius: var(--radius-pilula);
+  background-color: var(--color-papel);
+  color: var(--color-cacau);
+  font-weight: 500;
+  text-decoration: none;
+  overflow-wrap: anywhere;
+}
+
+.dc-fases-indice a:hover {
+  background-color: var(--color-areia);
+}
+
+.dc-fases-indice a[data-fase-ativa],
+.dc-fases-indice a[aria-current='location'] {
+  background-color: var(--color-cacau);
+  color: var(--color-papel);
+}
+
+.dc-fases-indice a:focus-visible {
+  outline: 2px solid var(--foco-faixa, var(--color-cacau));
+  outline-offset: 3px;
+}
+
+/* As seis fases abertas: uma lista só com fio de 1 px (E3 anima o fio de cima na entrada). */
+.dc-fases {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.dc-fases > li {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-content: start;
+  gap: var(--espaco-pilha);
+  padding-block: var(--espaco-grupo);
+  border-top: 1px solid currentcolor;
+  scroll-margin-top: calc(var(--cm-cabecalho) + var(--espaco-junto));
+}
+
+.dc-fases > li:last-child {
+  border-bottom: 1px solid currentcolor;
+}
+
+.dc-fase-cabeca {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--espaco-junto);
+}
+
+.dc-fase-faixa {
+  display: inline-block;
+  margin: 0;
+  padding: 2px var(--espaco-junto);
+  background-color: var(--color-areia);
+  color: var(--color-cacau);
+  font-weight: 500;
+  font-variant-numeric: tabular-nums lining-nums;
+}
+
+@container (min-width: 56rem) {
+  .dc-fases {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: var(--espaco-midia);
+  }
+
+  .dc-fases > li:nth-last-child(2) {
+    border-bottom: 1px solid currentcolor;
+  }
+}
+
+.dc-itens {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--espaco-junto);
+  max-width: var(--leitura);
+  margin: 0;
+  padding-left: 1.25em;
+  list-style: disc;
+}
+
+.dc-itens > li {
+  text-wrap: pretty;
+}
+
+/* ---- Faixa 4: Tummy time, segundo as fontes (areia) ------------------------------------------------------------
+   Composição editorial estruturada: cabeçalho 7/5 -> três pilares em colunas iguais -> tabela comparativa -> postura
+   editorial sem meta em destaque ao lado de "Se o bebê reclamar" -> fontes. */
+.dc-tummy {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  row-gap: var(--espaco-bloco);
+}
+
+.dc-cabeca-duas {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  row-gap: var(--espaco-pilha);
+}
+
+.dc-pilares {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  row-gap: var(--espaco-grupo);
+}
+
+.dc-parte {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-content: start;
+  gap: var(--espaco-junto);
+  min-width: 0;
+}
+
+.dc-parte-pilar {
+  padding-top: var(--espaco-pilha);
+  border-top: 1px solid currentcolor;
+}
+
+.dc-tabela-quadro {
+  min-width: 0;
+  padding: var(--espaco-grupo);
+  background-color: var(--color-papel);
+}
+
+.dc-tummy-fecho {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  row-gap: var(--espaco-grupo);
+  align-items: start;
+}
+
+.dc-postura {
+  padding-left: var(--espaco-grupo);
+  border-left: 3px solid var(--color-cacau);
+  font-family: var(--fonte-exibicao);
+  font-weight: var(--peso-titulo);
+}
+
+.dc-fontes-barra {
+  padding-top: var(--espaco-grupo);
+  border-top: 1px solid currentcolor;
+}
+
+@container (min-width: 56rem) {
+  .dc-cabeca-duas {
+    grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+    column-gap: var(--espaco-midia);
+    align-items: start;
+  }
+
+  .dc-pilares {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    column-gap: var(--espaco-bloco);
+  }
+
+  .dc-tummy-fecho {
+    grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+    column-gap: var(--espaco-midia);
+  }
+}
+
+/* ---- Faixa 5: Marcos, sem cobrança (papel) ---------------------------------------------------------------------
+   Diferenciação clara da segunda metade: trilho fixo à esquerda (título, resumo, faixa, fontes) e lista editorial
+   vertical com fios à direita, culminando no bloco destacado de conversa com o profissional. */
+.dc-marcos {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  row-gap: var(--espaco-bloco);
+}
+
+.dc-marcos-trilho {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--espaco-pilha);
+  min-width: 0;
+}
+
+.dc-marcos-fontes {
+  width: 100%;
+  padding-top: var(--espaco-pilha);
+  border-top: 1px solid var(--color-areia);
+  min-width: 0;
+}
+
+.dc-marcos-conteudo {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espaco-grupo);
+  min-width: 0;
+}
+
+.dc-parte-trilho {
+  padding-top: var(--espaco-grupo);
+  border-top: 1px solid currentcolor;
+}
+
+.dc-marcos-destaque {
+  padding: var(--espaco-grupo);
+  border-left: 3px solid var(--color-cacau);
+  background-color: var(--color-areia);
+}
+
+@container (min-width: 56rem) {
+  .dc-marcos {
+    grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+    grid-template-rows: auto minmax(0, 1fr);
+    column-gap: var(--espaco-midia);
+    row-gap: var(--espaco-grupo);
+    align-items: start;
+  }
+
+  .dc-marcos-trilho {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  .dc-marcos-fontes {
+    grid-column: 1;
+    grid-row: 2;
+  }
+
+  .dc-marcos-conteudo {
+    grid-column: 2;
+    grid-row: 1 / 3;
+  }
+}
+
+/* ---- Faixa 6: Urgência 192 (cacau) ----------------------------------------------------------------------------- */
+.dc-urgencia {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  row-gap: var(--espaco-pilha);
+  align-items: baseline;
+}
+
+.dc-urgencia-titulo {
+  max-width: 560px;
+  font-variant-numeric: tabular-nums lining-nums;
+}
+
+@container (min-width: 52rem) {
+  .dc-urgencia {
+    grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+    column-gap: var(--espaco-midia);
+    align-items: center;
+  }
+}
+
+/* ---- Fontes (sempre abertas, alvos de 44 px; contraste AA em papel e em areia) --------------------------------- */
+.dc-fontes {
+  container-type: inline-size;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0;
+  color: inherit;
+}
+
+[data-faixa-fundo='papel'] .dc-fontes-data {
+  color: var(--color-texto-2);
+}
+
+.dc-fontes-rotulo {
+  margin: 0;
+  color: var(--color-cacau);
+  font-weight: 600;
+}
+
+.dc-fontes-data {
+  margin: 0;
+  font-variant-numeric: tabular-nums lining-nums;
+}
+
+.dc-fontes-lista {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+@container (min-width: 30rem) {
+  .dc-fontes-lista {
+    display: flex;
+    flex-wrap: wrap;
+    column-gap: var(--espaco-grupo);
+  }
+}
+
+.dc-fontes-lista a {
+  display: inline-block;
+  padding-block: 11px;
+  color: var(--color-cacau);
+  text-decoration-line: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+  overflow-wrap: anywhere;
+}
+
+.dc-fontes-lista a:hover {
+  text-decoration-thickness: 2px;
+}
+
+.dc-fontes-lista a:focus-visible {
+  outline: 2px solid var(--foco-faixa, var(--color-cacau));
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* ---- Tabela "quanto tempo" (sempre legível em qualquer largura) ------------------------------------------------ */
+.dc-tabela {
+  position: relative;
+  display: block;
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.dc-tabela caption {
+  display: block;
+  margin-bottom: var(--espaco-grupo);
+  text-align: left;
+}
+
+.dc-tabela-cabeca {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.dc-tabela tbody {
+  display: block;
+}
+
+.dc-tabela tr {
+  display: block;
+  padding-block: var(--espaco-pilha);
+  border-top: 1px solid currentcolor;
+}
+
+.dc-tabela tbody tr:last-child {
+  border-bottom: 1px solid currentcolor;
+}
+
+.dc-tabela th[scope='row'] {
+  display: block;
+  margin: 0;
+  font-weight: 600;
+  text-align: left;
+  overflow-wrap: anywhere;
+}
+
+.dc-tabela td {
+  display: block;
+  margin-top: var(--espaco-junto);
+  overflow-wrap: anywhere;
+}
+
+.dc-tabela td:last-child {
+  color: var(--color-texto-2);
+}
+
+.dc-tabela td::before {
+  content: attr(data-coluna);
+  display: block;
+  color: var(--color-texto-2);
+  font-size: var(--texto-pequeno-tamanho);
+  line-height: var(--texto-pequeno-entrelinha);
+  font-weight: 500;
+}
+
+/* A célula vazia (o traço da Pathways) fica vazia: sem o nome da coluna solto. */
+.dc-tabela td:empty {
+  display: none;
+}
+
+@container (min-width: 52rem) {
+  .dc-tabela {
+    display: table;
+    table-layout: fixed;
+  }
+
+  .dc-tabela caption {
+    display: table-caption;
+  }
+
+  .dc-tabela-cabeca {
+    position: static;
+    display: table-header-group;
+    width: auto;
+    height: auto;
+    overflow: visible;
+    clip-path: none;
+    white-space: normal;
+  }
+
+  .dc-tabela-cabeca th {
+    padding: 0 var(--espaco-grupo) var(--espaco-pilha) 0;
+    color: var(--color-texto-2);
+    font-weight: 600;
+    text-align: left;
+    vertical-align: bottom;
+  }
+
+  .dc-tabela-cabeca th:nth-child(1) {
+    width: 28%;
+  }
+
+  .dc-tabela-cabeca th:nth-child(2) {
+    width: 42%;
+  }
+
+  .dc-tabela tbody {
+    display: table-row-group;
+  }
+
+  .dc-tabela tr {
+    display: table-row;
+    padding-block: 0;
+  }
+
+  .dc-tabela th[scope='row'],
+  .dc-tabela td,
+  .dc-tabela td:empty {
+    display: table-cell;
+    margin: 0;
+    padding: var(--espaco-pilha) var(--espaco-grupo) var(--espaco-pilha) 0;
+    vertical-align: top;
+  }
+
+  .dc-tabela td::before {
+    content: none;
+  }
+}

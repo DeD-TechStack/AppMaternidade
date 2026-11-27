@@ -1,0 +1,556 @@
+/* Páginas públicas de leitura. A abertura usa a escala da Casa e a luminária sobre o piso.
+   Os documentos mantêm a coluna e o índice originais. */
+@layer components {
+  .pt-junto {
+    display: inline-block;
+    max-inline-size: 100%;
+  }
+
+  .pt-abertura {
+    --pt-borda: max(var(--quadro-calha), (100cqi - var(--quadro-largura)) / 2);
+    --pt-lampada: calc(var(--alvo-toque) * 1.28);
+
+    container: pt-abertura / inline-size;
+    display: grid;
+    border-block-end: var(--espaco-junto) solid var(--chao-noite);
+    background-color: var(--noite);
+    color: var(--tinta-noite);
+  }
+
+  main > .pt-abertura[data-h~='secao']:first-child:not([data-h-variante='painel']) {
+    padding-block: 0;
+  }
+
+  .pt-abertura-grade {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    align-items: center;
+    padding-block-start: var(--espaco-junto);
+  }
+
+  .pt-abertura-quadro[data-h~='quadro'] {
+    grid-area: 1 / 1;
+    inline-size: min(var(--leitura), 100% - 2 * var(--pt-borda) - var(--pt-lampada) - var(--espaco-pilha));
+    padding-block: var(--espaco-grupo);
+  }
+
+  .pt-abertura h1,
+  .pt-abertura p {
+    overflow-wrap: anywhere;
+  }
+
+  .pt-abertura :is(h1, .cm-botao):focus-visible {
+    outline: 2px solid var(--tinta-noite);
+    outline-offset: var(--espaco-junto);
+  }
+
+  .pt-abertura .cm-botao {
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+
+  .pt-luminaria {
+    grid-area: 1 / 1;
+    align-self: end;
+    justify-self: end;
+    inset-inline-end: var(--pt-borda);
+    inline-size: var(--pt-lampada);
+    pointer-events: none;
+  }
+
+  .pt-email {
+    display: grid;
+    justify-items: start;
+    gap: var(--espaco-pilha);
+    min-inline-size: 0;
+  }
+
+  .pt-email-dados {
+    min-inline-size: 0;
+  }
+
+  .pt-email-rotulo {
+    font-family: var(--fonte-texto);
+    font-size: var(--texto-pequeno-tamanho);
+    line-height: var(--texto-pequeno-entrelinha);
+    font-weight: 600;
+  }
+
+  .pt-pilares {
+    background-color: var(--chao-dia);
+  }
+
+  .pt-fecho {
+    display: grid;
+    gap: var(--espaco-bloco);
+  }
+
+  .pt-pilares .pt-titulados {
+    display: grid;
+  }
+
+  @container pt-pagina (min-width: 40rem) {
+    .pt-pilares .pt-titulados {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  @container (min-width: 66rem) {
+    .pt-cena > .pt-abertura-grade {
+      --pt-lampada: calc(var(--alvo-toque) * 2.2);
+
+      padding-block-start: var(--espaco-midia);
+    }
+  }
+
+  .pt-contato .pt-abertura-quadro[data-h~='quadro'] {
+    inline-size: calc(100% - 2 * var(--pt-borda) - var(--pt-lampada) - var(--espaco-junto));
+    max-inline-size: none;
+  }
+
+  .pt-contato .pt-abertura h1 {
+    max-inline-size: var(--leitura);
+  }
+
+  .pt-email .sb-botao-grupo {
+    flex-wrap: wrap;
+    gap: var(--espaco-junto);
+  }
+
+  .pt-email .cm-texto-2 {
+    color: var(--tinta-noite);
+  }
+
+  @container pt-abertura (width < 40rem) {
+    .pt-contato .pt-abertura-quadro[data-h~='quadro'] {
+      inline-size: calc(100% - 2 * var(--pt-borda));
+    }
+
+    /* Na abertura estreita, a linha do endereço atravessa o quadro acima da luminária. */
+    .pt-contato .pt-email .sb-botao-grupo {
+      box-sizing: border-box;
+      min-inline-size: 0;
+      max-inline-size: 100%;
+      min-block-size: calc(var(--pt-lampada) * 645 / 195 - var(--espaco-grupo));
+      padding-inline-end: calc(var(--pt-lampada) + var(--espaco-pilha));
+      align-content: center;
+    }
+  }
+
+  @media (min-width: 69.5rem) {
+    .pt-contato {
+      display: grid;
+      grid-template-rows: 1fr auto;
+      min-block-size: calc(100svh - var(--cm-cabecalho));
+    }
+  }
+
+  /* ----- Documento: sobre papel, logo abaixo da faixa ----- */
+
+  .pt-secao-leitura[data-h~='secao'] {
+    padding-block-start: var(--espaco-midia);
+  }
+
+  /* Cabeça e corpo partem da largura disponível e da mesma calha, inclusive com barra de rolagem. */
+  .pt-pagina[data-h~='quadro'],
+  .pt-destinatario[data-h~='quadro'] {
+    inline-size: min(var(--quadro-largura), 100% - 2 * var(--quadro-calha));
+  }
+
+  /* O quadro da página é o contêiner do índice: ele vai para a direita da coluna quando cabem 640 + vão + 320. */
+  .pt-pagina {
+    container: pt-pagina / inline-size;
+  }
+
+  /* Estreito: o índice vem antes do documento, em fluxo, numa coluna só. */
+  .pt-pagina-grade {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--espaco-bloco);
+  }
+
+  @container pt-pagina (min-width: 66rem) {
+    .pt-pilares .pt-titulados {
+      grid-template-columns: repeat(4, minmax(min-content, 1fr));
+    }
+
+    /* Cada trilho reserva a largura da maior palavra do título antes de repartir a sobra. */
+    .pt-pilares .pt-h3 {
+      overflow-wrap: normal;
+    }
+
+    .pt-fecho {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .pt-pagina-grade {
+      grid-template-columns: minmax(0, var(--leitura)) minmax(0, 20rem);
+      column-gap: var(--espaco-secao);
+      align-items: start;
+    }
+
+    .pt-pagina-grade > .pt-leitura {
+      grid-column: 1;
+      grid-row: 1;
+    }
+
+    /* O índice acompanha a leitura: gruda na linha de âncora (`--ancora-leitura`, a mesma que o `scroll-padding-top`
+       do html lê, para o título cair onde o índice começa) e, se a lista não cabe na janela, rola por dentro. Ele
+       gruda dentro da grade, então no fim da página para antes do rodapé. */
+    .pt-pagina-grade > .pt-indice {
+      grid-column: 2;
+      grid-row: 1;
+      position: sticky;
+      inset-block-start: var(--ancora-leitura);
+      max-block-size: calc(100svh - var(--ancora-leitura) - var(--espaco-grupo));
+      overflow-y: auto;
+    }
+
+    /* Sem índice (menos de três seções: Contato): as duas seções lado a lado, 7 para 5, e a frase de apresentação,
+       quando há, ocupa a linha de cima. A coluna de leitura deixa de ser caixa: as seções viram células da grade. */
+    .pt-pagina-grade.pt-sem-indice {
+      grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+      column-gap: var(--espaco-secao);
+      row-gap: var(--espaco-midia);
+    }
+
+    .pt-pagina-grade.pt-sem-indice > .pt-leitura {
+      display: contents;
+    }
+
+    .pt-pagina-grade.pt-sem-indice > .pt-leitura > .cm-lide {
+      grid-column: 1 / -1;
+    }
+  }
+
+  /* Índice "Nesta página": o rótulo no corpo, em 500, e uma lista vertical só, igual nas seis páginas. */
+  .pt-indice-rotulo {
+    margin: 0;
+    font-family: var(--fonte-texto);
+    font-size: var(--texto-corpo-tamanho);
+    line-height: var(--texto-corpo-entrelinha);
+    font-weight: 500;
+  }
+
+  /* A lista leva o trilho: um fio de 1 px na cor do fio suave, no começo da linha. Os links recuam o vão da pilha. */
+  .pt-indice-lista {
+    margin: 4px 0 0;
+    padding: 0;
+    border-inline-start: 1px solid var(--cor-fio-suave);
+    list-style: none;
+  }
+
+  /* Em tela estreita o índice é um <details> fechado: o resumo é uma linha de 48 px com a seta, sem fundo. */
+  .pt-indice-resumo {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--espaco-junto);
+    box-sizing: border-box;
+    min-height: 48px;
+    font-family: var(--fonte-texto);
+    font-size: var(--texto-corpo-tamanho);
+    line-height: var(--texto-corpo-entrelinha);
+    font-weight: 500;
+    list-style: none;
+    cursor: pointer;
+  }
+
+  .pt-indice-resumo::-webkit-details-marker {
+    display: none;
+  }
+
+  .pt-indice-detalhes[open] .pt-indice-seta {
+    transform: rotate(180deg);
+  }
+
+  /* Links de cacau, alvo de 44 px no mínimo, sublinhados só no hover e no foco (a resposta é imediata). */
+  .pt-indice-link {
+    position: relative;
+    display: flex;
+    align-items: center;
+    box-sizing: border-box;
+    min-block-size: var(--alvo-toque);
+    padding-block: 6px;
+    padding-inline-start: var(--espaco-pilha);
+    color: var(--color-cacau);
+    font-family: var(--fonte-texto);
+    font-size: var(--texto-corpo-tamanho);
+    line-height: var(--texto-corpo-entrelinha);
+    text-decoration-line: none;
+    text-decoration-thickness: 1.5px;
+    text-underline-offset: 4px;
+  }
+
+  .pt-indice-link:hover,
+  .pt-indice-link:focus-visible {
+    text-decoration-line: underline;
+  }
+
+  /* O marcador da seção atual: um traço de cacau de 2 px, da altura do link, sobre o trilho. Fica sempre desenhado e só
+     a escala vertical muda (0 → 1), no tempo e na curva de fechar; com movimento reduzido a transição vale 0 (index.css)
+     e o traço aparece no lugar. */
+  .pt-indice-link::before {
+    position: absolute;
+    inset-block: 0;
+    inset-inline-start: -1px;
+    inline-size: 2px;
+    background-color: var(--color-cacau);
+    content: '';
+    transform: scaleY(0);
+    transition: transform var(--mov-fechar) var(--mov-curva);
+  }
+
+  .pt-indice-link[aria-current='location']::before {
+    transform: scaleY(1);
+  }
+
+  /* Leitura: Outfit no corpo (18/28 em 1440) numa coluna de 640 px (uns 70 letras por linha). As seções se separam
+     só pelo vão `midia` da pilha (64 px em 1440) e pelos títulos: nenhum fio, nenhum cartão. */
+  .pt-leitura {
+    font-family: var(--fonte-texto);
+    font-size: var(--texto-corpo-tamanho);
+    line-height: var(--texto-corpo-entrelinha);
+  }
+
+  /* h2 em Literata no degrau de título 2 (36/42 em 1440; o h2 de 56 é de página de venda) e h3 no de título 4. O vão
+     até o texto é o da pilha (16 px). */
+  .pt-h2,
+  .pt-h3 {
+    margin: 0;
+    font-family: var(--fonte-titulo);
+    font-weight: 600;
+    text-wrap: balance;
+    overflow-wrap: anywhere;
+  }
+
+  .pt-h2 {
+    font-size: var(--texto-titulo-2-tamanho);
+    line-height: var(--texto-titulo-2-entrelinha);
+    letter-spacing: -0.01em;
+  }
+
+  .pt-h3 {
+    font-size: var(--texto-titulo-4-tamanho);
+    line-height: var(--texto-titulo-4-entrelinha);
+  }
+
+  /* Texto: Outfit no corpo. */
+  .pt-texto {
+    font-family: var(--fonte-texto);
+    font-size: var(--texto-corpo-tamanho);
+    line-height: var(--texto-corpo-entrelinha);
+  }
+
+  .pt-texto > * {
+    margin: 0;
+  }
+
+  /* `text-wrap: pretty` só evita a palavra sozinha na última linha do parágrafo; as demais linhas enchem a coluna. */
+  .pt-texto p {
+    overflow-wrap: break-word;
+    text-wrap: pretty;
+  }
+
+  /* Link no meio do texto: alvo de 44 x 44 no mínimo. A caixa cresce 8 px para cima e para baixo (28 de linha
+     + 16 = 44) e a margem negativa devolve os 8 px, para a altura da linha não mudar. */
+  .pt-texto a:not(.cm-botao) {
+    display: inline-block;
+    box-sizing: border-box;
+    min-width: 44px;
+    max-width: 100%;
+    min-height: 44px;
+    padding-block: 8px;
+    margin-block: -8px;
+    color: var(--cor-link);
+    line-height: var(--texto-corpo-entrelinha);
+    overflow-wrap: anywhere;
+    text-decoration-line: underline;
+    text-decoration-thickness: 1.5px;
+    text-underline-offset: 3px;
+  }
+
+  .pt-texto a:not(.cm-botao):hover {
+    text-decoration-thickness: 3px;
+  }
+
+  /* O reset do Tailwind tira os marcadores: aqui voltam (números nas listas ordenadas, bolinhas nas outras),
+     na cor do texto (AA) e com recuo para o marcador ficar à vista. */
+  .pt-texto > .pt-lista {
+    padding-inline-start: var(--espaco-grupo);
+  }
+
+  ol.pt-lista {
+    list-style: decimal outside;
+  }
+
+  ul.pt-lista {
+    list-style: disc outside;
+  }
+
+  .pt-lista > li::marker {
+    color: var(--color-cacau);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .pt-lista > li {
+    padding-inline-start: 4px;
+  }
+
+  .pt-lista > li + li {
+    margin-top: var(--espaco-junto);
+  }
+
+  /* Celular: a lista de leitura é mais densa (vão de 4 px entre itens, no lugar do vão junto). O texto, o tamanho e a
+     entrelinha do corpo e a ordem não mudam; só o espaço, para a lista longa de Privacidade (9 grupos de dados)
+     empurrar menos o primeiro parágrafo para baixo. */
+  @media (max-width: 639.98px) {
+    .pt-lista > li + li {
+      margin-top: 4px;
+    }
+  }
+
+  /* Lista de 4 itens ou mais e só de itens curtos: corre em duas colunas dentro da coluna de leitura (a ordem
+     segue de cima para baixo e as colunas se equilibram). Lista de itens longos fica numa coluna só. */
+  @media (min-width: 640px) {
+    .pt-lista.pt-lista-colunas {
+      columns: 2;
+      column-gap: var(--espaco-grupo);
+    }
+
+    .pt-lista-colunas > li {
+      break-inside: avoid;
+    }
+
+    .pt-lista-colunas > li + li {
+      margin-top: 0;
+    }
+
+    .pt-lista-colunas > li:not(:last-child) {
+      margin-bottom: var(--espaco-junto);
+    }
+  }
+
+  .pt-titulados p {
+    margin: 0;
+  }
+
+  /* Tabela: legenda, cabeçalhos e linhas; rola dentro da própria região em tela estreita. */
+  .pt-tabela {
+    container: pt-tabela / inline-size;
+    max-width: 100%;
+    overflow-x: auto;
+    border: 1px solid var(--cor-fio-suave);
+    border-radius: var(--radius-cartao);
+    background-color: var(--cor-cartao);
+  }
+
+  .pt-tabela table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: var(--texto-pequeno-tamanho);
+    line-height: var(--texto-pequeno-entrelinha);
+  }
+
+  .pt-tabela caption {
+    padding: var(--espaco-pilha) var(--espaco-pilha) var(--espaco-junto);
+    font-size: var(--texto-corpo-tamanho);
+    line-height: var(--texto-corpo-entrelinha);
+    font-weight: 600;
+    text-align: left;
+  }
+
+  .pt-tabela th,
+  .pt-tabela td {
+    padding: var(--espaco-junto) var(--espaco-pilha);
+    border-top: 1px solid var(--cor-fio-suave);
+    text-align: left;
+    vertical-align: top;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .pt-tabela thead th {
+    border-top: 1.5px solid var(--cor-texto);
+    font-weight: 600;
+  }
+
+  .pt-tabela tbody th {
+    font-weight: 600;
+  }
+
+  /* Em coluna estreita para o tamanho do texto (menos de 15 em: texto a 200% no celular) as células quebram até
+     dentro da palavra e a tabela cabe na coluna. Com folga (15 em ou mais: 390 e 1440 com o texto normal) o canal e o
+     número ficam numa linha só, como sempre foram; o em é o do corpo, por isso a consulta acompanha o texto. */
+  .pt-tabela th,
+  .pt-tabela td {
+    overflow-wrap: anywhere;
+  }
+
+  @container pt-tabela (min-width: 15em) {
+    .pt-tabela th,
+    .pt-tabela td {
+      overflow-wrap: normal;
+    }
+
+    .pt-tabela tbody th,
+    .pt-tabela tbody td:nth-child(2) {
+      white-space: nowrap;
+    }
+  }
+
+  @media (max-width: 767px) {
+    .pt-tabela caption {
+      padding-inline: var(--espaco-junto);
+    }
+
+    .pt-tabela th,
+    .pt-tabela td {
+      padding: var(--espaco-junto);
+    }
+  }
+}
+
+/* A composição fornece os degraus tipográficos. Estes ajustes dizem respeito à disposição da leitura. */
+.pt-cabeca .co-lede {
+  margin-block-start: 0;
+}
+
+.pt-email .pt-email-endereco {
+  --texto-pt-email-tamanho: clamp(calc(var(--texto-corpo-tamanho) * 1.12), 5cqi, var(--texto-co-h2-tamanho));
+  --texto-pt-email-entrelinha: calc(var(--texto-pt-email-tamanho) * 1.15);
+
+  font-size: var(--texto-pt-email-tamanho);
+  font-style: normal;
+  font-weight: 800;
+  line-height: var(--texto-pt-email-entrelinha);
+  overflow-wrap: anywhere;
+}
+
+@container pt-abertura (width < 40rem) {
+  .pt-email .pt-email-endereco {
+    letter-spacing: -0.024em;
+  }
+}
+
+.pt-numero {
+  color: var(--tinta-dia);
+  font-family: var(--font-titulo);
+  white-space: nowrap;
+}
+
+@container pt-pagina (width < 66rem) {
+  .pt-numero {
+    --texto-co-leg-tamanho: calc(var(--texto-corpo-tamanho) * 1.5);
+  }
+}
+
+.pt-destinatario .pt-texto {
+  max-inline-size: calc(100% * 2 / 3);
+  margin-block-start: 0;
+}
+
+@container (width < 66rem) {
+  .pt-destinatario .pt-texto {
+    max-inline-size: var(--leitura);
+  }
+}

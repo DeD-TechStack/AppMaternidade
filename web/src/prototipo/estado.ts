@@ -1,4 +1,6 @@
-import { formatarDuracao } from './formatar.ts'
+// O que sobrou do protótipo depois que os dados vieram do banco (MAT-38a): os tipos e rótulos das sessões, as
+// escolhas dos botões rápidos que o Início ainda mostra nas miniaturas e o formato de uma sessão anterior.
+// O estado, o reducer e a família fictícia saíram: o Hoje e a Sessão leem a camada de dados da rotina.
 
 export type TipoSessao = 'sono' | 'mamada' | 'tummy'
 
@@ -14,50 +16,13 @@ export function ehTipoSessao(valor: unknown): valor is TipoSessao {
   return typeof valor === 'string' && (TIPOS_SESSAO as readonly string[]).includes(valor)
 }
 
-export const NOME_BEBE = 'Heloísa'
-export const IDADE_BEBE = '3 meses'
-const PESSOA_PADRAO = 'Juliana'
-
-interface Sessao {
-  tipo: TipoSessao
-  /** Instante de início em ms (Date.now). A duração sempre sai de `agora - inicio`. */
+/** Uma sessão já encerrada, para a lista de anteriores da Sessão. */
+export interface SessaoAnterior {
   inicio: number
+  fim: number
   pessoa: string
+  detalhe: string
 }
-
-interface ItemUltimo {
-  chave: string
-  rotulo: string
-  quando: string
-}
-
-/** O que o "Desfazer" devolve: exatamente o que um registro pode mudar. */
-interface Instantaneo {
-  sessao: Sessao | null
-  ultimos: ItemUltimo[]
-}
-
-interface Confirmacao {
-  texto: string
-  anterior: Instantaneo
-}
-
-export interface EstadoPrototipo {
-  sessao: Sessao | null
-  nota: { texto: string; autor: string; hora: string }
-  ultimos: ItemUltimo[]
-  madrugada: boolean
-  confirmacao: Confirmacao | null
-}
-
-export type Acao =
-  | { tipo: 'iniciar'; sessao: TipoSessao; agora: number }
-  | { tipo: 'encerrar'; agora: number; comNota: boolean }
-  | { tipo: 'descartar' }
-  | { tipo: 'registrar'; chave: string; rotulo: string; confirmacao: string }
-  | { tipo: 'desfazer' }
-  | { tipo: 'fecharConfirmacao' }
-  | { tipo: 'definirMadrugada'; valor: boolean }
 
 export interface ItemMais {
   chave: string
@@ -73,68 +38,14 @@ export const ITENS_MAIS: readonly ItemMais[] = [
 export const ESCOLHAS_FRALDA = ['Xixi', 'Cocô', 'Ambos'] as const
 export type EscolhaFralda = (typeof ESCOLHAS_FRALDA)[number]
 
-const MINUTO = 60_000
+/** O texto da confirmação da fralda, com ou sem o tipo escolhido. */
+const TEXTO_FRALDA = 'Fralda registrada'
 
-export function criarEstadoInicial(agora: number): EstadoPrototipo {
-  return {
-    sessao: { tipo: 'sono', inicio: agora - 72 * MINUTO, pessoa: 'Bruno' },
-    nota: { texto: 'Pomada só à noite.', autor: 'Carla', hora: '22:40' },
-    ultimos: [
-      { chave: 'mamada', rotulo: 'Mamada', quando: 'há 2 h 10 min' },
-      { chave: 'fralda', rotulo: 'Fralda', quando: 'há 50 min' },
-      { chave: 'tummy', rotulo: 'Tummy time', quando: 'ontem 17:30' },
-    ],
-    madrugada: false,
-    confirmacao: null,
-  }
+export function textoDaFralda(escolha: EscolhaFralda): string {
+  return `${TEXTO_FRALDA}: ${escolha}`
 }
 
-function instantaneo(estado: EstadoPrototipo): Instantaneo {
-  return { sessao: estado.sessao, ultimos: estado.ultimos }
-}
-
-export function reduzir(estado: EstadoPrototipo, acao: Acao): EstadoPrototipo {
-  switch (acao.tipo) {
-    case 'iniciar': {
-      // No protótipo há no máximo uma sessão por vez; repetir o comando não duplica.
-      if (estado.sessao) return estado
-      return {
-        ...estado,
-        sessao: { tipo: acao.sessao, inicio: acao.agora, pessoa: PESSOA_PADRAO },
-        confirmacao: null,
-      }
-    }
-    case 'encerrar': {
-      if (!estado.sessao) return estado
-      const duracao = formatarDuracao(acao.agora - estado.sessao.inicio)
-      return {
-        ...estado,
-        sessao: null,
-        confirmacao: {
-          texto: `Sessão encerrada: ${duracao}${acao.comNota ? ', com nota' : ''}`,
-          anterior: instantaneo(estado),
-        },
-      }
-    }
-    case 'descartar':
-      // A sessão some sem registro e sem confirmação.
-      return { ...estado, sessao: null, confirmacao: null }
-    case 'registrar': {
-      const novo: ItemUltimo = { chave: acao.chave, rotulo: acao.rotulo, quando: 'agora' }
-      return {
-        ...estado,
-        ultimos: [novo, ...estado.ultimos.filter((item) => item.chave !== acao.chave)],
-        confirmacao: { texto: acao.confirmacao, anterior: instantaneo(estado) },
-      }
-    }
-    case 'desfazer': {
-      if (!estado.confirmacao) return estado
-      const { sessao, ultimos } = estado.confirmacao.anterior
-      return { ...estado, sessao, ultimos, confirmacao: null }
-    }
-    case 'fecharConfirmacao':
-      return estado.confirmacao ? { ...estado, confirmacao: null } : estado
-    case 'definirMadrugada':
-      return estado.madrugada === acao.valor ? estado : { ...estado, madrugada: acao.valor }
-  }
+/** A confirmação da fralda, com ou sem o tipo; é ela que traz as escolhas Xixi, Cocô e Ambos. */
+export function ehConfirmacaoDeFralda(texto: string | null): boolean {
+  return texto !== null && (texto === TEXTO_FRALDA || texto.startsWith(`${TEXTO_FRALDA}: `))
 }

@@ -17,7 +17,7 @@ values
   ),
   (
     '22222222-2222-4222-8222-222222222222', '00000000-0000-0000-0000-000000000000',
-    'authenticated', 'authenticated', 'bruno@exemplo.invalid',
+    'authenticated', 'authenticated', 'icaro@exemplo.invalid',
     extensions.crypt('senha-local-ficticia', extensions.gen_salt('bf')), now(),
     '{"provider": "email", "providers": ["email"]}', '{}', now(), now(),
     '', '', '', '', '', '', '', ''
@@ -43,7 +43,7 @@ values
   (
     'aaaaaaa2-2222-4222-8222-222222222222', '22222222-2222-4222-8222-222222222222',
     '22222222-2222-4222-8222-222222222222',
-    '{"sub": "22222222-2222-4222-8222-222222222222", "email": "bruno@exemplo.invalid", "email_verified": true}',
+    '{"sub": "22222222-2222-4222-8222-222222222222", "email": "icaro@exemplo.invalid", "email_verified": true}',
     'email', now(), now(), now()
   ),
   (
@@ -56,7 +56,7 @@ values
 insert into public.contas (id, nome_privado, fuso)
 values
   ('11111111-1111-4111-8111-111111111111', 'Ana', 'America/Sao_Paulo'),
-  ('22222222-2222-4222-8222-222222222222', 'Bruno', 'America/Sao_Paulo'),
+  ('22222222-2222-4222-8222-222222222222', 'Ícaro', 'America/Sao_Paulo'),
   ('33333333-3333-4333-8333-333333333333', 'Carla', 'America/Sao_Paulo');
 
 insert into public.familias (id, nome, fuso, criada_por)

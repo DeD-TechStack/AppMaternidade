@@ -1,0 +1,59 @@
+import { useId } from 'react'
+import { Cartao, Pilha } from '../base/layout/index.ts'
+import { Avatar } from './Avatar.tsx'
+import type { SessaoAnterior, TipoSessao } from '../../prototipo/estado.ts'
+import { formatarDuracao, formatarHora } from '../../prototipo/formatar.ts'
+import { SESSOES_ANTERIORES } from '../../prototipo/textosSessao.ts'
+
+const TITULO: Record<TipoSessao, string> = {
+  sono: SESSOES_ANTERIORES.sono,
+  mamada: SESSOES_ANTERIORES.mamada,
+  tummy: SESSOES_ANTERIORES.tummy,
+}
+
+interface Props {
+  tipo: TipoSessao
+  itens: readonly SessaoAnterior[]
+  className?: string
+}
+
+/** As sessões já encerradas do mesmo tipo: quando, quem, onde e quanto durou. */
+export function SessoesAnteriores({ tipo, itens, className }: Props) {
+  const idTitulo = useId()
+  return (
+    <Cartao
+      as="section"
+      dataH="coluna"
+      aria-labelledby={idTitulo}
+      data-anteriores=""
+      className={`border border-(--cor-fio-suave) bg-(--cor-cartao) [box-shadow:var(--sombra-cartao)] ${className ?? ''}`}
+    >
+      <Pilha vao="junto">
+        <h2 id={idTitulo} className="text-titulo-4 font-titulo font-semibold">
+          {TITULO[tipo]}
+        </h2>
+        {itens.length === 0 ? (
+          <p className="py-4 text-(--cor-texto-2)">{SESSOES_ANTERIORES.nenhuma}</p>
+        ) : (
+          <ul>
+            {itens.slice(0, 4).map((item) => (
+              <li
+                key={item.inicio}
+                className="flex items-center gap-3 border-t border-(--cor-fio-suave) py-3 first:border-t-0 lg:gap-4"
+              >
+                <Avatar nome={item.pessoa} />
+                <div className="min-w-0 flex-1">
+                  <p className="font-medium tabular-nums">{`${formatarHora(item.inicio)} às ${formatarHora(item.fim)}`}</p>
+                  <p className="text-pequeno text-(--cor-texto-2)">{`${item.pessoa}, ${item.detalhe}`}</p>
+                </div>
+                <span className="shrink-0 text-pequeno whitespace-nowrap text-(--cor-texto-2) tabular-nums">
+                  {formatarDuracao(item.fim - item.inicio)}
+                </span>
+              </li>
+            ))}
+          </ul>
+        )}
+      </Pilha>
+    </Cartao>
+  )
+}

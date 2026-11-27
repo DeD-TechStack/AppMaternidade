@@ -1,94 +1,142 @@
-import { describe, expect, it } from 'vitest'
-import { fireEvent, screen, within } from '@testing-library/react'
+import { describe, expect, it, vi } from 'vitest'
+import { act, fireEvent, screen, within } from '@testing-library/react'
+import { INI } from './conteudo/inicio.ts'
 import { PROMESSA } from './conteudo/textos.ts'
-import { criarEstadoInicial } from './prototipo/estado.ts'
-import { renderizarRota } from './teste/renderizarRota.tsx'
+import { aguardarCarga, renderizarRota } from './teste/renderizarRota.tsx'
+import { criarMundoDeTeste, semSessaoEmAndamento } from './teste/rotina.fixture.ts'
 
-const semSessao = () => ({ ...criarEstadoInicial(Date.now()), sessao: null })
+const semSessao = () => ({ ajustarRotina: semSessaoEmAndamento })
 
 describe('rotas', () => {
-  it('o Início tem um único h1, igual à promessa', async () => {
+  // REP-HOME: the Início has ONE h1, "Ela mamou que horas?", written as two spans (day wall, night wall).
+  it('o Início tem um único h1, "Ela mamou que horas?", em dois spans', async () => {
     renderizarRota('/')
 
     const titulos = await screen.findAllByRole('heading', { level: 1 })
     expect(titulos).toHaveLength(1)
-    expect(titulos[0].textContent).toBe(PROMESSA)
+    expect(titulos[0].textContent).toBe(INI.h1)
+    // The old home's promise ("A rotina do bebê, dividida com carinho.") is retired from the Início.
+    expect(titulos[0].textContent).not.toBe(PROMESSA)
+    expect(titulos[0].querySelector('[data-h1-dia]')!.textContent).toBe(INI.h1Dia)
+    expect(titulos[0].querySelector('[data-h1-noite]')!.textContent).toBe(INI.h1Noite)
   })
 
-  it('o Início traz os quatro pilares e o link para o Hoje', async () => {
-    renderizarRota('/')
-    await screen.findByRole('heading', { level: 1 })
-
-    for (const pilar of ['Rotina', 'Desenvolvimento', 'Cuidado compartilhado', 'Comunidade']) {
-      expect(screen.getByText(pilar).className).toContain('etiqueta')
-    }
-    const link = screen.getByRole('link', { name: 'Ver o protótipo do Hoje' })
-    expect(link.getAttribute('href')).toBe('/app/hoje')
-    expect(screen.getByText('Protótipo em construção. Nada aqui é dado real.')).toBeTruthy()
-  })
-
-  it('as miniaturas do Início ficam inertes e escondidas do leitor de tela', async () => {
+  // REP-HOME: the primary action (the closing band's wide mel button; the hero one only exists from 1024 px, which this
+  // jsdom run is not) is "Criar conta" to /criar-conta; the text link "Ver como funciona" goes to Como funciona.
+  it('o Início traz a ação primária "Criar conta" para /criar-conta e o link "Ver como funciona"', async () => {
     const { container } = renderizarRota('/')
     await screen.findByRole('heading', { level: 1 })
 
-    const miniaturas = container.querySelector('[inert]')
-    expect(miniaturas).not.toBeNull()
-    expect(miniaturas!.getAttribute('aria-hidden')).toBe('true')
-    // Nada dentro é focável por Tab.
-    for (const elemento of miniaturas!.querySelectorAll<HTMLElement>('a, button, input, textarea, select')) {
-      const fora = elemento.tabIndex < 0 || (elemento as HTMLButtonElement).disabled
-      expect(fora, elemento.outerHTML).toBe(true)
+    const primarios = [...container.querySelectorAll<HTMLElement>('main a[data-botao-largo]')]
+    expect(primarios.length).toBeGreaterThan(0)
+    for (const primario of primarios) {
+      expect(primario.textContent).toBe('Criar conta')
+      expect(primario.getAttribute('href')).toBe('/criar-conta')
     }
+
+    const main = container.querySelector<HTMLElement>('main')!
+    const secundario = within(main).getByRole('link', { name: 'Ver como funciona' })
+    expect(secundario.getAttribute('href')).toBe('/como-funciona')
+    expect(secundario.getAttribute('data-botao')).toBe('texto')
+    expect(container.querySelector('[inert]')).toBeNull()
   })
 
-  it('o Hoje tem o h1 "Hoje" e um único cartão', async () => {
+  for (const [caminho, titulo] of [
+    ['/como-funciona', 'Deixa que eu anoto.'],
+    ['/cuidado-compartilhado', 'A babá vê o quê?'],
+    ['/desenvolvimento', 'Ela já devia rolar?'],
+    ['/regras-da-comunidade', 'Regras da comunidade'],
+    ['/privacidade', 'Privacidade'],
+    ['/termos', 'Termos de uso'],
+    ['/exclusao-de-conta', 'Exclusão de conta'],
+    ['/contato', 'Contato'],
+    ['/sobre', 'Sobre'],
+    ['/sistema', 'Campo de mel, a base do site.'],
+  ] as const) {
+    it(`${caminho} abre dentro da casca, com o h1 "${titulo}"`, async () => {
+      const { container } = renderizarRota(caminho)
+      const h1 = await screen.findByRole('heading', { level: 1, name: titulo })
+      expect(container.querySelector('header[data-cabecalho]')).not.toBeNull()
+      expect(container.querySelector('footer[data-rodape]')).not.toBeNull()
+      expect(h1.closest('main')).not.toBeNull()
+    })
+  }
+
+  it('o Hoje tem o h1 "Hoje" e um único bloco de cor (Em andamento), sem cartão', async () => {
     const { container } = renderizarRota('/app/hoje')
 
-    const titulo = await screen.findByRole('heading', { level: 1 })
+    // A tela de carga já traz o h1 "Hoje": espera a tela final (nenhum aria-busy) antes de conferir.
+    await aguardarCarga()
+    const titulo = await screen.findByRole('heading', { level: 1, name: 'Hoje' })
     expect(titulo.textContent).toBe('Hoje')
     expect(screen.getAllByRole('heading', { level: 1 })).toHaveLength(1)
-    expect(container.querySelectorAll('.cartao')).toHaveLength(1)
-    expect(container.querySelector('.cartao .cartao')).toBeNull()
+    expect(container.querySelectorAll('[data-andamento]')).toHaveLength(1)
+    expect(container.querySelector('.cartao')).toBeNull()
   })
 
   it('a Sessão com ?tipo=tummy e sem sessão começa um Tummy time', async () => {
-    renderizarRota('/app/sessao?tipo=tummy', { estadoInicial: semSessao() })
+    renderizarRota('/app/sessao?tipo=tummy', semSessao())
 
-    const titulo = await screen.findByRole('heading', { level: 1 })
+    const titulo = await screen.findByRole('heading', { level: 1, name: 'Tummy time de Heloísa' })
+    await aguardarCarga()
     expect(titulo.textContent).toBe('Tummy time de Heloísa')
     expect(screen.getByText('Atividade sugerida: Espelho no chão')).toBeTruthy()
-    expect(screen.getByText(/^Iniciado às \d{2}:\d{2} por Juliana$/)).toBeTruthy()
+    expect(screen.getByText(/^Início às \d{2}:\d{2}, por Juliana$/)).toBeTruthy()
   })
 
   it('a Sessão sem sessão e sem tipo mostra o estado vazio', async () => {
-    renderizarRota('/app/sessao', { estadoInicial: semSessao() })
+    renderizarRota('/app/sessao', semSessao())
 
-    const titulo = await screen.findByRole('heading', { level: 1 })
+    const titulo = await screen.findByRole('heading', { level: 1, name: 'Nenhuma sessão em andamento' })
+    await aguardarCarga()
     expect(titulo.textContent).toBe('Nenhuma sessão em andamento')
     const link = screen.getByRole('link', { name: 'Voltar para Hoje' })
     expect(link.getAttribute('href')).toBe('/app/hoje')
   })
 
   it('a Sessão ignora um ?tipo= inválido', async () => {
-    renderizarRota('/app/sessao?tipo=banho', { estadoInicial: semSessao() })
+    renderizarRota('/app/sessao?tipo=banho', semSessao())
 
-    const titulo = await screen.findByRole('heading', { level: 1 })
+    const titulo = await screen.findByRole('heading', { level: 1, name: 'Nenhuma sessão em andamento' })
+    await aguardarCarga()
     expect(titulo.textContent).toBe('Nenhuma sessão em andamento')
   })
 
   it('a Sessão mostra a sessão em andamento e ignora o ?tipo=', async () => {
     renderizarRota('/app/sessao?tipo=tummy')
 
-    const titulo = await screen.findByRole('heading', { level: 1 })
+    const titulo = await screen.findByRole('heading', { level: 1, name: 'Sono de Heloísa' })
+    await aguardarCarga()
     expect(titulo.textContent).toBe('Sono de Heloísa')
     expect(screen.queryByText(/Atividade sugerida/)).toBeNull()
+  })
+
+  it('a Sessão com a leitura da rotina segurada tem um único h1 "Sessão", dentro do main aria-busy', async () => {
+    const mundo = criarMundoDeTeste()
+    // Segura a leitura do contexto até o fim do teste; devolve a resposta de verdade ao soltar.
+    const original = mundo.rotina.contexto.bind(mundo.rotina)
+    let liberar: () => void = () => {}
+    vi.spyOn(mundo.rotina, 'contexto').mockImplementation(() => new Promise((resolver) => (liberar = () => resolver(original()))))
+    renderizarRota('/app/sessao', { mundo })
+    await act(async () => {
+      for (let passo = 0; passo < 8; passo++) await Promise.resolve()
+    })
+
+    const ocupado = document.querySelector('main[aria-busy="true"]') as HTMLElement
+    expect(ocupado).toBeTruthy()
+    expect(within(ocupado).getAllByRole('heading', { level: 1 }).map((h) => h.textContent)).toEqual(['Sessão'])
+    expect(screen.getAllByRole('heading', { level: 1 })).toHaveLength(1)
+
+    liberar()
+    await aguardarCarga()
+    expect(document.querySelector('[aria-busy="true"]')).toBeNull()
   })
 
   it('a rota inexistente mostra o aviso e o link para o início', async () => {
     renderizarRota('/qualquer-coisa')
 
     const titulo = await screen.findByRole('heading', { level: 1 })
-    expect(titulo.textContent).toBe('Página não encontrada')
+    expect(titulo.textContent).toBe('Aqui não mora ninguém.')
 
     const link = screen.getByRole('link', { name: 'Voltar ao início' })
     expect(link.getAttribute('href')).toBe('/')
@@ -105,46 +153,32 @@ describe('rotas', () => {
 })
 
 describe('navegação inferior', () => {
-  it('no Hoje só o item Hoje é link; os outros quatro estão desativados', async () => {
-    renderizarRota('/app/hoje')
-    const nav = await screen.findByRole('navigation', { name: 'Principal' })
+  // MAT-44d-2: nenhuma tela logada tem navegação inferior (a barra Registrar do Hoje não é navegação).
+  // O caminho de volta da Sessão ao Hoje é o link "Voltar para Hoje" da lateral da abertura.
+  for (const caminho of ['/app/hoje', '/app/sessao']) {
+    it(`${caminho} não tem navegação inferior: nem a nav "Principal", nem a legenda "Em breve", nem itens desativados`, async () => {
+      renderizarRota(caminho)
+      await screen.findByRole('heading', { level: 1 })
 
-    const links = within(nav).getAllByRole('link')
-    expect(links.map((l) => l.textContent)).toEqual(['Hoje'])
-    expect(links[0].getAttribute('href')).toBe('/app/hoje')
-    expect(links[0].getAttribute('aria-current')).toBe('page')
+      expect(screen.queryByRole('navigation', { name: 'Principal' })).toBeNull()
+      expect(screen.queryByText('Em breve')).toBeNull()
+      for (const nome of ['Histórico', 'Desenvolvimento', 'Comunidade', 'Família']) {
+        expect(screen.queryByRole('button', { name: nome }), nome).toBeNull()
+      }
+    })
+  }
 
-    for (const nome of ['Histórico', 'Desenvolvimento', 'Comunidade', 'Família']) {
-      const item = within(nav).getByRole('button', { name: nome })
-      expect(item.getAttribute('aria-disabled')).toBe('true')
-    }
-    expect(within(nav).getAllByRole('button')).toHaveLength(4)
-  })
+  it('na Sessão o caminho de volta é o link "Voltar para Hoje", na lateral, e leva à página /app/hoje', async () => {
+    const { roteador } = renderizarRota('/app/sessao')
+    // Na tela de carga o link ainda não é o da rota: espera a tela final antes de clicar.
+    await aguardarCarga()
+    const voltar = await screen.findByRole('link', { name: 'Voltar para Hoje' })
+    expect(voltar.getAttribute('href')).toBe('/app/hoje')
+    expect(voltar.hasAttribute('aria-current')).toBe(false)
 
-  it('"Em breve" aparece uma vez', async () => {
-    renderizarRota('/app/hoje')
-    await screen.findByRole('navigation', { name: 'Principal' })
+    fireEvent.click(voltar)
 
-    expect(screen.getAllByText('Em breve')).toHaveLength(1)
-  })
-
-  it('os itens desativados não fazem nada ao toque', async () => {
-    const { roteador } = renderizarRota('/app/hoje')
-    const nav = await screen.findByRole('navigation', { name: 'Principal' })
-
-    fireEvent.click(within(nav).getByRole('button', { name: 'Histórico' }))
-
+    await screen.findByRole('heading', { level: 1, name: 'Hoje' })
     expect(roteador.state.location.pathname).toBe('/app/hoje')
-  })
-
-  it('na Sessão o item Hoje é link, mas não é a página atual', async () => {
-    renderizarRota('/app/sessao')
-    const nav = await screen.findByRole('navigation', { name: 'Principal' })
-
-    const link = within(nav).getByRole('link', { name: 'Hoje' })
-    expect(link.getAttribute('href')).toBe('/app/hoje')
-    expect(link.hasAttribute('aria-current')).toBe(false)
-    expect(within(nav).getAllByRole('button')).toHaveLength(4)
-    expect(screen.getAllByText('Em breve')).toHaveLength(1)
   })
 })

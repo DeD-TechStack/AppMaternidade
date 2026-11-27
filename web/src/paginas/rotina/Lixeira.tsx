@@ -1,0 +1,138 @@
+import { useState } from 'react'
+import { ChevronLeft, Undo2 } from 'lucide-react'
+import { ALVO_APP } from '../../componentes/app/alvo.ts'
+import { Botao } from '../../componentes/base/Botao.tsx'
+import { Pilha } from '../../componentes/base/layout/index.ts'
+import { PainelVazio } from '../../componentes/estado/PainelVazio.tsx'
+import { AvisoDeLista } from '../../componentes/rotina/AvisoDeLista.tsx'
+import { AvisoDoPapel } from '../../componentes/rotina/AvisoDoPapel.tsx'
+import { IconeDoTipo } from '../../componentes/rotina/IconeDoTipo.tsx'
+import { LinkDaRotina } from '../../componentes/rotina/LinkDaRotina.tsx'
+import { SecaoDoHoje } from '../../componentes/rotina/SecaoDoHoje.tsx'
+import { TelaRotina } from '../../componentes/rotina/TelaRotina.tsx'
+import { useRotina, type BebeAtivo } from '../../componentes/rotina/contexto.ts'
+import { dataEHora, prazoDaRestauracao } from '../../componentes/rotina/datasDaRotina.ts'
+import { resumoDoRegistro } from '../../componentes/rotina/formatos.ts'
+import { textoDoPapel } from '../../componentes/rotina/textoDoPapel.ts'
+import { useAcoesDaRotina } from '../../componentes/rotina/useAcoesDaRotina.ts'
+import { useSecao } from '../../componentes/rotina/useSecao.ts'
+import { useTelaDaRotina } from '../../componentes/rotina/useTelaDaRotina.ts'
+import { HOJE, LIXEIRA, ROTULO_TIPO, TITULOS } from '../../conteudo/rotina.ts'
+import { LIMITES, type Registro } from '../../dados/rotina.tipos.ts'
+
+/** Mais recente primeiro (46-N1); o empate cai no id, para a ordem não depender do banco. */
+const maisRecenteDaExclusao = (a: Registro, b: Registro) =>
+  Date.parse(b.excluidoEm ?? '') - Date.parse(a.excluidoEm ?? '') || (a.id < b.id ? -1 : 1)
+
+export function Lixeira() {
+  const { ativo } = useRotina()
+  if (!ativo) return null
+  return <LixeiraDoBebe ativo={ativo} />
+}
+
+function LixeiraDoBebe({ ativo }: { ativo: BebeAtivo }) {
+  const { dados, podeAlterar } = useRotina()
+  const acoes = useAcoesDaRotina()
+  const { principal, acionar, focarTitulo } = useTelaDaRotina()
+  const [ocupados, setOcupados] = useState<ReadonlySet<string>>(new Set())
+  const lixeira = useSecao(ativo.bebe.id, (bebe) => dados.lixeira(bebe))
+  const somenteLeitura = ativo.arquivado || ativo.papel === 'observador'
+
+  async function restaurar(registro: Registro) {
+    if (ocupados.has(registro.id)) return
+    setOcupados((anteriores) => new Set(anteriores).add(registro.id))
+    focarTitulo()
+    await acoes.restaurar(registro, { confirmar: true })
+    setOcupados((anteriores) => {
+      const proximos = new Set(anteriores)
+      proximos.delete(registro.id)
+      return proximos
+    })
+  }
+
+  return (
+    <TelaRotina
+      tela="lixeira"
+      principal={principal}
+      acionar={acionar}
+      titulo={TITULOS.lixeira}
+      linha={ativo.bebe.nome}
+      ocupada={lixeira.estado === 'carregando'}
+      antes={
+        <LinkDaRotina
+          to="/app/historico"
+          className="-ml-1 inline-flex items-center gap-1.5 self-start no-underline hover:underline"
+          icone={<ChevronLeft className="size-5" strokeWidth={2} />}
+        >
+          {LIXEIRA.voltarParaHistorico}
+        </LinkDaRotina>
+      }
+    >
+      <Pilha vao="pilha" className="max-w-leitura">
+        <p>{LIXEIRA.intro}</p>
+        {somenteLeitura ? <AvisoDoPapel texto={textoDoPapel(ativo)} /> : null}
+        <SecaoDoHoje secao={lixeira} titulo={LIXEIRA.lista} papel={ativo.papel}>
+          {(lista) => {
+            const itens = [...lista.itens].sort(maisRecenteDaExclusao)
+            return (
+              <Pilha as="section" vao="pilha" aria-labelledby="lixeira-lista" data-lixeira="">
+                <h2 id="lixeira-lista" className="text-titulo-4 font-titulo font-semibold">
+                  {LIXEIRA.lista}
+                </h2>
+                {lista.incompleta ? <AvisoDeLista limite={LIMITES.lixeira} dado="lixeira" /> : null}
+                {/* O cuidador restaura só o que ele mesmo excluiu: uma frase, se há item de outra pessoa na lista. */}
+                {!somenteLeitura && itens.some((registro) => !podeAlterar(registro)) ? <AvisoDoPapel texto={textoDoPapel(ativo)} /> : null}
+                {itens.length === 0 ? (
+                  <PainelVazio texto={LIXEIRA.vazia} />
+                ) : (
+                  <ul className="border-y border-(--cor-fio-suave)">
+                    {itens.map((registro) => {
+                      const excluidoEm = Date.parse(registro.excluidoEm ?? '')
+                      const resumo = resumoDoRegistro(registro, ativo.familia.fuso)
+                      const rotulo = resumo ? HOJE.rotuloEResumo(ROTULO_TIPO[registro.tipo], resumo) : ROTULO_TIPO[registro.tipo]
+                      return (
+                        <li
+                          key={registro.id}
+                          data-registro={registro.id}
+                          className="flex flex-wrap items-center gap-x-esp-pilha gap-y-esp-junto border-t border-(--cor-fio-suave) py-esp-pilha first:border-t-0"
+                        >
+                          <div className="flex min-w-0 flex-[1_1_22rem] items-start gap-esp-junto">
+                            <IconeDoTipo tipo={registro.tipo} className="size-9 shrink-0 rounded-full bg-(--cor-papel-fundo) p-2 text-(--cor-texto)" />
+                            <div className="min-w-0 wrap-break-word">
+                              <p className="font-medium">
+                                {rotulo}, <span className="tabular-nums">{dataEHora(Date.parse(registro.inicio))}</span>
+                              </p>
+                              <p className="text-pequeno text-(--cor-texto-2)">
+                                {LIXEIRA.excluidoPor(acoes.nomeDoAutor(registro.excluidoPor, registro.familiaId), dataEHora(excluidoEm))}
+                              </p>
+                              <p className="mt-1 text-pequeno font-semibold text-(--cor-texto) tabular-nums">
+                                {LIXEIRA.podeSerRestauradoAte(dataEHora(prazoDaRestauracao(registro.excluidoEm ?? '')))}
+                              </p>
+                            </div>
+                          </div>
+                          {podeAlterar(registro) ? (
+                            <Botao
+                              variante="contorno"
+                              tamanho="app"
+                              className={`${ALVO_APP} max-w-full shrink-0 whitespace-normal`}
+                              icone={<Undo2 />}
+                              desativado={ocupados.has(registro.id)}
+                              aria-label={LIXEIRA.restaurarItem(ROTULO_TIPO[registro.tipo], dataEHora(Date.parse(registro.inicio)))}
+                              onClick={() => void restaurar(registro)}
+                            >
+                              {LIXEIRA.restaurar}
+                            </Botao>
+                          ) : null}
+                        </li>
+                      )
+                    })}
+                  </ul>
+                )}
+              </Pilha>
+            )
+          }}
+        </SecaoDoHoje>
+      </Pilha>
+    </TelaRotina>
+  )
+}

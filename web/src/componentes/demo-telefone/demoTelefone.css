@@ -1,0 +1,381 @@
+/* Demo interativa nos telefones da Início: tokens de web/DESIGN.md, cqi, scroll chaining e reduced motion. */
+
+.dt-envoltoria {
+  position: relative;
+  z-index: 2;
+  width: var(--fone-w);
+}
+
+.dt-envoltoria > .co-fone {
+  position: relative;
+  inset: auto;
+  width: 100%;
+  margin: 0;
+}
+
+.dt-envoltoria[data-demo-ativa] {
+  margin-bottom: var(--espaco-grupo);
+}
+
+.dt-barra-gatilho {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+@media (min-width: 69em) and (min-aspect-ratio: 1/1) {
+  .co-p2 .dt-envoltoria[data-demo-ativa],
+  .co-p3 .dt-envoltoria[data-demo-ativa] {
+    margin-bottom: 0;
+  }
+
+  .co-p2 .dt-barra-gatilho,
+  .co-p3 .dt-barra-gatilho,
+  .co-so .dt-barra-gatilho,
+  .co-prova .dt-barra-gatilho {
+    position: absolute;
+    left: 50%;
+    z-index: 4;
+    margin-bottom: 0;
+    transform: translateX(-50%);
+  }
+
+  .co-p2 .dt-barra-gatilho,
+  .co-p3 .dt-barra-gatilho {
+    top: calc(100% + 12px);
+  }
+
+  .co-so .dt-barra-gatilho,
+  .co-prova .dt-barra-gatilho {
+    bottom: calc(100% + 12px);
+  }
+
+  /* No erro, mantenha a mensagem e o botão dentro da moldura recortada. */
+  .co-p2 .dt-barra-gatilho:has(.dt-erro-carga),
+  .co-p3 .dt-barra-gatilho:has(.dt-erro-carga) {
+    top: auto;
+    bottom: 12px;
+    inline-size: min-content;
+  }
+
+  .co-so .dt-barra-gatilho:has(.dt-erro-carga) {
+    top: 12px;
+    bottom: auto;
+  }
+}
+
+.dt-erro-carga,
+.dt-gatilho {
+  font-family: var(--font-texto);
+  font-size: var(--texto-pequeno-tamanho);
+  line-height: var(--texto-pequeno-entrelinha);
+}
+
+.dt-erro-carga {
+  max-width: 100%;
+  margin: 0;
+  padding: 6px 10px;
+  border: 1px solid var(--cor-fio-suave);
+  border-radius: var(--radius-campo);
+  background: var(--cor-cartao);
+  color: var(--cor-texto);
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+
+.dt-gatilho {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 8px 16px;
+  border: 1.5px solid var(--color-cacau);
+  border-radius: var(--radius-pilula);
+  background: var(--color-cacau);
+  color: var(--color-papel);
+  font-weight: 600;
+  white-space: nowrap;
+  transition: scale 120ms ease-out;
+}
+
+.dt-gatilho[aria-disabled='true'] {
+  cursor: wait;
+  opacity: 0.85;
+}
+
+.dt-gatilho:active,
+.dt-topo-botao:active {
+  scale: 0.96;
+}
+
+.co-p2 .dt-gatilho,
+.co-p3 .dt-gatilho {
+  border-color: var(--color-cacau);
+  background: var(--color-mel);
+  color: var(--color-cacau);
+}
+
+.co-p2 .dt-gatilho:focus-visible,
+.co-p3 .dt-gatilho:focus-visible {
+  outline: 2px solid var(--color-mel);
+  outline-offset: 2px;
+}
+
+.dt-tela-caixa {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 390 / 844;
+}
+
+.dt-tela {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: clip;
+  contain: layout paint;
+  container: demo-fone / inline-size;
+  border-radius: calc(var(--fone-w) * 0.124);
+  background: var(--cor-fundo);
+  color: var(--cor-texto);
+  text-align: left;
+}
+
+.dt-tela[data-tema-local='madrugada'] {
+  --cor-primario-fundo: var(--color-mel);
+  --cor-primario-texto: var(--color-cacau);
+}
+
+.dt-roteador-casca,
+.dt-fluxo-coluna {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.dt-topo {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px;
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--cor-fio-suave);
+}
+
+.dt-topo-botao {
+  --texto-dt-acao: clamp(calc(var(--texto-pequeno-tamanho) * 0.78), 3.6cqi, var(--texto-pequeno-tamanho));
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+  min-height: 44px;
+  padding: 4px 8px;
+  border: 1px solid var(--cor-fio-suave);
+  border-radius: var(--radius-pilula);
+  color: inherit;
+  font-family: var(--font-texto);
+  font-size: var(--texto-dt-acao);
+  font-weight: 500;
+  line-height: calc(var(--texto-dt-acao) * 1.2);
+  white-space: nowrap;
+  transition: scale 120ms ease-out;
+}
+
+@media (hover: hover) {
+  .dt-gatilho:hover {
+    background: var(--color-papel);
+    color: var(--color-cacau);
+  }
+
+  .co-p2 .dt-gatilho:hover,
+  .co-p3 .dt-gatilho:hover {
+    border-color: var(--color-mel);
+    background: var(--color-cacau);
+    color: var(--color-mel);
+  }
+
+  .dt-topo-botao:hover {
+    background: var(--cor-texto);
+    color: var(--cor-fundo);
+  }
+}
+
+.dt-rolavel {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-x: clip;
+  overflow-y: auto;
+  overscroll-behavior-x: contain;
+  overscroll-behavior-y: auto;
+}
+
+.dt-corpo {
+  padding: 14px 12px 18px;
+}
+
+.dt-cabeca-tela,
+.dt-seletor-pessoa {
+  display: flex;
+  flex-direction: column;
+}
+
+.dt-cabeca-tela {
+  gap: 2px;
+  margin-bottom: 10px;
+}
+
+.dt-seletor-pessoa {
+  gap: 8px;
+}
+
+.dt-link-voltar {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  align-self: flex-start;
+  font-size: var(--texto-pequeno-tamanho);
+  line-height: var(--texto-pequeno-entrelinha);
+  font-weight: 500;
+}
+
+.dt-botoes-pessoa {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+/* Adaptação fluida dos componentes reais do app à largura do telefone (cqi). */
+.dt-tela [data-h='quadro'] {
+  width: 100%;
+  max-width: 100%;
+  margin-inline: 0;
+  padding-inline: 4px;
+}
+
+.dt-tela [data-andamento] {
+  padding: 14px;
+}
+
+.dt-tela [data-andamento] .cm-botao {
+  min-width: 0;
+  padding-inline: 12px;
+}
+
+.dt-tela [role='timer'] {
+  --texto-dt-cronometro: clamp(calc(var(--texto-pequeno-tamanho) * 2.1), 15cqi, calc(var(--texto-pequeno-tamanho) * 3.2));
+  font-size: var(--texto-dt-cronometro);
+  line-height: var(--texto-dt-cronometro);
+}
+
+.dt-tela [data-barra-registrar] {
+  z-index: 5;
+  flex-shrink: 0;
+  padding: 6px 4px 8px;
+}
+
+.dt-tela [data-fileira] {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+}
+
+@container demo-fone (min-width: 19rem) {
+  .dt-tela [data-fileira] {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+.dt-tela [data-fileira] button {
+  --texto-dt-barra: clamp(calc(var(--texto-pequeno-tamanho) * 0.78), 3.6cqi, var(--texto-pequeno-tamanho));
+  flex-direction: column;
+  gap: 2px;
+  height: 48px;
+  padding-inline: 4px;
+  font-size: var(--texto-dt-barra);
+  line-height: calc(var(--texto-dt-barra) * 1.15);
+}
+
+.dt-tela [data-fileira] svg {
+  width: 18px;
+  height: 18px;
+}
+
+.dt-tela [data-painel] [data-h='cartao'] {
+  width: 100%;
+  max-width: 100%;
+  padding: 10px;
+}
+
+.dt-tela [data-painel] [role='status'] p {
+  font-size: var(--texto-pequeno-tamanho);
+  line-height: var(--texto-pequeno-entrelinha);
+}
+
+.dt-tela [data-painel] [role='status'] > div {
+  flex-basis: 100%;
+}
+
+.dt-tela [data-painel] [role='group'] {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.dt-tela [data-painel] [data-largos] {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.dt-tela [data-painel] .cm-botao {
+  min-width: 0;
+  padding-inline: 10px;
+}
+
+.dt-tela [data-resumo] ul {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  border-top: 1px solid var(--cor-fio-suave);
+}
+
+.dt-tela [data-resumo] li {
+  flex-direction: column-reverse;
+  align-items: flex-start;
+  justify-content: flex-end;
+  gap: 4px;
+  padding: 10px 8px;
+  border-top: 0;
+  border-left: 1px solid var(--cor-fio-suave);
+}
+
+.dt-tela [data-resumo] li:nth-child(odd) {
+  border-left: 0;
+  padding-left: 0;
+}
+
+.dt-tela [data-resumo] li:nth-child(n + 3) {
+  border-top: 1px solid var(--cor-fio-suave);
+}
+
+.dt-tela [data-numero-do-dia] {
+  --texto-dt-numero: clamp(calc(var(--texto-pequeno-tamanho) * 1.05), 7.8cqi, calc(var(--texto-pequeno-tamanho) * 1.6));
+  font-size: var(--texto-dt-numero);
+  line-height: calc(var(--texto-dt-numero) * 1.05);
+}
+
+.dt-tela [data-iniciar-mamada] button {
+  max-width: 100%;
+}
+
+.dt-tela .cm-botao {
+  min-height: 44px;
+  padding-inline: 14px;
+  font-size: var(--texto-pequeno-tamanho);
+  line-height: var(--texto-pequeno-entrelinha);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dt-gatilho,
+  .dt-topo-botao {
+    transition: none;
+  }
+}

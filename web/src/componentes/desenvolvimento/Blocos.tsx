@@ -1,0 +1,153 @@
+import { Link } from 'react-router'
+import { T } from '../../conteudo/desenvolvimento/textosLogada.ts'
+import { Etiqueta } from '../base/Etiqueta.tsx'
+import { Cartao } from '../base/layout/Cartao.tsx'
+import { Coluna, Colunas } from '../base/layout/Colunas.tsx'
+import { Pilha } from '../base/layout/Pilha.tsx'
+import { ArtigoDeConteudo } from './ArtigoDeConteudo.tsx'
+import { ABERTURA_DAS_IDEIAS, rotaDoItem, type ItemDeConteudo } from './itens.ts'
+
+// O link é a caixa inteira (a área clicável e o anel de foco); o `Cartao` dentro dele dá o padding e o raio.
+const LINK_DO_CARTAO = 'alvo-toque group block h-full rounded-cartao no-underline'
+const CARTAO =
+  'flex h-full flex-col gap-1 border border-[var(--cor-fio-suave)] bg-[var(--cor-cartao)] group-hover:border-[var(--cor-texto)]'
+
+const SEM_FASE_ATUAL: ReadonlySet<string> = new Set()
+
+/**
+ * Uma seção esvaziada pela publicação (DES-06, item 5) não some: mantém o `h2` e diz, uma vez, que o conteúdo
+ * está em revisão (T-50).
+ */
+function EmRevisao() {
+  return (
+    <p data-em-revisao="" className="m-0 max-w-[65ch] rounded-campo bg-[var(--cor-papel-fundo)] px-4 py-3 font-medium">
+      {T.emRevisao}
+    </p>
+  )
+}
+
+/**
+ * "Todas as fases" (T-04): um link para cada fase publicada, na ordem do rascunho. A fase de hoje leva a
+ * etiqueta "nesta fase" (T-37), em texto: o destaque nunca é só cor. Sem bebê, nenhuma fase é a de hoje.
+ */
+export function TodasAsFases({
+  fases,
+  atuais = SEM_FASE_ATUAL,
+}: {
+  fases: readonly ItemDeConteudo[]
+  atuais?: ReadonlySet<string>
+}) {
+  return (
+    <Pilha as="section" vao="grupo" aria-labelledby="desenv-todas-as-fases" data-todas-as-fases="">
+      <h2 id="desenv-todas-as-fases" className="cm-h4 text-titulo-4">
+        {T.todasAsFases}
+      </h2>
+      {fases.length === 0 ? (
+        <EmRevisao />
+      ) : (
+        <ul className="m-0 list-none p-0">
+          {fases.map((fase) => {
+            const descricao = fase.corpo.flatMap((bloco) => (bloco.tipo === 'lista' ? bloco.itens : []))[0]
+            const tituloId = `lista-${fase.id}-titulo`
+            const descricaoId = `lista-${fase.id}-descricao`
+            return (
+              <li key={fase.id} className="border-b border-[var(--cor-fio-suave)]">
+                <Link
+                  to={rotaDoItem(fase.id)}
+                  aria-current={atuais.has(fase.id) ? 'true' : undefined}
+                  aria-labelledby={tituloId}
+                  aria-describedby={descricao ? descricaoId : undefined}
+                  className="alvo-toque group flex w-full flex-col gap-esp-junto py-esp-pilha text-corpo no-underline wrap-anywhere"
+                >
+                  <span className="flex flex-wrap items-center gap-esp-junto">
+                    <span id={tituloId} className="font-medium text-[var(--cor-link)] underline decoration-[1.5px] underline-offset-4 group-hover:decoration-2">
+                      {fase.titulo}
+                    </span>
+                    {atuais.has(fase.id) ? <Etiqueta>{T.nestaFase}</Etiqueta> : null}
+                  </span>
+                  {descricao ? <span id={descricaoId} className="max-w-[65ch] text-[var(--cor-texto-2)]">{descricao}</span> : null}
+                </Link>
+              </li>
+            )
+          })}
+        </ul>
+      )}
+    </Pilha>
+  )
+}
+
+/**
+ * "Ideias para brincar nesta fase" (T-03): a seção fica sempre, com o `h2`. A frase de abertura acompanha a
+ * publicação do item 2 (`comAbertura`); com itens, cada um inteiro, com título em `h3`. Sem itens (tudo recolhido), só T-50. Com o nascimento depois de hoje,
+ * T-66 ocupa o lugar dos itens por fase e ficam só as ideias que valem para todas.
+ */
+export function IdeiasDaFase({
+  itens,
+  comAbertura,
+  nascimentoDepoisDeHoje = false,
+}: {
+  itens: readonly ItemDeConteudo[]
+  /** A frase de abertura é parte do item 2: só aparece quando ele está publicado (visível). */
+  comAbertura: boolean
+  nascimentoDepoisDeHoje?: boolean
+}) {
+  return (
+    <Pilha as="section" vao="grupo" id="ideias" aria-labelledby="desenv-ideias" data-ideias="" className="scroll-mt-6">
+      <Pilha vao="pilha">
+        <h2 id="desenv-ideias" className="cm-h3 text-titulo-3">
+          {T.ideias}
+        </h2>
+        {comAbertura ? <p className="m-0 max-w-[65ch] text-[var(--cor-texto-2)]">{ABERTURA_DAS_IDEIAS}</p> : null}
+      </Pilha>
+      {nascimentoDepoisDeHoje ? (
+        <p
+          role="status"
+          data-aviso-estado="nascimento-futuro"
+          className="m-0 max-w-[65ch] rounded-campo bg-[var(--cor-papel-fundo)] px-4 py-3 font-medium wrap-anywhere"
+        >
+          {T.nascimentoDepoisDeHoje}
+        </p>
+      ) : null}
+      {itens.length === 0 ? (
+        <EmRevisao />
+      ) : (
+        // Os itens em duas colunas a partir de 1024 px (o `lg` de antes); abaixo, empilhados.
+        <Colunas fracoes="1fr 1fr" aPartirDe={1024} alinhar="inicio">
+          {itens.map((item) => (
+            <Coluna key={item.id}>
+              <ArtigoDeConteudo item={item} nivel="secao" />
+            </Coluna>
+          ))}
+        </Colunas>
+      )}
+    </Pilha>
+  )
+}
+
+/** "Para ler" (T-02): os artigos (tummy time e marcos), um cartão de link com o resumo de cada um. */
+export function ParaLer({ artigos }: { artigos: readonly ItemDeConteudo[] }) {
+  return (
+    <Pilha as="section" vao="grupo" aria-labelledby="desenv-para-ler" data-para-ler="">
+      <h2 id="desenv-para-ler" className="cm-h3 text-titulo-3">
+        {T.paraLer}
+      </h2>
+      {artigos.length === 0 ? (
+        <EmRevisao />
+      ) : (
+        // Os cartões em duas colunas a partir de 1024 px (o `lg` de antes); abaixo, empilhados.
+        <Colunas role="list" fracoes="1fr 1fr" aPartirDe={1024}>
+          {artigos.map((artigo) => (
+            <Coluna as="li" key={artigo.id} className="list-none">
+              <Link to={rotaDoItem(artigo.id)} className={LINK_DO_CARTAO}>
+                <Cartao className={CARTAO}>
+                  <span className="cm-h4 text-titulo-4">{artigo.titulo}</span>
+                  {artigo.resumo ? <span className="text-[var(--cor-texto-2)]">{artigo.resumo}</span> : null}
+                </Cartao>
+              </Link>
+            </Coluna>
+          ))}
+        </Colunas>
+      )}
+    </Pilha>
+  )
+}

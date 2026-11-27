@@ -1,0 +1,645 @@
+/* /cuidado-compartilhado: "a porta" (quem entra e o que vê).
+   Usa os tokens e peças da composição do Início (`.co`, `Legenda`, `Telefone`, `co-varre-noite`).
+   Sem sombra, sem gradiente, sem cor crua; movimento apenas em 1440 com `@supports ((animation-timeline: view()) and
+   (animation-range: entry))` e `prefers-reduced-motion: no-preference`. */
+
+/* A pílula do cabeçalho fica quieta (contorno de cacau) nesta página de dia. */
+[data-pagina-cuidado] [data-cabecalho-pilula] {
+  border-color: var(--color-cacau);
+  background-color: transparent;
+  color: var(--color-cacau);
+}
+
+[data-pagina-cuidado] [data-cabecalho-pilula]:hover {
+  background-color: var(--color-cacau);
+  color: var(--color-papel);
+}
+
+.cc-pagina {
+  --cc-chao: 4.5rem;
+  --cc-w12: min(90cqw, 21.875rem);
+  --cc-m12-topo: calc(var(--cc-w12) * 1602 / 981 * -0.35);
+  --cc-m12-base: calc(var(--cc-w12) * 1602 / 981 * -0.042);
+
+  background-color: var(--noite);
+}
+
+.cc-faixa {
+  position: relative;
+  overflow: clip;
+}
+
+/* ---- Faixa 1: abertura de dia, família + porta M12 na linha de chão ---- */
+.cc-abertura {
+  --foco-faixa: var(--color-cacau);
+
+  display: flex;
+  flex-direction: column;
+  padding-top: var(--espaco-grupo);
+  background-color: var(--dia);
+  color: var(--tinta-dia);
+}
+
+.cc-abertura-grade {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  row-gap: var(--espaco-grupo);
+  align-items: end;
+}
+
+.cc-m12 {
+  width: var(--cc-w12);
+  margin: 0 auto var(--cc-m12-base);
+  overflow: clip;
+}
+
+.cc-m12 img {
+  margin-top: var(--cc-m12-topo);
+}
+
+.cc-abertura-chao {
+  position: relative;
+  z-index: 1;
+  display: block;
+  width: 100%;
+  height: var(--espaco-grupo);
+  margin-top: calc(var(--espaco-pilha) * -1);
+  background-color: var(--chao-dia);
+}
+
+/* Janela baixa: o texto e a ação vêm antes da cena, com espaço para quebrar linhas. */
+@media (max-height: 30em) {
+  .cc-abertura {
+    padding-top: var(--espaco-junto);
+  }
+
+  .cc-abertura-texto .co-h1 {
+    font-size: var(--texto-titulo-1-tamanho);
+    line-height: var(--texto-titulo-1-entrelinha);
+  }
+
+  .cc-abertura-texto .co-lede {
+    margin-top: var(--espaco-junto);
+    font-size: var(--texto-corpo-tamanho);
+    line-height: var(--texto-corpo-entrelinha);
+  }
+
+  .cc-abertura-texto .co-acoes {
+    margin-top: calc(var(--espaco-junto) * 0.75);
+  }
+}
+
+/* ---- Faixa 2: chão de areia, "Por enquanto, somos três." + celular Família ---- */
+.cc-tres {
+  --foco-faixa: var(--color-cacau);
+
+  overflow: visible;
+  padding-block: var(--espaco-secao);
+  background-color: var(--chao-dia);
+  color: var(--tinta-dia);
+}
+
+.cc-tres-grade {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  row-gap: var(--espaco-grupo);
+  align-items: center;
+}
+
+.cc-tres-fone {
+  --fone-w: min(77cqw, 18.75rem);
+
+  margin: 0 auto;
+}
+
+#cc-tres,
+.cc-papel-nome {
+  hyphens: auto;
+  overflow-wrap: anywhere;
+}
+
+/* ---- Faixa 3: os três papéis ---- */
+.cc-papeis-faixa {
+  --foco-faixa: var(--color-cacau);
+
+  padding-block: var(--espaco-secao);
+  background-color: var(--dia);
+  color: var(--tinta-dia);
+}
+
+.cc-papeis {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--espaco-grupo);
+  margin: var(--espaco-bloco) 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.cc-papel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espaco-pilha);
+  padding: var(--espaco-grupo) 0 0;
+  border-top: 1px solid color-mix(in srgb, var(--color-cacau) 32%, transparent);
+}
+
+.cc-papel[data-papel='cuidador'] {
+  margin-inline: calc(var(--espaco-pilha) * -1);
+  padding: var(--espaco-grupo) var(--espaco-pilha);
+  border-top: 2px solid var(--color-cacau);
+  background-color: var(--chao-dia);
+}
+
+.cc-papel-nome {
+  --texto-cc-papel-tamanho: clamp(calc(var(--texto-pequeno-tamanho) * 1.8667), 7cqw, calc(var(--texto-pequeno-tamanho) * 2.4));
+
+  margin: 0;
+  font-family: var(--font-titulo);
+  font-size: var(--texto-cc-papel-tamanho);
+  font-weight: 800;
+  line-height: calc(var(--texto-cc-papel-tamanho) * 1.1);
+  letter-spacing: -0.015em;
+  color: var(--tinta-dia);
+}
+
+.cc-campos {
+  display: grid;
+  gap: var(--espaco-pilha);
+  margin: 0;
+}
+
+.cc-campo {
+  display: grid;
+  gap: 4px;
+}
+
+.cc-rotulo {
+  font-family: var(--font-texto);
+  font-size: var(--texto-pequeno-tamanho);
+  font-weight: 600;
+  line-height: var(--texto-pequeno-entrelinha);
+  color: var(--color-oliva-tinta);
+}
+
+.cc-campo-valor {
+  margin: 0;
+}
+
+.cc-verbo {
+  font-weight: 600;
+}
+
+/* ---- Faixa 4: as duas horas (13:00 e 14:40 na parede de dia, sem M05 e sem vaga) ---- */
+.cc-sono {
+  --foco-faixa: var(--color-cacau);
+
+  display: flex;
+  flex-direction: column;
+  padding-top: var(--espaco-secao);
+  background-color: var(--dia);
+  color: var(--tinta-dia);
+  border-top: 1px solid color-mix(in srgb, var(--color-cacau) 16%, transparent);
+}
+
+.cc-sono-horas {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: var(--espaco-pilha);
+  padding: 0 var(--margem);
+  user-select: none;
+}
+
+.cc-sono-hora {
+  /* Cada hora inteira cabe entre as margens (cinco caracteres tabulares ocupam cerca de 2,5 em). */
+  --texto-cc-fantasma-tamanho: min(
+    clamp(calc(var(--texto-pequeno-tamanho) * 3.4), 15.5cqw, calc(var(--texto-pequeno-tamanho) * 12)),
+    (100cqw - 2 * var(--margem)) / 2.6
+  );
+
+  font-family: var(--font-titulo);
+  font-size: var(--texto-cc-fantasma-tamanho);
+  font-weight: 800;
+  line-height: var(--texto-cc-fantasma-tamanho);
+  letter-spacing: -0.03em;
+  font-variant-numeric: lining-nums tabular-nums;
+  white-space: nowrap;
+  color: color-mix(in srgb, var(--chao-dia) 88%, var(--color-texto-2));
+}
+
+.cc-sono-texto {
+  padding-top: var(--espaco-grupo);
+  padding-bottom: var(--espaco-bloco);
+}
+
+.cc-hora {
+  --texto-cc-hora-tamanho: calc(var(--texto-pequeno-tamanho) * 1.4667);
+
+  font-family: var(--font-titulo);
+  font-size: var(--texto-cc-hora-tamanho);
+  font-weight: 800;
+  line-height: calc(var(--texto-cc-hora-tamanho) * 1.15);
+  font-variant-numeric: lining-nums tabular-nums;
+  white-space: nowrap;
+}
+
+.cc-sono-chao {
+  display: block;
+  width: 100%;
+  height: var(--espaco-grupo);
+  background-color: var(--chao-dia);
+}
+
+/* ---- Faixa 5: noite entrando pela direita, Histórico em 03:00 por Ícaro (sem M01) ---- */
+.cc-senha {
+  --foco-faixa: var(--color-papel);
+
+  background-color: var(--chao-dia);
+}
+
+.cc-senha-dentro {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  padding-top: var(--espaco-secao);
+  background-color: var(--noite);
+  color: var(--tinta-noite);
+}
+
+.cc-senha-grade {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  row-gap: var(--espaco-grupo);
+  align-items: end;
+}
+
+.cc-senha-texto {
+  order: 1;
+}
+
+.cc-senha-fone {
+  --fone-w: min(77cqw, 18.75rem);
+  --bisel: var(--color-noite-cartao);
+  --bisel-fio: color-mix(in srgb, var(--color-papel) 38%, transparent);
+
+  order: 2;
+  margin: 0 auto calc(var(--espaco-pilha) * -1);
+}
+
+/* Mostra o cabeçalho e a linha "03:00 Mamada, 20 min · lado esquerdo · por Ícaro" (y=871..1168 de 3702). */
+.cc-senha-fone img {
+  object-position: top;
+}
+
+.cc-senha-chao {
+  position: relative;
+  z-index: 1;
+  padding: var(--espaco-bloco) var(--margem) var(--espaco-grupo);
+  background-color: var(--chao-noite);
+  color: var(--tinta-noite);
+}
+
+.cc-senha-leg {
+  color: var(--tinta-noite);
+}
+
+/* ---- Faixa 6: papel, "Quando alguém para de cuidar." ---- */
+.cc-parar-faixa {
+  --foco-faixa: var(--color-cacau);
+
+  display: flex;
+  flex-direction: column;
+  padding-top: var(--espaco-secao);
+  background-color: var(--dia);
+  color: var(--tinta-dia);
+}
+
+.cc-parar {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--espaco-grupo);
+  padding-bottom: var(--espaco-secao);
+}
+
+.cc-parar-corpo {
+  display: grid;
+  gap: var(--espaco-pilha);
+}
+
+.cc-parar-corpo .co-p {
+  margin-top: 0;
+}
+
+.cc-parar-chao {
+  display: block;
+  width: 100%;
+  height: var(--espaco-grupo);
+  background-color: var(--chao-dia);
+}
+
+/* ---- Faixa 7: fecho de noite com fresta de luz da porta em mel ---- */
+.cc-fecho {
+  --foco-faixa: var(--color-papel);
+
+  display: flex;
+  flex-direction: column;
+  min-height: 22rem;
+  padding-top: var(--espaco-secao);
+  background-color: var(--noite);
+  color: var(--tinta-noite);
+}
+
+.cc-fecho :focus-visible {
+  outline-color: var(--foco-faixa);
+}
+
+.cc-porta-luz {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  height: 11rem;
+  margin-bottom: var(--espaco-grupo);
+}
+
+.cc-porta-fresta {
+  position: absolute;
+  top: 0;
+  bottom: calc(2.5rem - 1px);
+  left: var(--margem);
+  width: 1.5rem;
+  background-color: var(--color-mel);
+}
+
+.cc-porta-cunha {
+  position: absolute;
+  inset: auto 0 0 var(--margem);
+  width: min(16rem, 72cqw);
+  height: 2.5rem;
+  background-color: var(--color-mel);
+  clip-path: polygon(0 0, 1.5rem 0, 100% 100%, 0 100%);
+}
+
+.cc-fecho-texto {
+  position: relative;
+  z-index: 3;
+  padding-bottom: var(--espaco-secao);
+}
+
+.cc-fecho-chao {
+  display: block;
+  width: 100%;
+  height: var(--espaco-grupo);
+  background-color: var(--chao-noite);
+}
+
+/* ---- Composição larga (1440 / >= 69em paisagem): uma linha de chão atravessa a página ---- */
+@media (min-width: 69em) and (min-aspect-ratio: 1/1) {
+  .cc-pagina {
+    --cc-chao: 6.25rem;
+    --cc-w12: min(34cqw, 31.5rem);
+    --cc-fone-abertura: min(20cqw, 18rem);
+    --cc-m12-topo: calc(var(--cc-w12) * 1602 / 981 * -0.35);
+    --cc-m12-base: calc(var(--cc-w12) * 1602 / 981 * -0.042);
+  }
+
+  /* 1: M12 (<= 540px) à esquerda, h1 + lede + CTA no meio, espaço do celular Família à extrema direita na mesma linha de chão */
+  .cc-abertura {
+    display: block;
+    padding-top: var(--espaco-bloco);
+  }
+
+  .cc-abertura-grade {
+    grid-template-columns: var(--cc-w12) minmax(0, 1fr) var(--cc-fone-abertura);
+    column-gap: var(--espaco-bloco);
+    align-items: end;
+    padding: 0 var(--margem);
+  }
+
+  .cc-m12 {
+    grid-area: 1 / 1;
+    width: var(--cc-w12);
+    margin: 0 0 calc(var(--cc-chao) * -0.58);
+  }
+
+  .cc-abertura-texto {
+    grid-area: 1 / 2;
+    align-self: center;
+    padding: 0 0 var(--espaco-bloco);
+  }
+
+  .cc-abertura-chao {
+    height: var(--cc-chao);
+    margin-top: 0;
+  }
+
+  /* 2: o celular Família sobe para a coluna direita da faixa 1 e cruza a linha de chão para dentro da areia */
+  .cc-tres {
+    padding-block: var(--espaco-bloco) var(--espaco-secao);
+  }
+
+  .cc-tres-grade {
+    grid-template-columns: minmax(0, 1fr) var(--cc-fone-abertura);
+    column-gap: var(--espaco-midia);
+    align-items: start;
+    padding: 0 var(--margem);
+  }
+
+  .cc-tres-fone {
+    --fone-w: var(--cc-fone-abertura);
+    --cc-sobe: calc(var(--fone-w) * -1.78);
+
+    grid-area: 1 / 2;
+    z-index: 3;
+    margin: var(--cc-sobe) 0 0;
+  }
+
+  .cc-tres-texto {
+    grid-area: 1 / 1;
+    padding: 0;
+  }
+
+  /* 3: três colunas lado a lado (Responsável / Cuidador / Observador) */
+  .cc-papeis-faixa {
+    padding-block: var(--espaco-secao-ampla);
+  }
+
+  .cc-papeis {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--espaco-bloco);
+    align-items: stretch;
+  }
+
+  .cc-papel {
+    padding: var(--espaco-grupo) var(--espaco-pilha);
+  }
+
+  .cc-papel[data-papel='cuidador'] {
+    margin-inline: 0;
+    padding: var(--espaco-grupo) var(--espaco-grupo);
+  }
+
+  /* 4: 13:00 e 14:40 lado a lado na parede de dia, texto em pé na linha de chão */
+  .cc-sono {
+    padding-top: var(--espaco-secao);
+  }
+
+  .cc-sono-horas {
+    justify-content: flex-start;
+    gap: var(--espaco-midia);
+  }
+
+  .cc-sono-texto {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    column-gap: var(--espaco-midia);
+    align-items: end;
+    padding-top: var(--espaco-grupo);
+    padding-bottom: var(--espaco-secao);
+  }
+
+  .cc-sono-texto .co-p {
+    margin-top: 0;
+  }
+
+  .cc-sono-chao {
+    height: var(--cc-chao);
+  }
+
+  /* 5: noite pela direita, Histórico em 03:00 por Ícaro à esquerda, texto à direita e legenda no chão de noite */
+  .cc-senha-dentro {
+    --cc-fone-senha: min(24cqw, 22rem, (100svh - var(--cm-cabecalho) - var(--cc-chao) - 5.5rem) / 2.15);
+
+    display: block;
+    padding-top: var(--espaco-bloco);
+  }
+
+  .cc-senha-grade {
+    grid-template-columns: auto minmax(0, 1fr);
+    column-gap: var(--espaco-midia);
+    align-items: end;
+    padding: 0 var(--margem);
+  }
+
+  .cc-senha-fone {
+    --fone-w: var(--cc-fone-senha);
+
+    grid-area: 1 / 1;
+    order: 0;
+    margin: 0;
+  }
+
+  .cc-senha-texto {
+    grid-area: 1 / 2;
+    order: 0;
+    align-self: center;
+    padding: 0 0 var(--espaco-bloco);
+  }
+
+  .cc-senha-chao {
+    display: flex;
+    align-items: center;
+    height: var(--cc-chao);
+    padding: 0 var(--margem) 0 calc(var(--margem) + var(--cc-fone-senha) + var(--espaco-midia));
+  }
+
+  .cc-senha-leg {
+    flex-direction: row;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .cc-senha-leg .co-leg-resto {
+    margin-top: 4px;
+  }
+
+  /* 6: duas colunas na linha de chão */
+  .cc-parar-faixa {
+    padding-top: var(--espaco-secao-ampla);
+  }
+
+  .cc-parar {
+    grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
+    column-gap: var(--espaco-midia);
+    align-items: start;
+    padding-bottom: var(--espaco-secao-ampla);
+  }
+
+  .cc-parar-chao {
+    height: var(--cc-chao);
+  }
+
+  /* 7: fresta de luz de mel na parede de noite e cunha de mel no chão, título + CTA ao lado */
+  .cc-fecho {
+    display: block;
+    min-height: 30rem;
+    padding: 0;
+  }
+
+  .cc-porta-luz {
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: 40%;
+    height: auto;
+    margin: 0;
+  }
+
+  .cc-porta-fresta {
+    top: 3rem;
+    bottom: calc(var(--cc-chao) - 1px);
+    left: var(--margem);
+    width: 2.25rem;
+  }
+
+  .cc-porta-cunha {
+    inset: auto auto 0 var(--margem);
+    width: 26cqw;
+    height: var(--cc-chao);
+    clip-path: polygon(0 0, 2.25rem 0, 100% 100%, 0 100%);
+  }
+
+  .cc-fecho-texto {
+    max-width: 56%;
+    margin-left: 40%;
+    padding: var(--espaco-secao-ampla) var(--margem) calc(var(--cc-chao) + var(--espaco-secao)) var(--espaco-bloco);
+  }
+
+  .cc-fecho-chao {
+    position: absolute;
+    inset: auto 0 0;
+    z-index: 1;
+    height: var(--cc-chao);
+  }
+}
+
+/* ---- Movimento (1440, view timeline, sem movimento reduzido): fora disso, tudo parado no estado final ---- */
+@keyframes cc-porta-abre {
+  from {
+    clip-path: polygon(0 0, 10% 0, 10% 100%, 0 100%);
+  }
+
+  to {
+    clip-path: polygon(0 0, 2.25rem 0, 100% 100%, 0 100%);
+  }
+}
+
+@media (min-width: 69em) and (min-aspect-ratio: 1/1) and (prefers-reduced-motion: no-preference) {
+  @supports ((animation-timeline: view()) and (animation-range: entry)) {
+    .cc-senha-dentro {
+      animation: co-varre-noite linear both;
+      animation-timeline: view();
+      animation-range: entry 0% entry 50%;
+    }
+
+    .cc-porta-cunha {
+      animation: cc-porta-abre linear both;
+      animation-timeline: view();
+      animation-range: entry 15% entry 80%;
+    }
+  }
+}

@@ -1,0 +1,62 @@
+// Desenvolvimento (/desenvolvimento): as frases que o deck COPY_desenvolvimento escreveu (16), cada uma com o id do
+// deck no comentário da mesma linha. Os 91 textos de saúde NÃO moram aqui: vêm, só de leitura, de
+// `conteudo/desenvolvimento/*.ts`. As imagens são as três vagas fechadas do spec (cenas do ASSET-2).
+import { imagemPublica } from '../../componentes/campo/urlPublica.ts'
+import { placa } from '../../componentes/campo/imagens.ts'
+import type { Imagem } from '../../componentes/secoes/contrato.ts'
+import m04Heroi from '../../assets/cenas/desenvolvimento/m04-heroi-1672w.webp?w=1100;1672&format=avif;webp&as=picture'
+import m04Heroi390 from '../../assets/cenas/desenvolvimento/m04-heroi-390c-1170w.webp?w=390;780;1170&format=avif;webp&as=picture'
+import m12Familia from '../../assets/cenas/desenvolvimento/m12-familia-585w.webp?w=390;585&format=avif;webp&as=picture'
+
+export const DESENVOLVIMENTO_CASA = {
+  aba: 'Desenvolvimento | AppMaternidade', // de.aba
+  h1: 'Ela já devia rolar?', // de.h1
+  lede: 'Cada bebê tem o seu ritmo. Aqui tem ideias para brincar em cada fase e o que as fontes dizem sobre tummy time.', // de.lede
+  cta1: 'Ver ideias para cada fase', // de.cta1
+  cta2: 'Ler sobre tummy time', // de.cta2
+  legenda1: '15:00, tummy time, anotado por Ju', // de.leg1
+  altCena1:
+    'A cena é vista da altura do chão. Heloísa, acordada, de bruços num tapete firme, ergue a cabeça e olha para a frente. Juliana, de óculos, está deitada ao lado, na altura dos olhos dela, olhando para a bebê.', // de.alt.cena1
+  h2Registro: 'No site, é só um registro.', // de.h2.registro
+  pRegistro:
+    'Tummy time entra na rotina como entra uma mamada: com a hora, a duração e o nome de quem anotou. O site não põe meta de minutos e não compara a Helo com nenhum outro bebê.', // de.p.registro
+  altTela1: 'Tela do Histórico do site num celular. Na lista do dia, o tummy time das 15:00, de 8 minutos, está anotado por Juliana.', // de.alt.tela1
+  h2Ideias: 'Ideias para brincar em cada fase.', // de.h2.ideias
+  altCena2: 'Heloísa, acordada e sorrindo, no colo de Juliana.', // de.alt.cena2
+  h2Tummy: 'Tummy time, segundo as fontes.', // de.h2.tummy
+  h2Marcos: 'Marcos, sem cobrança.', // de.h2.marcos
+  h2Urgencia: 'Em urgência de saúde, ligue 192.', // de.h2.urgencia
+  fontesRotulo: 'Fontes', // de.fontes.rotulo
+} as const
+
+/** Os destinos dos dois links da abertura (âncoras da própria página). */
+export const DESTINOS_DESENVOLVIMENTO = { ideias: '#ideias', tummy: '#tummy-time' } as const
+
+// DE-S1: a cena M04 da abertura. Em telas largas ocupa a coluna direita (~640 px com recorte útil de 1240/1672,
+// puxando o arquivo 1672w em DPR 2 para nitidez próxima de 2x); abaixo de 768 usa o recorte de 390.
+export const CENA_ABERTURA: Imagem = placa(m04Heroi, '(min-width: 960px) min(880px, 58vw), 100vw', 1100)
+
+export const CENA_ABERTURA_RECORTE: Imagem = placa(m04Heroi390, '100vw', 390)
+
+// DE-S2: a captura do Histórico (15:00, tummy time) sob a moldura do dia, agora ao lado da faixa "No site, é só um
+// registro.". A tela chega a 340 px em telas largas (com 780w/1170w em DPR 2/3) e até 300 px no celular.
+export const TELA_HISTORICO: Imagem = imagemPublica({
+  src: '/telas/t1i/historico-y15-280w.webp',
+  srcSet:
+    '/telas/t1i/historico-y15-280w.webp 280w, /telas/t1i/historico-y15-320w.webp 320w, /telas/t1i/historico-y15-560w.webp 560w, /telas/t1i/historico-y15-640w.webp 640w, /telas/t1i/historico-y15-780w.webp 780w, /telas/t1i/historico-y15-1170w.webp 1170w',
+  sizes: '(min-width: 900px) 340px, 300px',
+  largura: 1170,
+  altura: 2532,
+})
+
+export const MOLDURA_DIA: Imagem = imagemPublica({
+  src: '/molduras/moldura-dia.png',
+  srcSet: '/molduras/moldura-dia.png 678w, /molduras/moldura-dia-1356w.png 1356w',
+  sizes: '(min-width: 900px) 360px, 318px',
+  largura: 721,
+  altura: 1426,
+})
+
+// DE-S3: a família (M12) na abertura da faixa das ideias. Limitada a 292 px em telas largas e 260 px no estreito
+// para que o mestre de 585 px mantenha nitidez plena (~2x) em DPR 2 sem estourar.
+export const CENA_FAMILIA: Imagem = placa(m12Familia, '(min-width: 960px) 292px, 260px', 390)
