@@ -90,13 +90,36 @@ describe('selo, título da aba e noindex (MAT-40:RF-02, teste 10)', () => {
     }
   })
 
-  it('sem sessão, qualquer rota vai a /entrar?volta=... (a MAT-40 não cria tela de login)', async () => {
-    const estado = criarElenco()
-    const comunidade = criarDadosComunidadeMemoria(estado, ELENCO.autor.conta)
-    const contas = criarDadosContaMemoria(fixtureDeContasDoElenco(criarFixtureDeTeste(Date.now())))
-    const { roteador } = renderizarComunidade('/app/comunidade', { contas, comunidade })
-    await waitFor(() => expect(roteador.state.location.pathname).toBe('/entrar'))
-    expect(roteador.state.location.search).toBe(`?volta=${encodeURIComponent('/app/comunidade')}`)
+  // COMUNIDADE-DEMO: as três telas de leitura abrem sem conta na demonstração (`demoSemConta.test.tsx`); as
+  // demais rotas e, com o banco, todas elas continuam indo a /entrar?volta=... (a MAT-40 não cria tela de login).
+  it('sem sessão, as rotas da pessoa vão a /entrar?volta=... (a MAT-40 não cria tela de login)', async () => {
+    for (const caminho of ['/app/comunidade/perfil', '/app/comunidade/denuncias', `${espaco('sono')}/novo`]) {
+      const estado = criarElenco()
+      const comunidade = criarDadosComunidadeMemoria(estado, ELENCO.autor.conta)
+      const contas = criarDadosContaMemoria(fixtureDeContasDoElenco(criarFixtureDeTeste(Date.now())))
+      const { roteador, unmount } = renderizarComunidade(caminho, { contas, comunidade })
+      await waitFor(() => expect(roteador.state.location.pathname).toBe('/entrar'))
+      expect(roteador.state.location.search).toBe(`?volta=${encodeURIComponent(caminho)}`)
+      unmount()
+    }
+  })
+
+  it('com o banco configurado e sem sessão, as três telas de leitura também vão a /entrar?volta=...', async () => {
+    vi.stubEnv('VITE_SUPABASE_URL', 'https://exemplo.invalid')
+    vi.stubEnv('VITE_SUPABASE_ANON_KEY', 'chave-publica-de-teste')
+    try {
+      for (const caminho of ['/app/comunidade', espaco('sono'), topico(CONTEUDO.topicoDoAutor)]) {
+        const estado = criarElenco()
+        const comunidade = criarDadosComunidadeMemoria(estado, ELENCO.autor.conta)
+        const contas = criarDadosContaMemoria(fixtureDeContasDoElenco(criarFixtureDeTeste(Date.now())))
+        const { roteador, unmount } = renderizarComunidade(caminho, { contas, comunidade })
+        await waitFor(() => expect(roteador.state.location.pathname).toBe('/entrar'))
+        expect(roteador.state.location.search).toBe(`?volta=${encodeURIComponent(caminho)}`)
+        unmount()
+      }
+    } finally {
+      vi.unstubAllEnvs()
+    }
   })
 
   it('nenhuma tela chama a rede', async () => {
@@ -335,18 +358,26 @@ describe('estados das leituras (MAT-40:RF-15, teste 5)', () => {
     for (const espiao of espioes) expect(espiao).not.toHaveBeenCalled()
   })
 
+  // COMUNIDADE-DEMO: sem o banco, as telas de leitura não têm guarda (a demonstração abre sem conta); a
+  // guarda que leva a /entrar?volta=... vale com o banco configurado, que é o que este teste liga.
   it('sessão encerrada: nada da MAT-40 na tela; o provedor da MAT-37 leva a /entrar?volta=...', async () => {
-    const estado = criarElenco()
-    const comunidade = criarDadosComunidadeMemoria(estado, ELENCO.outro.conta)
-    const contas = criarDadosContaMemoria(fixtureDeContasDoElenco(criarFixtureDeTeste(Date.now())))
-    contas.sessaoParaTeste(ELENCO.outro.email)
-    simularFalha(comunidade, 'listarEspacos', 'sessao_encerrada')
-    const { roteador } = renderizarComunidade('/app/comunidade', { contas, comunidade })
-    // A sessão acaba por fora: a próxima leitura devolve `sessao_encerrada` e o provedor relê a sessão.
-    contas.encerrarSessaoPorFora()
-    await waitFor(() => expect(roteador.state.location.pathname).toBe('/entrar'))
-    expect(roteador.state.location.search).toBe(`?volta=${encodeURIComponent('/app/comunidade')}`)
-    expect(screen.queryByText(TEXTOS_ERRO_COMUNIDADE.desconhecido)).toBeNull()
+    vi.stubEnv('VITE_SUPABASE_URL', 'https://exemplo.invalid')
+    vi.stubEnv('VITE_SUPABASE_ANON_KEY', 'chave-publica-de-teste')
+    try {
+      const estado = criarElenco()
+      const comunidade = criarDadosComunidadeMemoria(estado, ELENCO.outro.conta)
+      const contas = criarDadosContaMemoria(fixtureDeContasDoElenco(criarFixtureDeTeste(Date.now())))
+      contas.sessaoParaTeste(ELENCO.outro.email)
+      simularFalha(comunidade, 'listarEspacos', 'sessao_encerrada')
+      const { roteador } = renderizarComunidade('/app/comunidade', { contas, comunidade })
+      // A sessão acaba por fora: a próxima leitura devolve `sessao_encerrada` e o provedor relê a sessão.
+      contas.encerrarSessaoPorFora()
+      await waitFor(() => expect(roteador.state.location.pathname).toBe('/entrar'))
+      expect(roteador.state.location.search).toBe(`?volta=${encodeURIComponent('/app/comunidade')}`)
+      expect(screen.queryByText(TEXTOS_ERRO_COMUNIDADE.desconhecido)).toBeNull()
+    } finally {
+      vi.unstubAllEnvs()
+    }
   })
 
   it('o tópico que o banco não devolve é "não encontrado" (também o que a pessoa não pode ver)', async () => {

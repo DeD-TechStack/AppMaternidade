@@ -7,13 +7,37 @@ import type { ItemNavegacao } from './navegacao.ts'
 // Cada página é um pacote à parte (`lazy`): esta lista não importa componentes de página.
 const handle = { titulo: TITULO_DA_ABA_COMUNIDADE }
 
-export const rotasComunidadePublicas: RouteObject[] = []
-export const rotasComunidadeLogadas: RouteObject[] = [
+// As três telas de leitura ficam sob uma rota sem caminho: a demonstração sem conta as abre sem guarda, e com o
+// banco a mesma rota é a guarda (`PortaDaComunidade`). Os caminhos fixos (`entrar`, `perfil`, ...) continuam
+// abaixo, na lista das logadas, e têm precedência sobre `:slug`.
+export const rotasComunidadePublicas: RouteObject[] = [
   {
-    path: 'app/comunidade',
-    lazy: async () => ({ Component: (await import('../paginas/comunidade/Comunidade.tsx')).Comunidade }),
+    path: 'comunidade',
+    lazy: async () => ({ Component: (await import('../paginas/comunidade/ConhecerComunidade.tsx')).ConhecerComunidade }),
     handle,
   },
+  {
+    lazy: async () => ({ Component: (await import('../paginas/comunidade/PortaDaComunidade.tsx')).PortaDaComunidade }),
+    children: [
+      {
+        path: 'app/comunidade',
+        lazy: async () => ({ Component: (await import('../paginas/comunidade/Comunidade.tsx')).Comunidade }),
+        handle,
+      },
+      {
+        path: 'app/comunidade/topico/:id',
+        lazy: async () => ({ Component: (await import('../paginas/comunidade/Topico.tsx')).Topico }),
+        handle,
+      },
+      {
+        path: 'app/comunidade/:slug',
+        lazy: async () => ({ Component: (await import('../paginas/comunidade/Espaco.tsx')).Espaco }),
+        handle,
+      },
+    ],
+  },
+]
+export const rotasComunidadeLogadas: RouteObject[] = [
   {
     path: 'app/comunidade/entrar',
     lazy: async () => ({ Component: (await import('../paginas/comunidade/EntrarNaComunidade.tsx')).EntrarNaComunidade }),
@@ -30,18 +54,8 @@ export const rotasComunidadeLogadas: RouteObject[] = [
     handle,
   },
   {
-    path: 'app/comunidade/topico/:id',
-    lazy: async () => ({ Component: (await import('../paginas/comunidade/Topico.tsx')).Topico }),
-    handle,
-  },
-  {
     path: 'app/comunidade/topico/:id/editar',
     lazy: async () => ({ Component: (await import('../paginas/comunidade/EditarTopico.tsx')).EditarTopico }),
-    handle,
-  },
-  {
-    path: 'app/comunidade/:slug',
-    lazy: async () => ({ Component: (await import('../paginas/comunidade/Espaco.tsx')).Espaco }),
     handle,
   },
   {

@@ -158,6 +158,7 @@ export const ESPACO = {
 } as const
 
 export const TOPICO = {
+  apoiarDemonstracao: 'Apoiar na demonstração',
   respostas: 'Respostas',
   responder: 'Responder',
   editar: 'Editar',
@@ -272,4 +273,16 @@ export const DIALOGO_BLOQUEIO = {
   titulo: (apelido: string) => `Bloquear ${apelido}?`,
   confirmar: 'Bloquear',
   bloqueado: (apelido: string) => `Você bloqueou ${apelido}.`,
+} as const
+
+export const CONHECER_COMUNIDADE = {
+  titulo: 'Conheça a comunidade',
+  lide: 'Um espaço para trocar experiências sobre os cuidados do dia a dia, organizado por assunto.',
+  espacos: 'Espaços da comunidade',
+  exemplos: 'Exemplos fictícios',
+  aviso: 'Os exemplos abaixo são fictícios e servem apenas para conhecer a comunidade. Não são publicações de pessoas reais.',
+  exemplo: 'Exemplo fictício',
+  participar: 'Participar da comunidade',
+  acesso: 'Para publicar e responder na comunidade, entre com sua conta e siga as regras da comunidade.',
+  regras: 'Regras da comunidade',
 } as const

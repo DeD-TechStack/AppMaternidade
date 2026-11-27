@@ -157,7 +157,7 @@ describe('cabeçalho público', () => {
       'Desenvolvimento',
       'Comunidade',
     ])
-    expect(within(nav).getByRole('link', { name: 'Comunidade' }).getAttribute('href')).toBe('/regras-da-comunidade')
+    expect(within(nav).getByRole('link', { name: 'Comunidade' }).getAttribute('href')).toBe('/comunidade')
     expect(within(cabecalho).getByRole('link', { name: 'Entrar' })).toBeTruthy()
     const criar = within(cabecalho).getByRole('link', { name: 'Criar conta' })
     expect(criar.getAttribute('data-botao')).toBe('primario')
@@ -175,13 +175,14 @@ describe('cabeçalho público', () => {
   })
 
   it('todo destino do cabeçalho é uma rota que existe (nenhuma rota inventada)', async () => {
-    for (const item of ITENS_DO_CABECALHO.publico) expect(ROTAS_PUBLICAS).toContain(item.para)
+    const rotasDoCabecalho = [...ROTAS_PUBLICAS, '/comunidade']
+    for (const item of ITENS_DO_CABECALHO.publico) expect(rotasDoCabecalho).toContain(item.para)
     const { container } = renderizarRota('/', { sessao: null })
     await aguardarCarga()
     for (const link of container.querySelectorAll<HTMLAnchorElement>('header[data-cabecalho] a')) {
       const destino = link.getAttribute('href')!
       // O link de pular para o conteúdo (WCAG 2.4.1) é âncora da própria página, e não uma rota.
-      expect(['/', ...ROTAS_PUBLICAS, '/entrar', '/criar-conta', '#conteudo'], destino).toContain(destino)
+      expect(['/', ...rotasDoCabecalho, '/entrar', '/criar-conta', '#conteudo'], destino).toContain(destino)
     }
   })
 
