@@ -56,6 +56,12 @@ describe('R38-22: o que o detalhe mostra', () => {
     expect(screen.queryByText(/encerrado por/)).toBeNull()
   })
 
+  it('uma URL direta com parâmetros de Histórico mantém a volta para o dia do registro', async () => {
+    await renderizarRotaPronta(`/app/registro/${MAMADA}?dia=2026-11-04&tipos=tummy&vista=semana`)
+
+    expect(screen.getByRole('link', { name: 'Voltar para o Histórico' }).getAttribute('href')).toBe('/app/historico?dia=2026-11-05')
+  })
+
   it('um registro pontual mostra `registrado por` e só o horário', async () => {
     await renderizarRotaPronta(`/app/registro/${FRALDA_DE_JULIANA}`, { diaCompleto: true })
 

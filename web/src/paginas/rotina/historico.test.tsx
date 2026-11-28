@@ -1,5 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { act, fireEvent, screen, within } from '@testing-library/react'
+import { act, fireEvent, render, screen, within } from '@testing-library/react'
+import { createMemoryRouter, RouterProvider } from 'react-router'
+import { ProvedorDadosConta } from '../../componentes/conta/sessao.tsx'
+import { LinhaDoDia } from '../../componentes/rotina/LinhaDoDia.tsx'
+import { ProvedorDadosRotina } from '../../componentes/rotina/dadosRotina.tsx'
 import { janelaDoDia } from '../../dados/rotina.dia.ts'
 import { simularFalhaRotina, type FixtureRotina } from '../../dados/rotina.memoria.ts'
 import type { Registro } from '../../dados/rotina.tipos.ts'
@@ -8,6 +12,7 @@ import { seteDiasAte } from '../../componentes/rotina/diasDoHistorico.ts'
 import { formatarMinutos, totaisPorDiaDaSemana } from '../../componentes/rotina/totaisHistorico.ts'
 import { aguardarCarga, renderizarRota, renderizarRotaPronta } from '../../teste/renderizarRota.tsx'
 import { FUSO_DO_APARELHO, ID_BEBE, criarMundoDeTeste } from '../../teste/rotina.fixture.ts'
+import { criarRotasProntas } from '../../teste/rotasProntas.ts'
 
 // O Histórico (MAT-38b, R38-20 e R38-21), com o relógio falso às 10:00 de 5/11/2026 (hora do aparelho): o dia, a
 // semana, os filtros, os parâmetros da URL e os estados de lista. A fixture "dia completo" tem 9 registros de hoje.
@@ -57,6 +62,161 @@ describe('R38-20: a vista do dia', () => {
 
     const primeira = document.querySelector('[data-registros-do-dia] li')!
     expect(within(primeira as HTMLElement).getByRole('link').getAttribute('href')).toBe(`/app/registro/${primeira.getAttribute('data-registro')}`)
+  })
+
+  it.each([undefined, ''])('estado da linha a partir da busca %j', async (buscaDoHistorico) => {
+    const { rotina } = criarMundoDeTeste({ diaCompleto: true })
+    const leitura = await rotina.doDia(ID_BEBE, '2026-11-05')
+    if (!leitura.ok) throw new Error('A fixture precisa de registros no dia.')
+    const registro = leitura.valor.itens[0]
+    const para = `/app/registro/${registro.id}`
+    const contexto = buscaDoHistorico === undefined ? {} : { buscaDoHistorico }
+    const roteador = createMemoryRouter([
+      {
+        path: '/app/historico',
+        element: <ul><LinhaDoDia registro={registro} fuso={FUSO_DO_APARELHO} autor="Juliana" para={para} {...contexto} /></ul>,
+      },
+      { path: '/app/registro/:id', element: <h1>Registro</h1> },
+    ], { initialEntries: ['/app/historico'] })
+    const chaveDoHistorico = roteador.state.location.key
+    render(<RouterProvider router={roteador} />)
+
+    const link = screen.getByRole('link')
+    expect(link.getAttribute('href')).toBe(para)
+    fireEvent.click(link)
+    expect(roteador.state.location.pathname).toBe(para)
+    expect(roteador.state.location.state).toStrictEqual(
+      buscaDoHistorico === undefined ? { foco: 'titulo' } : { foco: 'titulo', buscaDoHistorico, chaveDoHistorico },
+    )
+  })
+
+  it.each(['', '/AppMaternidade'])('voltar do registro recupera o histórico filtrado (base %j)', async (basename) => {
+    const { conta, rotina } = criarMundoDeTeste({ diaCompleto: true })
+    const historico = `${basename}/app/historico`
+    const buscaOriginal = '?dia=2026-11-04&tipos=tummy'
+    const destino = `${historico}${buscaOriginal}`
+    const roteador = createMemoryRouter(criarRotasProntas(), { basename: basename || '/', initialEntries: [destino] })
+    vi.stubGlobal('scrollTo', vi.fn())
+    render(
+      <ProvedorDadosConta dados={conta}>
+        <ProvedorDadosRotina dados={rotina}>
+          <RouterProvider router={roteador} />
+        </ProvedorDadosRotina>
+      </ProvedorDadosConta>,
+    )
+    await aguardarCarga()
+
+    const abrirRegistro = async () => {
+      fireEvent.click(screen.getByRole('link', { name: 'Tummy time, 8 min' }))
+      await aguardarCarga()
+      expect(roteador.state.location.pathname).toMatch(`${basename}/app/registro/`)
+      expect(document.activeElement).toBe(screen.getByRole('heading', { level: 1, name: 'Registro' }))
+    }
+
+    await abrirRegistro()
+    await act(async () => {
+      await roteador.navigate(-1)
+    })
+    await aguardarCarga()
+    expect(roteador.state.historyAction).toBe('POP')
+    expect(roteador.state.location).toMatchObject({ pathname: historico, search: buscaOriginal })
+
+    await abrirRegistro()
+    const voltar = screen.getByRole('link', { name: 'Voltar para o Histórico' })
+    expect.soft(voltar.getAttribute('href')).toBe(destino)
+    fireEvent.click(voltar)
+    await aguardarCarga()
+
+    expect(roteador.state.location).toMatchObject({ pathname: historico, search: buscaOriginal })
+    expect(document.activeElement).toBe(screen.getByRole('heading', { level: 1, name: 'Histórico' }))
+    expect(linhaDoBebe()).toBe('Heloísa, Ontem, quarta-feira, 4 de novembro')
+    expect(botao('Dia').getAttribute('aria-pressed')).toBe('true')
+    expect(botao('Semana').getAttribute('aria-pressed')).toBe('false')
+    expect(botao('Tummy time').getAttribute('aria-pressed')).toBe('true')
+    expect(botao('Sono').getAttribute('aria-pressed')).toBe('false')
+    expect(linhas().map((l) => l.texto)).toEqual(['Tummy time, 8 min', 'Tummy time, 10 min'])
+  })
+
+  it('voltar mantém o dia que era Hoje se a data mudar com o registro aberto', async () => {
+    vi.setSystemTime(new Date('2026-11-05T10:00:00Z'))
+    const mundo = await renderizarRotaPronta('/app/historico?tipos=mamada', { fusoDaFamilia: 'UTC' })
+    fireEvent.click(screen.getByRole('link', { name: 'Mamada, 18 min · lado esquerdo' }))
+    await aguardarCarga()
+
+    act(() => {
+      vi.setSystemTime(new Date('2026-11-06T10:00:00Z'))
+      vi.advanceTimersByTime(60_000)
+    })
+    fireEvent.click(screen.getByRole('link', { name: 'Voltar para o Histórico' }))
+    await aguardarCarga()
+
+    expect(busca(mundo)).toBe('?dia=2026-11-05&tipos=mamada')
+    expect(linhaDoBebe()).toBe('Heloísa, Ontem, quinta-feira, 5 de novembro')
+    expect(linhas().map((l) => l.texto)).toEqual(['Mamada, 18 min · lado esquerdo'])
+  })
+
+  it.each([
+    { base: '', linha: 'visível' },
+    { base: '/AppMaternidade', linha: 'visível' },
+    { base: '', linha: 'removida' },
+    { base: '', linha: 'fora da janela' },
+  ])('volta nativa com linha $linha (base $base)', async ({ base, linha }) => {
+    const { conta, rotina } = criarMundoDeTeste({ diaCompleto: true })
+    const pathname = `${base}/app/historico`
+    const search = '?dia=2026-11-04&tipos=tummy'
+    const roteador = createMemoryRouter(criarRotasProntas(), {
+      basename: base || '/',
+      initialEntries: [{ pathname, search, state: base ? { foco: 'titulo' } : null }],
+    })
+    vi.stubGlobal('scrollTo', vi.fn())
+    const focarLink = vi.spyOn(HTMLAnchorElement.prototype, 'focus')
+    render(
+      <ProvedorDadosConta dados={conta}>
+        <ProvedorDadosRotina dados={rotina}>
+          <RouterProvider router={roteador} />
+        </ProvedorDadosRotina>
+      </ProvedorDadosConta>,
+    )
+    await aguardarCarga()
+
+    const abrir = screen.getByRole('link', { name: 'Tummy time, 8 min' })
+    const href = abrir.getAttribute('href')!
+    const id = href.split('/').at(-1)!
+    abrir.focus()
+    fireEvent.click(abrir)
+    await aguardarCarga()
+    if (linha === 'removida') expect((await rotina.excluirRegistro(id)).ok).toBe(true)
+    // O jsdom não tem layout nem restauração de rolagem. Só a geometria do link é simulada.
+    vi.spyOn(HTMLAnchorElement.prototype, 'getBoundingClientRect').mockImplementation(function (this: HTMLAnchorElement) {
+      return new DOMRect(20, this.getAttribute('href') === href && linha === 'visível' ? 250 : 1600, 160, 44)
+    })
+    focarLink.mockClear()
+    await act(async () => {
+      await roteador.navigate(-1)
+    })
+    await aguardarCarga()
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(48)
+    })
+
+    expect(roteador.state.historyAction).toBe('POP')
+    expect(roteador.state.location).toMatchObject({ pathname, search })
+    expect(botao('Dia').getAttribute('aria-pressed')).toBe('true')
+    expect(botao('Tummy time').getAttribute('aria-pressed')).toBe('true')
+    const registro = screen.queryByRole('link', { name: 'Tummy time, 8 min' })
+    if (linha === 'visível') {
+      expect(registro).not.toBeNull()
+      expect(document.activeElement).toBe(registro)
+      expect(focarLink).toHaveBeenCalledExactlyOnceWith({ preventScroll: true })
+    } else if (linha === 'removida') {
+      expect(registro).toBeNull()
+      expect(document.activeElement).toBe(screen.getByRole('heading', { level: 1, name: 'Histórico' }))
+    } else {
+      expect(registro).not.toBeNull()
+      expect(document.activeElement).toBe(document.body)
+      expect(focarLink).not.toHaveBeenCalled()
+    }
+    expect(screen.getByRole('link', { name: 'Tummy time, 10 min' })).toBeTruthy()
   })
 
   it('o resumo do dia tem só totais, com a parte do sono que começou ontem', async () => {

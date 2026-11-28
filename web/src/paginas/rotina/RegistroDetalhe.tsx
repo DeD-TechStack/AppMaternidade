@@ -1,5 +1,5 @@
-import { useState, type ReactNode } from 'react'
-import { useNavigate, useParams } from 'react-router'
+import { useContext, useLayoutEffect, useState, type ReactNode } from 'react'
+import { UNSAFE_DataRouterContext, useLocation, useNavigate, useParams } from 'react-router'
 import { ChevronLeft, Pencil, Trash2, Undo2 } from 'lucide-react'
 import { ALVO_APP } from '../../componentes/app/alvo.ts'
 import { Botao } from '../../componentes/base/Botao.tsx'
@@ -9,6 +9,7 @@ import { ErroDaRotina } from '../../componentes/estado/ErroDaRotina.tsx'
 import { AvisoDeLista } from '../../componentes/rotina/AvisoDeLista.tsx'
 import { AvisoDoPapel } from '../../componentes/rotina/AvisoDoPapel.tsx'
 import { ItemRegistro } from '../../componentes/rotina/ItemRegistro.tsx'
+import { voltaAoRegistro } from '../../componentes/rotina/LinhaDoDia.tsx'
 import { LinkDaRotina } from '../../componentes/rotina/LinkDaRotina.tsx'
 import { SecaoDoHoje } from '../../componentes/rotina/SecaoDoHoje.tsx'
 import { TelaRotina } from '../../componentes/rotina/TelaRotina.tsx'
@@ -16,7 +17,7 @@ import { camposMudados } from '../../componentes/rotina/alteracoesDoRegistro.ts'
 import { useRotina } from '../../componentes/rotina/contexto.ts'
 import { dataEHora, ehRestauravel } from '../../componentes/rotina/datasDaRotina.ts'
 import { camposDoDetalhe } from '../../componentes/rotina/detalhesDoRegistro.ts'
-import { urlDoHistoricoDoDia } from '../../componentes/rotina/parametrosHistorico.ts'
+import { lerParametros, urlDoHistoricoDoDia } from '../../componentes/rotina/parametrosHistorico.ts'
 import { textoDoPapel } from '../../componentes/rotina/textoDoPapel.ts'
 import { useAcoesDaRotina } from '../../componentes/rotina/useAcoesDaRotina.ts'
 import { useBebeDoRegistro } from '../../componentes/rotina/useBebeDoRegistro.ts'
@@ -24,6 +25,7 @@ import { useSecao } from '../../componentes/rotina/useSecao.ts'
 import { useTelaDaRotina } from '../../componentes/rotina/useTelaDaRotina.ts'
 import { COMUM, DETALHE, ESTADOS, ROTULO_TIPO, TITULOS } from '../../conteudo/rotina.ts'
 import type { Resultado } from '../../dados/comum.ts'
+import { diaDaFamilia } from '../../dados/rotina.dia.ts'
 import { ehTipoDeSessao, LIMITES, podeEscrever, type Alteracao, type Lista, type Registro } from '../../dados/rotina.tipos.ts'
 import { ehUuid } from '../../dados/rotina.uuid.ts'
 import { useAgora } from '../../prototipo/useAgora.ts'
@@ -57,10 +59,26 @@ function DetalheDoRegistro() {
   const acoes = useAcoesDaRotina()
   const { principal, acionar, focarTitulo } = useTelaDaRotina()
   const navigate = useNavigate()
+  const { key, state: estadoDaNavegacao } = useLocation() as { key: string; state: unknown }
+  const roteador = useContext(UNSAFE_DataRouterContext)?.router
   const { id } = useParams()
   const agora = useAgora(UM_MINUTO)
   const [ocupado, setOcupado] = useState(false)
   const invalido = !ehUuid(id)
+  const origem = typeof estadoDaNavegacao === 'object' && estadoDaNavegacao !== null
+    ? estadoDaNavegacao as { chaveDoHistorico?: unknown; buscaDoHistorico?: unknown }
+    : null
+  const { chaveDoHistorico, buscaDoHistorico } = origem ?? {}
+
+  // O POP precisa voltar à mesma entrada que abriu este detalhe, não só a uma URL parecida.
+  useLayoutEffect(() => {
+    if (!roteador || !ehUuid(id) || typeof chaveDoHistorico !== 'string' || typeof buscaDoHistorico !== 'string') return
+    return roteador.subscribe(({ location, historyAction }) => {
+      if (location.key !== key && historyAction === 'POP' && location.key === chaveDoHistorico) {
+        voltaAoRegistro.set(roteador, { localizacao: location, id, busca: buscaDoHistorico })
+      }
+    })
+  }, [roteador, id, key, chaveDoHistorico, buscaDoHistorico])
 
   const leitura = useSecao<Leitura>(invalido ? null : `${PREFIXO}${id}`, async (chave): Promise<Resultado<Leitura>> => {
     const lido = await dados.registro(chave.slice(PREFIXO.length))
@@ -76,9 +94,13 @@ function DetalheDoRegistro() {
 
   if (!ativo || !dono) return null
   const titulo = TITULOS.registro
+  const historicoDeOrigem =
+    typeof buscaDoHistorico === 'string' && (buscaDoHistorico === '' || buscaDoHistorico.startsWith('?'))
+      ? `/app/historico${lerParametros(buscaDoHistorico, diaDaFamilia(agora, dono.familia.fuso)).canonica}`
+      : null
   const voltar = (dia: string | null) => (
     <LinkDaRotina
-      to={dia === null ? '/app/historico' : urlDoHistoricoDoDia(dia)}
+      to={historicoDeOrigem ?? (dia === null ? '/app/historico' : urlDoHistoricoDoDia(dia))}
       className="-ml-1 inline-flex items-center gap-1.5 self-start underline underline-offset-4"
       data-voltar=""
       icone={<ChevronLeft className="size-5" strokeWidth={2} />}

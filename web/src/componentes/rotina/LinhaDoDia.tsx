@@ -1,5 +1,5 @@
-import type { ReactNode } from 'react'
-import { Link } from 'react-router'
+import type { ContextType, ReactNode } from 'react'
+import { Link, UNSAFE_DataRouterContext, useLocation, type Location } from 'react-router'
 import { HOJE, ROTULO_TIPO, SESSOES } from '../../conteudo/rotina.ts'
 import type { Registro } from '../../dados/rotina.tipos.ts'
 import { formatarHora } from '../../prototipo/formatar.ts'
@@ -7,12 +7,19 @@ import { MarcaDeEnvio } from './ItemRegistro.tsx'
 import { IconeDoTipo } from './IconeDoTipo.tsx'
 import { resumoDoRegistro } from './formatos.ts'
 
+type Roteador = NonNullable<ContextType<typeof UNSAFE_DataRouterContext>>['router']
+
+// Só o Histórico consome a volta observada pelo detalhe. A localização é a desta travessia.
+export const voltaAoRegistro = new WeakMap<Roteador, { localizacao: Location; id: string; busca: string }>()
+
 interface Props {
   registro: Registro
   fuso: string
   autor: string
   /** A rota do detalhe: a linha inteira é o link. */
   para: string
+  /** A busca canônica, quando a linha pertence à tela Histórico. Pode ser vazia. */
+  buscaDoHistorico?: string
   /** O encaixe da marca de envio (MAT-41); a MAT-38 nunca a passa. */
   marca?: ReactNode
 }
@@ -21,7 +28,11 @@ interface Props {
  * Uma linha da linha do dia (R38-20): a hora à esquerda, o ícone do tipo, o rótulo e o resumo, `por <autor>`.
  * Usa o mesmo encaixe da marca de envio do `ItemRegistro`, logo depois da hora (R38-13).
  */
-export function LinhaDoDia({ registro, fuso, autor, para, marca }: Props) {
+export function LinhaDoDia({ registro, fuso, autor, para, buscaDoHistorico, marca }: Props) {
+  const { key: chaveDoHistorico } = useLocation()
+  const estado = buscaDoHistorico === undefined
+    ? { foco: 'titulo' }
+    : { foco: 'titulo', buscaDoHistorico, chaveDoHistorico }
   const resumo = resumoDoRegistro(registro, fuso)
   const texto = resumo ? HOJE.rotuloEResumo(ROTULO_TIPO[registro.tipo], resumo) : ROTULO_TIPO[registro.tipo]
   return (
@@ -33,7 +44,7 @@ export function LinhaDoDia({ registro, fuso, autor, para, marca }: Props) {
       <IconeDoTipo tipo={registro.tipo} />
       <div className="min-w-0 flex-1">
         <p className="font-medium wrap-anywhere">
-          <Link to={para} state={{ foco: 'titulo' }} className="rotina-link-esticado">
+          <Link to={para} state={estado} className="rotina-link-esticado">
             {texto}
           </Link>
         </p>

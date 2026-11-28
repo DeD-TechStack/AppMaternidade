@@ -1,5 +1,5 @@
-import { useEffect } from 'react'
-import { useLocation, useNavigate } from 'react-router'
+import { useContext, useEffect, useRef, useState } from 'react'
+import { parsePath, UNSAFE_DataRouterContext, useLocation, useNavigate } from 'react-router'
 import { Trash2 } from 'lucide-react'
 import { ALVO_APP } from '../../componentes/app/alvo.ts'
 import { Botao } from '../../componentes/base/Botao.tsx'
@@ -9,26 +9,27 @@ import { AvisoDeFuso } from '../../componentes/rotina/AvisoDeFuso.tsx'
 import { AvisoDeLista } from '../../componentes/rotina/AvisoDeLista.tsx'
 import { AvisoDoPapel } from '../../componentes/rotina/AvisoDoPapel.tsx'
 import { FiltrosDoHistorico } from '../../componentes/rotina/FiltrosDoHistorico.tsx'
-import { LinhaDoDia } from '../../componentes/rotina/LinhaDoDia.tsx'
+import { LinhaDoDia, voltaAoRegistro } from '../../componentes/rotina/LinhaDoDia.tsx'
 import { LinkDaRotina } from '../../componentes/rotina/LinkDaRotina.tsx'
 import { SecaoDoHoje } from '../../componentes/rotina/SecaoDoHoje.tsx'
 import { SemanaDoHistorico } from '../../componentes/rotina/SemanaDoHistorico.tsx'
 import { SeletorDeDia } from '../../componentes/rotina/SeletorDeDia.tsx'
 import { TelaRotina } from '../../componentes/rotina/TelaRotina.tsx'
 import { TotaisDoDia } from '../../componentes/rotina/TotaisDoDia.tsx'
-import { useRotina, type BebeAtivo } from '../../componentes/rotina/contexto.ts'
+import { useRotina, type AcaoDaConfirmacao, type BebeAtivo } from '../../componentes/rotina/contexto.ts'
 import { diaPorExtenso, seteDiasAte, somarDias } from '../../componentes/rotina/diasDoHistorico.ts'
 import { lerParametros, urlDoHistorico, type Vista } from '../../componentes/rotina/parametrosHistorico.ts'
 import { temAlgoParaSomar, totaisDoPeriodo, totaisPorDiaDaSemana } from '../../componentes/rotina/totaisHistorico.ts'
 import { textoDoPapel } from '../../componentes/rotina/textoDoPapel.ts'
 import { useAcoesDaRotina } from '../../componentes/rotina/useAcoesDaRotina.ts'
 import { useSecao } from '../../componentes/rotina/useSecao.ts'
-import { useTelaDaRotina } from '../../componentes/rotina/useTelaDaRotina.ts'
 import { ESTADOS, HISTORICO, TITULOS } from '../../conteudo/rotina.ts'
 import type { Resultado } from '../../dados/comum.ts'
 import { diaDaFamilia, janelaDoDia, lerAparelho } from '../../dados/rotina.dia.ts'
 import { LIMITES, type Lista, type Registro, type TipoRegistro } from '../../dados/rotina.tipos.ts'
+import { focoDoEstado } from '../../prototipo/foco.ts'
 import { useAgora } from '../../prototipo/useAgora.ts'
+import { useTituloDaTela } from '../../prototipo/useTituloDaTela.ts'
 
 const UM_MINUTO = 60_000
 const SEPARADOR = '|'
@@ -43,6 +44,14 @@ const porInicio = (a: Registro, b: Registro) => Date.parse(a.inicio) - Date.pars
 /** `05/11`: o dia e o mês de um `AAAA-MM-DD`. */
 const diaEMes = (dia: string) => `${dia.slice(8, 10)}/${dia.slice(5, 7)}`
 
+function linkAlcancavel(link: HTMLAnchorElement): boolean {
+  const { left, top, width, height } = link.getBoundingClientRect()
+  const x = left + width / 2
+  const y = top + height / 2
+  if (width <= 0 || height <= 0 || x < 0 || x >= window.innerWidth || y < 0 || y >= window.innerHeight) return false
+  return !document.elementFromPoint || link.contains(document.elementFromPoint(x, y))
+}
+
 export function Historico() {
   const { ativo } = useRotina()
   if (!ativo) return null
@@ -50,11 +59,14 @@ export function Historico() {
 }
 
 function HistoricoDoBebe({ ativo }: { ativo: BebeAtivo }) {
-  const { dados } = useRotina()
+  const { dados, fecharConfirmacao, confirmacao } = useRotina()
   const acoes = useAcoesDaRotina()
-  const { principal, acionar } = useTelaDaRotina()
+  const { principal, focarTitulo } = useTituloDaTela()
   const navigate = useNavigate()
   const location = useLocation()
+  const roteador = useContext(UNSAFE_DataRouterContext)?.router
+  const [volta] = useState(() => roteador && voltaAoRegistro.get(roteador))
+  const retomou = useRef(false)
   const agora = useAgora(UM_MINUTO)
 
   const bebeId = ativo.bebe.id
@@ -64,6 +76,24 @@ function HistoricoDoBebe({ ativo }: { ativo: BebeAtivo }) {
   // Quem só vê (observador) ou lê um bebê arquivado recebe o texto do papel; ninguém grava neste histórico.
   const somenteLeitura = ativo.arquivado || ativo.papel === 'observador'
   const { dia, tipos, vista, canonica } = lerParametros(location.search, hoje)
+  // Guarda o dia resolvido mesmo quando a URL usa o padrão de hoje, que pode mudar com o detalhe aberto.
+  const { search: buscaDoHistorico = '' } = parsePath(urlDoHistorico({ dia, tipos, vista }))
+  const retorno = volta?.localizacao === roteador?.state.location && volta?.busca === buscaDoHistorico ? volta : null
+
+  useEffect(() => {
+    if (roteador && volta && voltaAoRegistro.get(roteador) === volta) voltaAoRegistro.delete(roteador)
+  }, [roteador, volta])
+
+  // O foco no título dos links internos não deve rolar a entrada restaurada num POP do detalhe.
+  useEffect(() => {
+    if (!retorno && focoDoEstado(location.state) === 'titulo') focarTitulo()
+  }, [retorno, location.key, location.state, focarTitulo])
+
+  const acionar = (acao: AcaoDaConfirmacao) => {
+    if (acao.chave !== 'tentar_de_novo') fecharConfirmacao()
+    if (acao.chave === 'tentar_de_novo' ? confirmacao?.origem : !acao.para) focarTitulo()
+    acao.executar()
+  }
 
   // Qualquer parâmetro que não vale vira o padrão, e a URL é trocada pela forma canônica (substitui a entrada).
   useEffect(() => {
@@ -106,6 +136,20 @@ function HistoricoDoBebe({ ativo }: { ativo: BebeAtivo }) {
       ? HISTORICO.linhaDoBebe(ativo.bebe.nome, HISTORICO.diaPorExtenso(diaPorExtenso(dia), relativo))
       : HISTORICO.linhaDaSemana(ativo.bebe.nome, diaEMes(semana[0]), diaEMes(semana[6]))
   const secaoAtual = vista === 'dia' ? doDia : daSemana
+  useEffect(() => {
+    if (!retorno || retomou.current || secaoAtual.estado === 'carregando') return
+    // As linhas já entraram no DOM. Deixe o navegador assentar a rolagem antes de medir.
+    let quadro = requestAnimationFrame(() => {
+      quadro = requestAnimationFrame(() => {
+        retomou.current = true
+        if (document.activeElement !== document.body) return
+        const link = principal.current?.querySelector<HTMLAnchorElement>(`[data-registros-do-dia] [data-registro="${retorno.id}"] a`)
+        if (!link) focarTitulo()
+        else if (linkAlcancavel(link)) link.focus({ preventScroll: true })
+      })
+    })
+    return () => cancelAnimationFrame(quadro)
+  }, [retorno, secaoAtual.estado, principal, focarTitulo])
   const autorDe = (registro: Registro) => acoes.nomeDoAutor(registro.criadoPor, registro.familiaId)
 
   function conteudoDoDia(lido: DoDia) {
@@ -136,7 +180,14 @@ function HistoricoDoBebe({ ativo }: { ativo: BebeAtivo }) {
           ) : (
             <ul className="border-y border-(--cor-fio-suave)">
               {visiveis.map((registro) => (
-                <LinhaDoDia key={registro.id} registro={registro} fuso={fuso} autor={autorDe(registro)} para={`/app/registro/${registro.id}`} />
+                <LinhaDoDia
+                  key={registro.id}
+                  registro={registro}
+                  fuso={fuso}
+                  autor={autorDe(registro)}
+                  para={`/app/registro/${registro.id}`}
+                  buscaDoHistorico={buscaDoHistorico}
+                />
               ))}
             </ul>
           )}
