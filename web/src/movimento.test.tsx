@@ -947,7 +947,10 @@ describe('VIS4-20: interação', () => {
     const aoTerminar = vi.fn()
     const { container } = render(<Cortina aoTerminar={aoTerminar} />)
 
-    await waitFor(() => expect(container.firstChild).toBeNull(), { timeout: 4000 })
+    await waitFor(() => {
+      expect(container.firstChild).toBeNull()
+      expect(aoTerminar).toHaveBeenCalled()
+    }, { timeout: 4000 })
     expect(aoTerminar).toHaveBeenCalledTimes(1)
   })
 })
